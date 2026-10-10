@@ -1,11 +1,10 @@
-import type { ClaimType, LocationId } from './types.js';
-
-export type BotPersonality = 'tabloid' | 'gazette' | 'wildcard';
+import type { Claim, Location } from '../shared/ids.ts';
+import type { BotPersonality } from './types.ts';
 
 export interface BotHeadlineContext {
   readonly personality: BotPersonality;
-  readonly location: LocationId;
-  readonly claimType: ClaimType;
+  readonly location: Location;
+  readonly claimType: Claim;
   readonly rivalPaperName?: string;
   readonly rivalHeadline?: string;
 }
@@ -118,9 +117,47 @@ export const BOT_HEADLINES = {
   },
 } as const;
 
+export const BOT_HEADLINE_TEMPLATES: Record<Claim, readonly string[]> = {
+  danger: [
+    'PANIC: Danger reported near the {location}!',
+    'Avoid the {location} — major peril strikes!',
+    'Safety hazard confirmed at the {location}!',
+  ],
+  health_scare: [
+    'Is the {location} making residents sick?!',
+    'Health advisory issued around the {location}!',
+    'Sanitation scare reported at the {location}!',
+  ],
+  scandal: [
+    'SCANDAL: Secret dealings uncovered at the {location}!',
+    'Official inquiry targets events at the {location}!',
+    'Whistleblower reveals truth about the {location}!',
+  ],
+  great_deal: [
+    'Incredible bargains draw crowds to the {location}!',
+    'Huge savings announced at the {location} today!',
+    'Rush to the {location} for unprecedented discounts!',
+  ],
+  weird_sighting: [
+    'Mysterious anomaly spotted hovering over {location}!',
+    'Unexplained sighting near the {location} shocks town!',
+    'Bizarre events reported at the {location} at dusk!',
+  ],
+  all_clear: [
+    'All calm and orderly across the {location} today.',
+    'Routine operations proceed at the {location} in peace.',
+    'No issues reported at the {location} — business as usual.',
+  ],
+  expose: [
+    '{paper} caught printing outrageous lies!',
+    'The truth comes out: {paper} published fabrications!',
+    'Rival paper {paper} exposed for false reporting!',
+  ],
+} as const;
+
 export function getFallbackBotHeadline(
   personality: BotPersonality,
-  claimType: ClaimType,
+  claimType: Claim,
   seedIndex: number = 0,
 ): string {
   const options = BOT_HEADLINES[personality][claimType];

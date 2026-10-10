@@ -1,9 +1,9 @@
-import type { EventTemplate } from './types.js';
+import type { EventTemplate } from './types.ts';
 
 export const EVENT_TEMPLATES: readonly EventTemplate[] = [
   // --- BAKERY (3 templates) ---
   {
-    id: 'bakery-midnight-delivery',
+    id: 'bakery_midnight_delivery',
     location: 'bakery',
     realClaim: 'health_scare',
     pReal: 0.45,
@@ -17,7 +17,7 @@ export const EVENT_TEMPLATES: readonly EventTemplate[] = [
     explanationInnocent: 'The bakery received a pre-dawn shipment of gourmet festival flour.',
   },
   {
-    id: 'bakery-oven-rumble',
+    id: 'bakery_oven_rumble',
     location: 'bakery',
     realClaim: 'danger',
     pReal: 0.40,
@@ -31,7 +31,7 @@ export const EVENT_TEMPLATES: readonly EventTemplate[] = [
     explanationInnocent: 'A newly installed hearth was being safely cured for the weekend.',
   },
   {
-    id: 'bakery-custard-deluge',
+    id: 'bakery_custard_deluge',
     location: 'bakery',
     realClaim: 'great_deal',
     pReal: 0.50,
@@ -47,7 +47,7 @@ export const EVENT_TEMPLATES: readonly EventTemplate[] = [
 
   // --- BANK (3 templates) ---
   {
-    id: 'bank-ledger-mismatch',
+    id: 'bank_ledger_mismatch',
     location: 'bank',
     realClaim: 'scandal',
     pReal: 0.40,
@@ -61,7 +61,7 @@ export const EVENT_TEMPLATES: readonly EventTemplate[] = [
     explanationInnocent: 'Auditors were just fixing minor decimal rounding errors from last year.',
   },
   {
-    id: 'bank-armored-crates',
+    id: 'bank_armored_crates',
     location: 'bank',
     realClaim: 'great_deal',
     pReal: 0.55,
@@ -75,7 +75,7 @@ export const EVENT_TEMPLATES: readonly EventTemplate[] = [
     explanationInnocent: 'The heavy crates only held decorative brass fittings for lobby renovation.',
   },
   {
-    id: 'bank-vault-tremor',
+    id: 'bank_vault_tremor',
     location: 'bank',
     realClaim: 'danger',
     pReal: 0.35,
@@ -91,7 +91,7 @@ export const EVENT_TEMPLATES: readonly EventTemplate[] = [
 
   // --- FOUNTAIN SQUARE (3 templates) ---
   {
-    id: 'fountain-glowing-tide',
+    id: 'fountain_glowing_tide',
     location: 'fountain_square',
     realClaim: 'weird_sighting',
     pReal: 0.50,
@@ -105,7 +105,7 @@ export const EVENT_TEMPLATES: readonly EventTemplate[] = [
     explanationInnocent: 'The fountain cleaner accidentally spilled harmless green bubble bath soap.',
   },
   {
-    id: 'fountain-statue-lean',
+    id: 'fountain_statue_lean',
     location: 'fountain_square',
     realClaim: 'danger',
     pReal: 0.45,
@@ -119,7 +119,7 @@ export const EVENT_TEMPLATES: readonly EventTemplate[] = [
     explanationInnocent: 'Masons were leveling the monument base to mount an anniversary plaque.',
   },
   {
-    id: 'fountain-wishing-coins',
+    id: 'fountain_wishing_coins',
     location: 'fountain_square',
     realClaim: 'great_deal',
     pReal: 0.50,
@@ -135,7 +135,7 @@ export const EVENT_TEMPLATES: readonly EventTemplate[] = [
 
   // --- TOWN HALL (3 templates) ---
   {
-    id: 'townhall-closed-doors',
+    id: 'townhall_closed_doors',
     location: 'town_hall',
     realClaim: 'scandal',
     pReal: 0.50,
@@ -149,7 +149,7 @@ export const EVENT_TEMPLATES: readonly EventTemplate[] = [
     explanationInnocent: 'Officials were coordinating a surprise celebration for fifty years of service.',
   },
   {
-    id: 'townhall-belfry-specter',
+    id: 'townhall_belfry_specter',
     location: 'town_hall',
     realClaim: 'weird_sighting',
     pReal: 0.40,
@@ -163,7 +163,7 @@ export const EVENT_TEMPLATES: readonly EventTemplate[] = [
     explanationInnocent: 'The eerie silhouette was just a new copper bat weather vane spinning in wind.',
   },
   {
-    id: 'townhall-rebate-line',
+    id: 'townhall_rebate_line',
     location: 'town_hall',
     realClaim: 'great_deal',
     pReal: 0.50,
@@ -179,7 +179,7 @@ export const EVENT_TEMPLATES: readonly EventTemplate[] = [
 
   // --- CLINIC (3 templates) ---
   {
-    id: 'clinic-sour-tonic',
+    id: 'clinic_sour_tonic',
     location: 'clinic',
     realClaim: 'health_scare',
     pReal: 0.50,
@@ -193,7 +193,7 @@ export const EVENT_TEMPLATES: readonly EventTemplate[] = [
     explanationInnocent: 'The pungent bottles contained harmless mint mouthwash samples.',
   },
   {
-    id: 'clinic-fluorescent-glow',
+    id: 'clinic_fluorescent_glow',
     location: 'clinic',
     realClaim: 'weird_sighting',
     pReal: 0.45,
@@ -207,7 +207,7 @@ export const EVENT_TEMPLATES: readonly EventTemplate[] = [
     explanationInnocent: 'The clinic was simply assembling a toy luminous skeleton for demonstration.',
   },
   {
-    id: 'clinic-hazard-tape',
+    id: 'clinic_hazard_tape',
     location: 'clinic',
     realClaim: 'danger',
     pReal: 0.40,

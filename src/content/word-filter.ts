@@ -25,6 +25,12 @@ export const BLOCKED_WORDS: readonly string[] = [
 ] as const;
 
 export const PROFANITY_WORD_LIST = BLOCKED_WORDS;
+export const WORD_LIST = [...BLOCKED_WORDS];
+
+const COMPILED_PATTERN = new RegExp(
+  `\\b(${BLOCKED_WORDS.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})\\b`,
+  'i',
+);
 
 export function containsProfanity(text: string): boolean {
   const normalized = text
@@ -32,13 +38,7 @@ export function containsProfanity(text: string): boolean {
     .replace(/[^a-z0-9\s]/g, '')
     .replace(/\s+/g, ' ');
 
-  for (const word of BLOCKED_WORDS) {
-    const pattern = new RegExp(`\\b${word}\\b`, 'i');
-    if (pattern.test(normalized)) {
-      return true;
-    }
-  }
-  return false;
+  return COMPILED_PATTERN.test(normalized);
 }
 
 export const checkProfanity = containsProfanity;

@@ -1,5 +1,4 @@
-import type { ClaimType, LocationId } from './types.js';
-import type { BotPersonality } from './bot-headlines.js';
+import type { BotPersonality, ClaimType, LocationId } from './types.ts';
 
 export const RATE_HEADLINE_SYSTEM_PROMPT = `
 You are the editorial judge for "News Town", a family-friendly multiplayer party game where 1930s-style newspapers compete in a small town.
@@ -26,6 +25,11 @@ Personalities:
 
 Return ONLY the headline text. Do not include quotes, tags, or explanations.
 `.trim();
+
+export const PROMPTS = {
+  rateHeadline: RATE_HEADLINE_SYSTEM_PROMPT,
+  writeBotHeadline: WRITE_BOT_HEADLINE_SYSTEM_PROMPT,
+} as const;
 
 export interface BuildRateHeadlineUserMessageParams {
   text: string;

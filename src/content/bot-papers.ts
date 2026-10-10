@@ -1,10 +1,10 @@
-import type { BotPersonality } from './bot-headlines.js';
+import type { Personality } from '../shared/ids.ts';
 
 export interface BotPaperConfig {
   readonly id: string;
   readonly name: string; // ≤ 24 chars
   readonly editorName: string; // ≤ 20 chars
-  readonly personality: BotPersonality;
+  readonly personality: Personality;
   readonly tagline: string;
   readonly preferredColorIndex: number;
 }
@@ -36,6 +36,16 @@ export const BOT_NEWSPAPERS: readonly BotPaperConfig[] = [
   },
 ] as const;
 
-export function getBotPaperConfig(personality: BotPersonality): BotPaperConfig | undefined {
-  return BOT_NEWSPAPERS.find((p) => p.personality === personality);
+export const BOT_PAPERS: Readonly<Record<Personality, string>> = {
+  tabloid: 'The Daily Gasp',
+  gazette: 'The Morning Ledger',
+  wildcard: 'Rumor Mill Weekly',
+} as const;
+
+export function getBotPaperConfig(personality: Personality): BotPaperConfig {
+  const found = BOT_NEWSPAPERS.find((p) => p.personality === personality);
+  if (!found) {
+    throw new Error(`Unknown bot personality: ${personality}`);
+  }
+  return found;
 }

@@ -15,7 +15,7 @@ export const RULE_CARDS: readonly RuleCard[] = [
   {
     id: 'rule-card-2',
     title: 'Investigate or Expose',
-    body: 'Check locations to gather hard evidence, or dig into rival past stories. If you find proof that a rival lied, publish an EXPOSE to wreck their trust and boost yours!',
+    body: 'Check locations to gather hard evidence, or dig into rival past stories. If you catch a rival lying, publish an EXPOSE to wreck their trust and boost yours!',
     tip: 'Town gossip also rolls to expose surviving lies each round.',
   },
   {
@@ -25,3 +25,5 @@ export const RULE_CARDS: readonly RuleCard[] = [
     tip: 'Score = Readers × (Trust / 50). You need both circulation and credibility to win!',
   },
 ] as const;
+
+export const RULE_CARDS_CONTENT = RULE_CARDS.map(({ title, body }) => ({ title, body }));
