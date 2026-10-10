@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ClientMessageSchema, HeadlineTextSchema, RoomCodeSchema, cleanText } from '../../src/shared/protocol.ts';
+import { AckSchema, ClientMessageSchema, DisplayNameSchema, HeadlineTextSchema, RoomCodeSchema, cleanText } from '../../src/shared/protocol.ts';
 
 describe('protocol', () => {
   it('cleans text: control chars, repeated whitespace, edges', () => {
@@ -34,5 +34,16 @@ describe('protocol', () => {
       type: 'lockHeadline', actionId: 'a', round: 1, phase: 'write',
       story: { kind: 'claim', location: 'bank', claim: 'expose', attachEvidence: false }, text: 'x',
     }).success).toBe(false);
+  });
+
+  it('strips invisible format characters so blank-looking text is rejected', () => {
+    expect(HeadlineTextSchema.safeParse('\u200b\u2060\u200b').success).toBe(false);
+    expect(DisplayNameSchema.safeParse('\u202e\u200b').success).toBe(false);
+    expect(HeadlineTextSchema.parse('Bank\u202e boss')).toBe('Bank boss');
+  });
+
+  it('acks carry server time and, on COLOR_TAKEN, the taken colors', () => {
+    expect(AckSchema.safeParse({ actionId: 'a', ok: true }).success).toBe(false);
+    expect(AckSchema.parse({ actionId: 'a', ok: false, error: 'COLOR_TAKEN', serverNowMs: 5, takenColors: ['red'] }).takenColors).toEqual(['red']);
   });
 });

@@ -68,6 +68,14 @@ describe('phase machine', () => {
     expect([s.round, s.phase, s.deadlineMs]).toEqual([1, 'reveal', late + TUNING.phaseMs.reveal]);
   });
 
+  it('keeps the clock running when the only human disconnects', () => {
+    let s = advanceTo(soloMatch(), 'investigate', 1);
+    const now = s.deadlineMs - 10_000;
+    s = applyCommand(s, 0, { type: 'connection', connected: false }, now).state;
+    s = tick(s, now).state;
+    expect([s.round, s.phase]).toEqual([1, 'investigate']);
+  });
+
   it('produces schema-valid snapshots in every phase', () => {
     let s = soloMatch();
     while (s.phase !== 'ended') {

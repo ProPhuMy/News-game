@@ -2,10 +2,10 @@ import { z } from 'zod';
 import { CLAIMS, COLORS, ERROR_CODES, LOCATIONS, PHASES, TOWN_CLAIMS } from './ids.ts';
 import { TUNING } from './tuning.ts';
 
-// eslint-disable-next-line no-control-regex
-const CONTROL_CHARS = /[\u0000-\u001f\u007f-\u009f]/g;
+/** Control characters plus invisible format characters (zero-width, bidi overrides) and line/paragraph separators. */
+const CONTROL_CHARS = /[\p{Cc}\p{Cf}\u2028\u2029]/gu;
 
-/** Strip control characters, collapse whitespace, trim. Applied to every piece of user text. */
+/** Strip control and format characters, collapse whitespace, trim. Applied to every piece of user text. */
 export function cleanText(raw: string): string {
   return raw.replace(CONTROL_CHARS, ' ').replace(/\s+/g, ' ').trim();
 }
@@ -77,6 +77,10 @@ export const AckSchema = z.object({
   ok: z.boolean(),
   error: ErrorCodeSchema.optional(),
   session: SessionSchema.optional(),
+  /** Server clock (epoch ms) when the ack was sent; the client derives its server-time offset from this. */
+  serverNowMs: z.number(),
+  /** On joinRoom failing with COLOR_TAKEN: colors already taken, so the joiner can pick another. */
+  takenColors: z.array(ColorSchema).optional(),
 });
 export type Ack = z.infer<typeof AckSchema>;
 

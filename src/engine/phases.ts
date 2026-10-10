@@ -6,9 +6,13 @@ import type { EngineEvent, MatchState } from './state.ts';
 
 const ACTION_PHASES: readonly Phase[] = ['intro', 'investigate', 'write'];
 
-/** Every connected human has acted, so an action phase may end early. Bots and the Caretaker act instantly. */
+/**
+ * An action phase may end early once every connected human has acted. With no connected human it never ends
+ * early: a dropped connection must not skip phases (spec §4.5, timers keep running).
+ */
 export function phaseDone(s: MatchState): boolean {
-  return ACTION_PHASES.includes(s.phase) && s.seats.every((seat) => seat.controller !== 'human' || seat.acted);
+  const humans = s.seats.filter((seat) => seat.controller === 'human');
+  return ACTION_PHASES.includes(s.phase) && humans.length > 0 && humans.every((seat) => seat.acted);
 }
 
 function enterPhase(s: MatchState, phase: 'investigate' | 'write' | 'reveal' | 'final', nowMs: number, events: EngineEvent[]): void {
@@ -55,7 +59,7 @@ function advance(s: MatchState, nowMs: number, events: EngineEvent[]): void {
 
 /**
  * Ends phases whose deadline passed or whose humans all acted. A new phase's deadline counts from `nowMs`,
- * so a late tick never skips a phase. With no connected humans, action phases chain instantly.
+ * so a late tick never skips a phase.
  */
 export function tick(state: MatchState, nowMs: number): { state: MatchState; events: EngineEvent[] } {
   const events: EngineEvent[] = [];
