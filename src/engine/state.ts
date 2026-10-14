@@ -77,6 +77,8 @@ export type EngineEvent =
       exposedHeadlineText?: string;
       /** Non-null: bot or Caretaker headline — ask the AI to write text, then rate it. */
       botPersonality: Personality | null;
+      /** What reveal applies if no rating arrives; pass to rateHeadline so a provider failure returns the same value. */
+      fallbackRating: Rating;
     }
   | { type: 'matchEnded' };
 
