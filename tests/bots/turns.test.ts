@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { applyCommand, createMatch, tick, type EngineEvent } from '../../src/engine/index.ts';
 import { TUNING } from '../../src/shared/tuning.ts';
 import { SAMPLE_CONTENT } from '../../src/sim/sample-content.ts';
-import { advanceTo, lockClaim, soloMatch } from '../engine/helpers.ts';
+import { advanceTo, checkLocation, lockClaim, run, soloMatch } from '../engine/helpers.ts';
 
 describe('bot turns', () => {
   it('bots lock template headlines at the start of Write, shown after 3–15 s', () => {
@@ -28,8 +28,9 @@ describe('bot turns', () => {
     expect(s.seats[2]!.evidence).toEqual([expect.objectContaining({ round: 1, location: s.seats[2]!.tip!.location })]);
   });
 
-  it('the Caretaker writes for a disconnected human; the lock stands after reconnect', () => {
-    let s = advanceTo(soloMatch(), 'write', 1);
+  it('the Caretaker writes from the human\'s evidence; the lock stands after reconnect', () => {
+    const inv = advanceTo(soloMatch(), 'investigate', 1);
+    let s = advanceTo(run(inv, 0, checkLocation(inv, inv.seats[0]!.tip!.location)), 'write', 1);
     const now = s.deadlineMs - 30_000;
     s = applyCommand(s, 0, { type: 'connection', connected: false }, now).state;
     const mine = s.headlines.find((h) => h.seatId === 0);
@@ -39,10 +40,20 @@ describe('bot turns', () => {
     expect(applyCommand(s, 0, lockClaim(s, 'bank', 'scandal'), now + 2).result).toEqual({ ok: false, error: 'ALREADY_ACTED' });
   });
 
-  it('plays a bot-only match to the end with every paper printing each round', () => {
+  it('the Caretaker always checks a location, so it never prints a blind guess', () => {
+    for (let seed = 1; seed <= 40; seed++) {
+      let s = advanceTo(soloMatch(seed), 'investigate', 2);
+      s = applyCommand(s, 0, { type: 'connection', connected: false }, s.deadlineMs - 1).state;
+      expect(s.seats[0]!.investigations.at(-1)).toMatchObject({ round: 2, outcome: 'evidence' });
+    }
+  });
+
+  it('plays a bot-only match to the end; only the Gazette may sit a round out', () => {
     let s = createMatch({ content: SAMPLE_CONTENT, startMs: 0 }, 9, [{ kind: 'bot' }, { kind: 'bot' }, { kind: 'bot' }, { kind: 'bot' }]);
     while (s.phase !== 'ended') s = tick(s, s.deadlineMs).state;
-    expect(s.headlines).toHaveLength(TUNING.rounds * TUNING.seats);
+    for (const seat of s.seats.filter((x) => x.personality !== 'gazette')) {
+      expect(s.headlines.filter((h) => h.seatId === seat.seatId)).toHaveLength(TUNING.rounds);
+    }
     expect(s.final?.winners.length).toBeGreaterThan(0);
   });
 });

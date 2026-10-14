@@ -68,8 +68,8 @@ export function decideWrite(personality: Personality, pub: PublicSnapshot, priv:
       if (expose) return expose;
       const lie = rng.chance(TUNING.bots.gazetteLie);
       if (card) return lie ? claim(card.location, hottestClaim(card.claim)) : claim(card.location, card.claim, true);
-      if (!tip) return { kind: 'skip' };
-      return lie ? claim(tip.location, tip.claim) : claim(tip.location, 'all_clear');
+      // No evidence (it probed a rival): never print a blind guess; only the 10% lie publishes.
+      return lie && tip ? claim(tip.location, tip.claim) : { kind: 'skip' };
     }
     case 'wildcard': {
       const expose = exposeWith(priv);

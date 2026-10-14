@@ -65,7 +65,7 @@ describe('Gazette', () => {
     priv.evidence = [{ round: 2, location: 'bakery', claim: 'all_clear', text: 'x' }];
     expect(decideWrite('gazette', pub, priv, NO())).toEqual({ kind: 'lock', story: { kind: 'claim', location: 'bakery', claim: 'all_clear', attachEvidence: true } });
     priv.evidence = [];
-    expect(decideWrite('gazette', pub, priv, NO())).toEqual({ kind: 'lock', story: { kind: 'claim', location: 'bakery', claim: 'all_clear', attachEvidence: false } });
+    expect(decideWrite('gazette', pub, priv, NO())).toEqual({ kind: 'skip' });
   });
 });
 

@@ -20,7 +20,10 @@ export function botText(s: MatchState, seat: Seat, story: Story, rng: Rng): stri
 function actFor(s: MatchState, seat: Seat, nowMs: number, events: EngineEvent[]): void {
   const personality = seat.personality ?? 'gazette'; // the Caretaker plays Gazette
   const rng = stream(s.seed, 'bot', s.round, s.phase, seat.seatId);
-  if (s.phase === 'investigate') {
+  if (s.phase === 'investigate' && seat.personality === null && seat.tip) {
+    // The Caretaker plays Gazette rules but always checks its tip, so an absent human never prints a blind guess.
+    investigate(s, seat, { kind: 'location', location: seat.tip.location });
+  } else if (s.phase === 'investigate') {
     const d = decideInvestigate(personality, publicView(s), privateView(s, seat.seatId), rng);
     if (d.kind === 'investigate') investigate(s, seat, d.target);
   } else if (s.phase === 'write') {
