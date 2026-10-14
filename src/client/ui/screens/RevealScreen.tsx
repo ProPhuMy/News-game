@@ -5,6 +5,7 @@ import type { ExposureEvent } from '../components/ExposureBanner.tsx';
 import { ExposureBanner } from '../components/ExposureBanner.tsx';
 import { RecapBanner } from '../components/RecapBanner.tsx';
 import { TUNING } from '../../../shared/tuning.ts';
+import { useTownFallback } from '../hooks/useTownFallback.ts';
 
 export interface RevealScreenProps {
   frontPages: FrontPageView[];
@@ -21,9 +22,9 @@ export const RevealScreen: React.FC<RevealScreenProps> = ({
   bubbles = [],
   showBubbles,
 }) => {
-  // Bubbles are rendered by the 3D town view; only render in 2D UI when in fallback mode or explicitly requested
-  const isTownFallback =
-    typeof document !== 'undefined' && Boolean(document.querySelector('.town-fallback-container'));
+  // Bubbles are rendered by the 3D town view; only render in 2D UI when in fallback mode or explicitly requested.
+  // Updates reactively when the town view loses or restores its WebGL context.
+  const isTownFallback = useTownFallback();
   const shouldRenderBubbles = showBubbles ?? isTownFallback;
 
   // Respect spec limit of at most TUNING.limits.maxBubbles

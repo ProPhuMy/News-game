@@ -1,14 +1,29 @@
 /** @vitest-environment jsdom */
 import React from 'react';
 import { describe, it, expect, afterEach } from 'vitest';
-import { render, screen, cleanup } from '@testing-library/react';
+import { render, screen, cleanup, waitFor } from '@testing-library/react';
 import { RevealScreen } from '../../src/client/ui/screens/RevealScreen';
 import type { FrontPageView } from '../../src/client/ui/components/FrontPageCard';
+
+function makeTownContainer(): HTMLElement {
+  const container = document.createElement('div');
+  container.id = 'town-canvas-container';
+  document.body.appendChild(container);
+  return container;
+}
+
+function makeFallback(): HTMLElement {
+  const fallback = document.createElement('div');
+  fallback.className = 'town-fallback-container';
+  return fallback;
+}
 
 describe('RevealScreen', () => {
   afterEach(() => {
     cleanup();
+    document.body.replaceChildren();
   });
+
   const mockFrontPages: FrontPageView[] = [
     {
       seatId: 0,
@@ -27,6 +42,17 @@ describe('RevealScreen', () => {
       hasEvidence: true,
       isExposed: false,
     },
+  ];
+
+  const eightBubbles = [
+    'Bubble 1',
+    'Bubble 2',
+    'Bubble 3',
+    'Bubble 4',
+    'Bubble 5',
+    'Bubble 6',
+    'Bubble 7',
+    'Bubble 8',
   ];
 
   it('renders all front pages as text, shows exposure stamp and recap line', () => {
@@ -81,6 +107,111 @@ describe('RevealScreen', () => {
     } finally {
       fallbackDiv.remove();
     }
+  });
+
+  it('removes 2D speech bubbles when WebGL context is restored during reveal', async () => {
+    const container = makeTownContainer();
+    const fallback = makeFallback();
+    container.appendChild(fallback);
+
+    render(
+      <RevealScreen
+        frontPages={mockFrontPages}
+        exposures={[]}
+        recap="Citizens went about their day."
+        bubbles={eightBubbles}
+      />
+    );
+
+    const bubblesBefore = document.querySelectorAll('.citizen-speech-bubble');
+    expect(bubblesBefore.length).toBe(6);
+
+    container.removeChild(fallback);
+    await waitFor(() => {
+      expect(document.querySelectorAll('.citizen-speech-bubble').length).toBe(0);
+    });
+  });
+
+  it('adds 2D speech bubbles when WebGL context is lost during reveal', async () => {
+    const container = makeTownContainer();
+
+    render(
+      <RevealScreen
+        frontPages={mockFrontPages}
+        exposures={[]}
+        recap="Citizens went about their day."
+        bubbles={eightBubbles}
+      />
+    );
+
+    expect(document.querySelectorAll('.citizen-speech-bubble').length).toBe(0);
+
+    const fallback = makeFallback();
+    container.appendChild(fallback);
+    await waitFor(() => {
+      expect(document.querySelectorAll('.citizen-speech-bubble').length).toBe(6);
+    });
+  });
+
+  it('respects explicit showBubbles prop regardless of fallback container toggling', async () => {
+    const container = makeTownContainer();
+    const fallback = makeFallback();
+    container.appendChild(fallback);
+
+    const { unmount } = render(
+      <RevealScreen
+        frontPages={mockFrontPages}
+        exposures={[]}
+        recap="Citizens went about their day."
+        bubbles={eightBubbles}
+        showBubbles={false}
+      />
+    );
+
+    expect(document.querySelectorAll('.citizen-speech-bubble').length).toBe(0);
+    container.removeChild(fallback);
+    expect(document.querySelectorAll('.citizen-speech-bubble').length).toBe(0);
+
+    unmount();
+
+    render(
+      <RevealScreen
+        frontPages={mockFrontPages}
+        exposures={[]}
+        recap="Citizens went about their day."
+        bubbles={eightBubbles}
+        showBubbles={true}
+      />
+    );
+
+    expect(document.querySelectorAll('.citizen-speech-bubble').length).toBe(6);
+    container.appendChild(fallback);
+    expect(document.querySelectorAll('.citizen-speech-bubble').length).toBe(6);
+  });
+
+  it('renders bubble text matching the first 6 entries in order after lost-context toggle', async () => {
+    const container = makeTownContainer();
+
+    render(
+      <RevealScreen
+        frontPages={mockFrontPages}
+        exposures={[]}
+        recap="Citizens went about their day."
+        bubbles={eightBubbles}
+      />
+    );
+
+    expect(document.querySelectorAll('.citizen-speech-bubble').length).toBe(0);
+
+    container.appendChild(makeFallback());
+    await waitFor(() => {
+      expect(document.querySelectorAll('.citizen-speech-bubble').length).toBe(6);
+    });
+
+    const renderedTexts = Array.from(document.querySelectorAll('.bubble-text')).map(
+      (el) => el.textContent
+    );
+    expect(renderedTexts).toEqual(eightBubbles.slice(0, 6));
   });
 
   it('formats recap text cleanly with deriveRecapText, falling back when location is missing', async () => {
