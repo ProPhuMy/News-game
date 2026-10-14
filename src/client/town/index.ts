@@ -12,12 +12,7 @@ import { createPoofEffect } from './particles.ts';
 import { createPlaybackCoordinator } from './playback.ts';
 import { createTownScene } from './scene.ts';
 import type { TownLayout } from './types.ts';
-import {
-  attachContextLossHandler,
-  createFallbackView,
-  isWebGL2Supported,
-  type FallbackView,
-} from './webgl.ts';
+import { attachContextLossHandler, createFallbackView, isWebGL2Supported, type FallbackView } from './webgl.ts';
 
 export interface TownViewOptions {
   container?: HTMLElement;
@@ -166,7 +161,7 @@ export function createTownView(
 
     function animate(now: number): void {
       if (animFrameId === null) return;
-      const deltaSeconds = Math.min(0.1, (now - lastTime) / 1000);
+      const deltaSeconds = Math.max(0, Math.min(0.1, (now - lastTime) / 1000));
       lastTime = now;
 
       try {
@@ -298,3 +293,5 @@ export function createTownView(
     return createFallbackTownView(container);
   }
 }
+
+export { mountTown, type MountTownOptions } from './mount.ts';

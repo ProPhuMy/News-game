@@ -294,7 +294,7 @@ describe('Town View Integration', () => {
     // Initial hat color at plan start should be fromPaper (grey 0x7f8c8d) immediately without lerp
     expect(view.getCitizenHatColor(0)).toBe(0x7f8c8d);
 
-    let now = 1000;
+    let now = performance.now();
     const step = (seconds: number) => {
       const steps = Math.ceil(seconds / 0.05);
       for (let i = 0; i < steps; i++) {
