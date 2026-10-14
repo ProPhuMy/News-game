@@ -19,10 +19,15 @@ export interface CitizenManagerOptions {
   reducedMotion?: boolean;
 }
 
+export interface SetCitizenPaperOptions {
+  reducedMotion?: boolean;
+  immediate?: boolean;
+}
+
 export interface CitizenManager {
   getCitizen(citizenId: number): CitizenInstance;
   getAllCitizens(): readonly CitizenInstance[];
-  setCitizenPaper(citizenId: number, seatId: SeatId | null, options?: { reducedMotion?: boolean }): void;
+  setCitizenPaper(citizenId: number, seatId: SeatId | null, options?: SetCitizenPaperOptions): void;
   setSeatColors(seatColors: SeatColorMap): void;
   syncCitizens(citizens: readonly CitizenPublic[], papers: readonly PaperPublic[]): void;
   getCitizenHatColor(citizenId: number): number;
@@ -225,7 +230,7 @@ export function createCitizenManager(
         const newColorHex =
           colorName === null ? PAPER_GREY_HEX : (PAPER_COLOR_HEX[colorName] ?? PAPER_GREY_HEX);
 
-        const shouldLerp = isReducedMotion && options.reducedMotion !== false;
+        const shouldLerp = isReducedMotion && !options.immediate && options.reducedMotion !== false;
         if (shouldLerp) {
           activeTransitions.set(citizenId, {
             startColor: c.accessoryMaterial.color.clone(),

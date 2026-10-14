@@ -167,6 +167,7 @@ export function createPlaybackCoordinator(
       // At plan start: initialize each citizen's hat to fromPaper
       plan.citizens.forEach((entry) => {
         deps.citizens.setCitizenPaper(entry.citizenId, entry.fromPaper, {
+          immediate: true,
           reducedMotion: true,
         });
       });

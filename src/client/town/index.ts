@@ -130,7 +130,9 @@ export function createTownView(
       interpolator,
       bubbles,
       poof,
-      reducedMotion: currentReducedMotion,
+      get reducedMotion() {
+        return currentReducedMotion;
+      },
     });
 
     let fallbackView: FallbackView | null = null;

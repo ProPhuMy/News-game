@@ -5,6 +5,7 @@ import { createTownView } from '../../src/client/town/index.ts';
 import { createTownLayout } from '../../src/client/town/layout.ts';
 import { createPoofEffect } from '../../src/client/town/particles.ts';
 import { createCitizenManager } from '../../src/client/town/citizens.ts';
+import type { ReactionPlan } from '../../src/shared/snapshots.ts';
 
 describe('Town View Integration', () => {
   it('mounts fallback view gracefully when WebGL is unavailable', () => {
@@ -237,5 +238,94 @@ describe('Town View Integration', () => {
     expect(citizenMgr.getCitizenHatColor(0)).toBe(0x7f8c8d);
 
     citizenMgr.dispose();
+  });
+
+  it('smoothly crossfades citizen hat colors during playback when reduced motion is enabled dynamically', async () => {
+    let animCallback: ((now: number) => void) | null = null;
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => {
+      animCallback = cb;
+      return 1;
+    });
+
+    const container = document.createElement('div');
+    const mockRenderer = {
+      setSize: vi.fn(),
+      setPixelRatio: vi.fn(),
+      render: vi.fn(),
+      dispose: vi.fn(),
+      domElement: document.createElement('canvas'),
+      shadowMap: { enabled: false, type: 0 },
+    } as unknown as THREE.WebGLRenderer;
+
+    const view = createTownView(container, {
+      forceWebGL: true,
+      customRenderer: mockRenderer,
+    });
+
+    // Dynamically enable reduced motion
+    view.setReducedMotion(true);
+
+    const plan: ReactionPlan = {
+      round: 1,
+      exposures: [],
+      citizens: [
+        {
+          citizenId: 0,
+          behavior: 'flee',
+          route: ['r0c0', 'r0c1'],
+          fromPaper: null,
+          toPaper: 0, // seat 0 is red: 0xc0392b
+          bubble: null,
+        },
+      ],
+      recap: {
+        headlineId: 'h1',
+        location: 'town_hall',
+        behavior: 'flee',
+        reactors: 1,
+        gainSeatId: 0,
+        gained: 1,
+      },
+    };
+
+    // Start plan with 2.0s duration
+    const planPromise = view.playReactionPlan(plan, 2.0);
+
+    // Initial hat color at plan start should be fromPaper (grey 0x7f8c8d) immediately without lerp
+    expect(view.getCitizenHatColor(0)).toBe(0x7f8c8d);
+
+    let now = 1000;
+    const step = (seconds: number) => {
+      const steps = Math.ceil(seconds / 0.05);
+      for (let i = 0; i < steps; i++) {
+        now += 50;
+        animCallback!(now);
+      }
+    };
+
+    // Advance 1.0s (progress = 0.5 < transitEnd 0.7): citizen still in transit, wearing fromPaper
+    step(1.0);
+    expect(view.getCitizenHatColor(0)).toBe(0x7f8c8d);
+
+    // Advance to 1.45s (past transitEnd = 1.4s): paper switch has triggered and lerp started
+    step(0.45);
+    expect(view.getCitizenHatColor(0)).not.toBe(0xc0392b);
+
+    // Advance 0.15s (halfway through 0.3s lerp duration)
+    step(0.15);
+    const midColor = view.getCitizenHatColor(0);
+    expect(midColor).not.toBe(0x7f8c8d);
+    expect(midColor).not.toBe(0xc0392b);
+
+    // Advance another 0.15s (completing 0.3s lerp duration)
+    step(0.15);
+    expect(view.getCitizenHatColor(0)).toBe(0xc0392b);
+
+    // Advance past end of plan
+    step(0.3);
+    await planPromise;
+
+    view.dispose();
+    vi.restoreAllMocks();
   });
 });
