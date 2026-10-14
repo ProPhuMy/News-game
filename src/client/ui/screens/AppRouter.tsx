@@ -81,6 +81,18 @@ export const AppRouter: React.FC<AppRouterProps> = ({ store = defaultStore }) =>
   const isPending = pending.length > 0;
   const formattedError = formatErrorMessage(error);
 
+  // Synchronize browser URL to /r/CODE when room session is active
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const activeCode = session?.code || room?.code;
+    if (activeCode) {
+      const targetPath = `/r/${activeCode.toUpperCase()}`;
+      if (window.location.pathname !== targetPath) {
+        window.history.replaceState({}, '', targetPath);
+      }
+    }
+  }, [session?.code, room?.code]);
+
   // Periodically update local clock during write phase so bot lock badges flip reactively
   useEffect(() => {
     if (publicSnapshot?.phase === 'write') {
@@ -98,6 +110,9 @@ export const AppRouter: React.FC<AppRouterProps> = ({ store = defaultStore }) =>
     }
     socketStore.connect?.();
     setJoinTarget(null);
+    if (typeof window !== 'undefined' && window.location.pathname !== '/') {
+      window.history.replaceState({}, '', '/');
+    }
   };
 
   // Handle server match termination / restart

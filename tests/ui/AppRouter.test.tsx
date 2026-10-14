@@ -553,4 +553,89 @@ describe('AppRouter Integration with ClientStore', () => {
     expect(screen.getByTestId('hud-error')).toBeDefined();
     expect(screen.getByText('Action not allowed at this time.')).toBeDefined();
   });
+
+  it('updates URL to /r/CODE on room entry, recovers seat on refresh, and clears URL on leave', () => {
+    window.history.pushState({}, '', '/');
+    const { store } = setupTestStore();
+    const { unmount } = render(<AppRouter store={store} />);
+    store.setConnection('connected');
+
+    let actionId = '';
+    act(() => {
+      actionId = store.actions.createRoom(profile)!;
+    });
+
+    act(() => {
+      store.receive(SERVER_EVENTS.ack, {
+        actionId,
+        ok: true,
+        session,
+        serverNowMs: 1000,
+      });
+      store.receive(SERVER_EVENTS.room, {
+        code: 'ABCDE',
+        status: 'lobby',
+        hostSeatId: 0,
+        you: 0,
+        seats: [
+          { seatId: 0, occupant: 'human', displayName: 'Jane', paperName: 'Daily Post', color: 'red', connected: true },
+          { seatId: 1, occupant: 'ai', displayName: null, paperName: null, color: null, connected: true },
+          { seatId: 2, occupant: 'ai', displayName: null, paperName: null, color: null, connected: true },
+          { seatId: 3, occupant: 'ai', displayName: null, paperName: null, color: null, connected: true },
+        ],
+      });
+    });
+
+    // 1. Verify URL was updated to /r/ABCDE without token
+    expect(window.location.pathname).toBe('/r/ABCDE');
+    expect(window.location.search).toBe('');
+
+    // Simulate refresh: save token in localStorage as store does on ack, unmount previous AppRouter
+    window.localStorage.setItem('news-town:ABCDE', session.token);
+    unmount();
+
+    // 2. Fresh mount at current URL /r/ABCDE
+    const reloadedSent: ClientMessage[] = [];
+    const reloadedStore = createClientStore({
+      send: (msg) => reloadedSent.push(msg),
+      storage: {
+        getItem: (k) => window.localStorage.getItem(k),
+        setItem: (k, v) => window.localStorage.setItem(k, v),
+      },
+    });
+
+    render(<AppRouter store={reloadedStore} />);
+    const recMsg = reloadedSent.find((m) => m.type === 'reconnect');
+    expect(recMsg).toBeDefined();
+    expect(recMsg?.type === 'reconnect' && recMsg.code === 'ABCDE' && recMsg.token === session.token).toBe(true);
+
+    // Provide ack with session and room state to reloaded instance so Lobby renders
+    act(() => {
+      reloadedStore.receive(SERVER_EVENTS.ack, {
+        actionId: recMsg!.actionId,
+        ok: true,
+        session,
+        serverNowMs: 1000,
+      });
+      reloadedStore.receive(SERVER_EVENTS.room, {
+        code: 'ABCDE',
+        status: 'lobby',
+        hostSeatId: 0,
+        you: 0,
+        seats: [
+          { seatId: 0, occupant: 'human', displayName: 'Jane', paperName: 'Daily Post', color: 'red', connected: true },
+          { seatId: 1, occupant: 'ai', displayName: null, paperName: null, color: null, connected: true },
+          { seatId: 2, occupant: 'ai', displayName: null, paperName: null, color: null, connected: true },
+          { seatId: 3, occupant: 'ai', displayName: null, paperName: null, color: null, connected: true },
+        ],
+      });
+    });
+
+    // 3. Leave Room -> URL reset to /
+    const leaveBtn = screen.getByText('Leave Room');
+    fireEvent.click(leaveBtn);
+    expect(window.location.pathname).toBe('/');
+
+    window.localStorage.removeItem('news-town:ABCDE');
+  });
 });
