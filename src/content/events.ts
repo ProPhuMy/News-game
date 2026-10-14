@@ -101,7 +101,7 @@ export const EVENT_TEMPLATES: EventTemplate[] = [
     ],
     evidenceReal: 'A rare bloom of emerald bioluminescent algae coated the fountain basin.',
     evidenceInnocent: 'A dropped carton of green citrus fizzing cleaning tablets dissolved in the pool.',
-    explanationReal: 'Natural green algae caused the fountain pool to take on an emerald hue.',
+    explanationReal: 'Natural bioluminescent green algae caused the fountain pool to take on an eerie emerald glow.',
     explanationInnocent: 'The fountain caretaker accidentally dropped green cleaning tablets into the pool.',
   },
   {
@@ -154,7 +154,7 @@ export const EVENT_TEMPLATES: EventTemplate[] = [
     realClaim: 'weird_sighting',
     pReal: 0.40,
     tipVariants: [
-      'A cluster of large winged shadows was spotted circling the clock tower at dusk.',
+      'A moving winged silhouette was spotted on the clock tower at dusk.',
       'Faint eerie screeching and rustling echoed from the Town Hall rafters.',
     ],
     evidenceReal: 'Luminous feathers and glowing pellets were found beneath the belfry beams.',
@@ -172,9 +172,9 @@ export const EVENT_TEMPLATES: EventTemplate[] = [
       'A pungent earthy odor drifted from the Town Hall basement ventilation grates.',
     ],
     evidenceReal: 'Toxic black mold colonies found spreading across old tax assessment rolls.',
-    evidenceInnocent: 'Burlap sacks of damp cedar mulch being spread on the front lawn flowerbeds.',
+    evidenceInnocent: 'Burlap sacks of damp cedar mulch being spread near the basement ventilation grates.',
     explanationReal: 'Dangerous airborne mold forced a temporary evacuation of the records room.',
-    explanationInnocent: 'The strong earthy smell was fresh cedar wood mulch for municipal flowerbeds.',
+    explanationInnocent: 'The strong earthy smell was fresh cedar wood mulch spread near the basement grates.',
   },
 
   // --- CLINIC (3 templates) ---
@@ -199,7 +199,7 @@ export const EVENT_TEMPLATES: EventTemplate[] = [
     pReal: 0.45,
     tipVariants: [
       'A pulsating neon green glow flickered through the clinic examination window.',
-      'Clinic staff were overheard whispering about a glowing heirloom in room two.',
+      'Clinic staff were overheard whispering about a glowing object in room two.',
     ],
     evidenceReal: 'An antique 1900 radium-dial pocket watch made the Geiger counter click frantically.',
     evidenceInnocent: 'Dr. Finch tested a novelty plastic glow-in-the-dark mustache for a gala.',
