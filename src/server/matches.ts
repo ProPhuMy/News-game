@@ -6,10 +6,14 @@ import { SERVER_EVENTS, type ClientMessage } from '../shared/protocol.ts';
 import { PrivateSnapshotSchema, PublicSnapshotSchema } from '../shared/snapshots.ts';
 import { TUNING } from '../shared/tuning.ts';
 import type { Room, RoomManager } from './rooms.ts';
+import type { AiAdapter } from '../shared/ai.ts';
+import { createWordFilter } from '../ai/text.ts';
+import { createHeadlineRater } from './ratings.ts';
 
 export function createMatchRunner(rooms: RoomManager, rawContent: GameContent,
-  emit: (socketId: string, event: string, payload: unknown) => void) {
+  emit: (socketId: string, event: string, payload: unknown) => void, ai?: AiAdapter) {
   const content = ContentSchema.parse(rawContent);
+  const passes = createWordFilter(content.wordList);
   let disposed = false;
   const publish = (room: Room) => {
     if (!room.state || disposed || !rooms.rooms.has(room.code)) return;
@@ -19,11 +23,13 @@ export function createMatchRunner(rooms: RoomManager, rawContent: GameContent,
       emit(seat.socketId, SERVER_EVENTS.private, PrivateSnapshotSchema.parse(privateView(room.state, seat.seatId)));
     }
   };
+  const rater = ai ? createHeadlineRater(rooms, ai, publish) : null;
   const advance = (room: Room, nowMs: number) => {
     if (!room.state) return;
     const result = engineTick(room.state, nowMs);
     const changed = result.state !== room.state;
     room.state = result.state;
+    for (const event of result.events) if (event.type === 'headlineLocked') void rater?.rate(room, event);
     if (result.events.some((event) => event.type === 'matchEnded')) {
       room.status = 'finished';
       room.finishedAtMs = nowMs;
@@ -52,9 +58,11 @@ export function createMatchRunner(rooms: RoomManager, rawContent: GameContent,
       if (!room.state || room.status !== 'playing') return 'NOT_ALLOWED' as const;
       switch (message.type) {
         case 'skipIntro': case 'investigate': case 'skipInvestigate': case 'lockHeadline': case 'skipWrite': {
+          if (message.type === 'lockHeadline' && !passes(message.text)) return 'FILTERED' as const;
           const outcome = applyCommand(room.state, seatId, message, nowMs);
           if (!outcome.result.ok) return outcome.result.error;
           room.state = outcome.state;
+          for (const event of outcome.events) if (event.type === 'headlineLocked') void rater?.rate(room, event);
           advance(room, nowMs);
           publish(room);
           return undefined;
@@ -78,6 +86,6 @@ export function createMatchRunner(rooms: RoomManager, rawContent: GameContent,
         advance(room, nowMs);
       }
     },
-    dispose() { disposed = true; },
+    dispose() { disposed = true; rater?.dispose(); },
   };
 }

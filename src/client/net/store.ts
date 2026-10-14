@@ -103,6 +103,7 @@ export function createClientStore(options: StoreOptions) {
           pending.delete(ack.actionId);
           update({ pending: [...pending.keys()], error: ack.ok ? null : ack.error ?? 'Action failed',
             serverOffsetMs: ack.serverNowMs - (action.startedMs + Date.now()) / 2 });
+          if (ack.error === 'FILTERED') update({ error: "Our lawyers won't print that — try again" });
           if (!ack.ok && action.message.type === 'reconnect') {
             clearSnapshots();
             update({ session: null, error: ack.error === 'ROOM_NOT_FOUND' ? 'The presses stopped — this match ended' : 'Seat recovery failed' });
