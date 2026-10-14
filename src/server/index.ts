@@ -9,7 +9,7 @@ import { createStaticHandler } from './static.ts';
 import { createAiAdapter } from '../ai/adapter.ts';
 import type { ProviderOptions } from '../ai/providers.ts';
 
-export async function createGameServer(options: { content: GameContent; distDirectory?: string; dev?: boolean; ai?: ProviderOptions }) {
+export async function createGameServer(options: { content: GameContent; distDirectory?: string; dev?: boolean; ai?: ProviderOptions; trustRenderProxy?: boolean }) {
   const content = ContentSchema.parse(options.content);
   const ai = createAiAdapter({ ...(options.ai ?? { provider: 'none' }), content });
   const http = createServer();
@@ -19,7 +19,7 @@ export async function createGameServer(options: { content: GameContent; distDire
   const io = new Server(http, { maxHttpBufferSize: 16_384 });
   const rooms = createRoomManager();
   const runner = createMatchRunner(rooms, content, (socket, event, payload) => io.to(socket).emit(event, payload), ai);
-  registerSocketHandlers(io, rooms, runner);
+  registerSocketHandlers(io, rooms, runner, options.trustRenderProxy);
   const timer = setInterval(() => runner.tick(Date.now()), 100);
   return {
     http, rooms, runner,
@@ -46,7 +46,9 @@ async function main() {
   const provider = process.env.AI_PROVIDER ?? 'none';
   if (provider !== 'none' && provider !== 'openai' && provider !== 'anthropic') throw new Error('Invalid AI_PROVIDER');
   const key = provider === 'openai' ? process.env.OPENAI_API_KEY : process.env.ANTHROPIC_API_KEY;
+  if (process.env.TRUST_RENDER_PROXY && !['true', 'false'].includes(process.env.TRUST_RENDER_PROXY)) throw new Error('Invalid TRUST_RENDER_PROXY');
   const game = await createGameServer({ content: ContentSchema.parse(module.content), dev: process.env.NODE_ENV !== 'production',
+    trustRenderProxy: process.env.TRUST_RENDER_PROXY === 'true',
     ai: { provider, ...(process.env.AI_MODEL ? { model: process.env.AI_MODEL } : {}), ...(key ? { apiKey: key } : {}) } });
   await game.listen(port);
   const shutdown = () => { void game.close().then(() => { process.exitCode = 0; }); };

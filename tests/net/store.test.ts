@@ -90,6 +90,19 @@ describe('client store', () => {
     store.dispose();
   });
 
+  it('recovers with in-memory token when saving browser storage fails', () => {
+    const sent: ClientMessage[] = [];
+    const store = createClientStore({ send: (message) => sent.push(message), storage: {
+      getItem: () => { throw new Error('denied'); }, setItem: () => { throw new Error('denied'); },
+    } });
+    const id = store.actions.createRoom(profile)!;
+    store.receive(SERVER_EVENTS.ack, { actionId: id, ok: true, session, serverNowMs: Date.now() });
+    expect(store.getState().error).toContain('storage');
+    store.actions.reconnect('abcde');
+    expect(sent.at(-1)).toMatchObject({ type: 'reconnect', code: 'ABCDE', token: session.token });
+    store.dispose();
+  });
+
   it('times out after bounded retries and derives countdown without advancing phase', async () => {
     vi.useFakeTimers();
     vi.setSystemTime(1000);

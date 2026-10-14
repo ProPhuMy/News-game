@@ -6,6 +6,8 @@ services:
     numInstances: 1
     autoDeployTrigger: off
     envVars:
+      - key: TRUST_RENDER_PROXY
+        value: 'true'
       - key: AI_PROVIDER
         value: none
       - key: AI_MODEL

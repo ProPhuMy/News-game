@@ -72,4 +72,29 @@ describe('socket boundary', () => {
     expect(await command(outsider, { type: 'reconnect', actionId: 'bad-token', code: ack.session!.code, token: '0'.repeat(32) }))
       .toMatchObject({ ok: false, error: 'BAD_TOKEN' });
   });
+
+  it('disconnects packet floods before allocating unbounded receipt entries', async () => {
+    const client = await connect();
+    const disconnected = received(client, 'disconnect');
+    for (let i = 0; i < 120; i++) await command(client, { type: 'startMatch', actionId: `flood-${i}` });
+    client.emit(CLIENT_EVENT, { type: 'startMatch', actionId: 'overflow' });
+    expect(await disconnected).toBe('io server disconnect');
+  });
+
+  it('retains accepted acknowledgments and stops new IDs when seat receipts reach capacity', async () => {
+    let client = await connect();
+    const first = await command(client, create);
+    for (let i = 0; i < 253; i++) {
+      if (i === 80 || i === 160) {
+        client = await connect();
+        await command(client, { type: 'reconnect', actionId: `recover-${i}`, code: first.session!.code, token: first.session!.token });
+      }
+      await command(client, { type: 'startMatch', actionId: `error-${i}` });
+    }
+    expect(await command(client, create)).toEqual(first);
+    const disconnected = received(client, 'disconnect');
+    client.emit(CLIENT_EVENT, { type: 'startMatch', actionId: 'overflow' });
+    expect(await disconnected).toBe('io server disconnect');
+    expect(rooms.require(first.session!.code).seats[0]!.receipts.size).toBe(256);
+  });
 });

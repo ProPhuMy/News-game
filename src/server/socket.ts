@@ -3,6 +3,7 @@ import { ActionIdSchema, AckSchema, CLIENT_EVENT, ClientMessageSchema, SERVER_EV
   type Ack, type ClientMessage } from '../shared/protocol.ts';
 import type { Room, RoomManager } from './rooms.ts';
 import { RoomError } from './rooms.ts';
+import { clientAddress } from './proxy.ts';
 
 export interface MatchHandlers {
   handle(room: Room, seatId: number, message: ClientMessage, nowMs: number): Ack['error'] | undefined;
@@ -15,11 +16,15 @@ export function broadcastRoom(io: Server, rooms: RoomManager, room: Room): void 
   }
 }
 
-export function registerSocketHandlers(io: Server, rooms: RoomManager, matches?: MatchHandlers): void {
+export function registerSocketHandlers(io: Server, rooms: RoomManager, matches?: MatchHandlers, trustRenderProxy = false): void {
   io.on('connection', (socket) => {
     const receipts = new Map<string, Ack>();
+    let windowStartMs = Date.now();
+    let packets = 0;
     socket.on(CLIENT_EVENT, (raw: unknown) => {
       const nowMs = Date.now();
+      if (nowMs - windowStartMs >= 60_000) { windowStartMs = nowMs; packets = 0; }
+      if (++packets > 120) { socket.disconnect(true); return; }
       const parsed = ClientMessageSchema.safeParse(raw);
       const possibleId = raw && typeof raw === 'object' && 'actionId' in raw ? raw.actionId : undefined;
       const id = ActionIdSchema.safeParse(possibleId);
@@ -27,6 +32,8 @@ export function registerSocketHandlers(io: Server, rooms: RoomManager, matches?:
       const current = rooms.authorized(socket.id);
       const previous = receipts.get(id.data) ?? current?.seat.receipts.get(id.data);
       if (previous) { socket.emit(SERVER_EVENTS.ack, previous); return; }
+      // Preserve old results for the match lifetime; new IDs cannot grow memory forever.
+      if (receipts.size >= 256 || (current?.seat.receipts.size ?? 0) >= 256) { socket.disconnect(true); return; }
       let ack: Ack = { actionId: id.data, ok: false, serverNowMs: nowMs };
       if (!parsed.success) ack.error = 'MALFORMED';
       else {
@@ -35,8 +42,8 @@ export function registerSocketHandlers(io: Server, rooms: RoomManager, matches?:
           switch (message.type) {
             case 'createRoom':
             case 'playSolo': {
-              // Peer address is authoritative; arbitrary forwarded headers never bypass limits.
-              ack.session = rooms.create(message, socket.id, socket.handshake.address, nowMs);
+              ack.session = rooms.create(message, socket.id,
+                clientAddress(socket.handshake.address, socket.handshake.headers, trustRenderProxy), nowMs);
               if (message.type === 'playSolo') {
                 const error = matches?.handle(rooms.require(ack.session.code), ack.session.seatId,
                   { type: 'startMatch', actionId: message.actionId }, nowMs);

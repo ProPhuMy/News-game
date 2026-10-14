@@ -26,8 +26,10 @@ export function createClientStore(options: StoreOptions) {
   let latestPrivate: PrivateSnapshot | null = null;
   let latestPublic: PublicSnapshot | null = null;
   let disposed = false;
+  let suspended = false;
+  let latestServerNowMs = -Infinity;
   const listeners = new Set<() => void>();
-  const pending = new Map<string, { message: ClientMessage; startedMs: number; timer: ReturnType<typeof setTimeout> }>();
+  const pending = new Map<string, { message: ClientMessage; startedMs: number; timer: ReturnType<typeof setTimeout> | undefined; resume: () => void }>();
   const update = (patch: Partial<ClientState>) => {
     state = { ...state, ...patch };
     for (const listener of listeners) listener();
@@ -44,7 +46,7 @@ export function createClientStore(options: StoreOptions) {
     const startedMs = Date.now();
     let attempts = 0;
     const transmit = () => {
-      if (disposed) return;
+      if (disposed || (suspended && message.type !== 'reconnect')) return;
       if (attempts === 3) {
         pending.delete(actionId);
         update({ pending: [...pending.keys()], error: 'No server acknowledgment. Check connection and try again.' });
@@ -52,9 +54,10 @@ export function createClientStore(options: StoreOptions) {
       }
       attempts++;
       const timer = setTimeout(transmit, 1000);
-      pending.set(actionId, { message, startedMs, timer });
+      pending.set(actionId, { message, startedMs, timer, resume: transmit });
       options.send(message);
     };
+    pending.set(actionId, { message, startedMs, timer: undefined, resume: transmit });
     transmit();
     update({ pending: [...pending.keys()], error: null });
     return actionId;
@@ -65,7 +68,8 @@ export function createClientStore(options: StoreOptions) {
   };
   const reconnect = (code: string) => {
     try {
-      const token = options.storage?.getItem(`news-town:${code.toUpperCase()}`);
+      code = code.trim().toUpperCase();
+      const token = state.session?.code === code ? state.session.token : options.storage?.getItem(`news-town:${code}`);
       if (!token) { update({ error: 'No saved seat for this room' }); return null; }
       clearSnapshots();
       return send({ type: 'reconnect', code, token });
@@ -101,12 +105,16 @@ export function createClientStore(options: StoreOptions) {
           if (!action) return;
           clearTimeout(action.timer);
           pending.delete(ack.actionId);
-          update({ pending: [...pending.keys()], error: ack.ok ? null : ack.error ?? 'Action failed',
-            serverOffsetMs: ack.serverNowMs - (action.startedMs + Date.now()) / 2 });
+          const serverOffsetMs = ack.serverNowMs >= latestServerNowMs
+            ? ack.serverNowMs - (action.startedMs + Date.now()) / 2 : state.serverOffsetMs;
+          latestServerNowMs = Math.max(latestServerNowMs, ack.serverNowMs);
+          update({ pending: [...pending.keys()], error: ack.ok ? null : ack.error ?? 'Action failed', serverOffsetMs });
           if (ack.error === 'FILTERED') update({ error: "Our lawyers won't print that — try again" });
           if (!ack.ok && action.message.type === 'reconnect') {
+            for (const request of pending.values()) clearTimeout(request.timer);
+            pending.clear();
             clearSnapshots();
-            update({ session: null, error: ack.error === 'ROOM_NOT_FOUND' ? 'The presses stopped — this match ended' : 'Seat recovery failed' });
+            update({ session: null, pending: [], error: ack.error === 'ROOM_NOT_FOUND' ? 'The presses stopped — this match ended' : 'Seat recovery failed' });
           }
           if (ack.ok && ack.session) {
             update({ session: ack.session });
@@ -139,10 +147,26 @@ export function createClientStore(options: StoreOptions) {
         }
       }
     },
-    setConnection(connection: ClientState['connection']) { if (!disposed) update({ connection }); },
+    setConnection(connection: ClientState['connection']) {
+      if (disposed) return;
+      if (connection === 'disconnected') {
+        suspended = true;
+        for (const action of pending.values()) clearTimeout(action.timer);
+        if (!state.session && pending.size > 0) {
+          pending.clear();
+          update({ pending: [], error: 'Connection lost before seat was saved. Try again.' });
+        }
+      }
+      update({ connection });
+      if (connection === 'connected' && suspended) {
+        suspended = false;
+        for (const action of [...pending.values()]) { clearTimeout(action.timer); action.resume(); }
+      }
+    },
     reset() {
       for (const action of pending.values()) clearTimeout(action.timer);
       pending.clear();
+      latestServerNowMs = -Infinity;
       clearSnapshots();
       update({ session: null, pending: [], error: null });
     },
