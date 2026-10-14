@@ -6,7 +6,7 @@
     "node": ">=24"
   },
   "scripts": {
-    "dev": "node --watch src/server/index.ts",
+    "dev": "node --watch-path=src/server --watch-path=src/engine --watch-path=src/bots --watch-path=src/shared --watch-path=src/ai --watch-path=src/content src/server/index.ts",
     "build": "vite build",
     "start": "NODE_ENV=production node src/server/index.ts",
     "test": "vitest run",
