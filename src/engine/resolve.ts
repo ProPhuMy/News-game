@@ -3,6 +3,7 @@ import type { Exposure } from '../shared/snapshots.ts';
 import { TUNING } from '../shared/tuning.ts';
 import { chooseCitizens } from './citizens.ts';
 import { fallbackRating, juiceOf } from './rating.ts';
+import { buildReactionPlan } from './reaction.ts';
 import { stream } from './rng.ts';
 import type { Headline, MatchState } from './state.ts';
 import { templateOf } from './truth.ts';
@@ -68,8 +69,9 @@ export function revealRound(s: MatchState): void {
 
   // 5. Citizens choose and readers are counted
   const exposedSeats = new Set(exposures.map((e) => e.seatId));
-  chooseCitizens(s, fresh, exposedSeats);
+  const choices = chooseCitizens(s, fresh, exposedSeats);
   for (const seat of s.seats) seat.readers.push(s.citizens.filter((c) => c.paper === seat.seatId).length);
 
-  // 6. Reaction plan (Task 13)
+  // 6. Reaction plan for the renderer
+  s.reactionPlan = buildReactionPlan(s, fresh, exposures, choices);
 }
