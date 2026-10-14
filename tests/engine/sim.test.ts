@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { publicView, type MatchState } from '../../src/engine/index.ts';
 import { PublicSnapshotSchema } from '../../src/shared/snapshots.ts';
 import { TUNING } from '../../src/shared/tuning.ts';
+import { balanceReport } from '../../src/sim/report.ts';
 import { runMatch } from '../../src/sim/runner.ts';
 import { SAMPLE_CONTENT } from '../../src/sim/sample-content.ts';
 import { HONEST, LIAR, MIXED } from '../../src/sim/strategies.ts';
@@ -27,5 +28,15 @@ describe('runMatch', () => {
     const times: number[] = [];
     runMatch({ seed: 1, content: SAMPLE_CONTENT, lineup: [HONEST, null, null, null], thinkMs: 4_000, onFrame: (_s, now) => times.push(now) });
     expect(times).toContain(4_000);
+  });
+});
+
+describe('balanceReport', () => {
+  it('rotates honest, liar, mixed and a bot through the seats and counts wins', () => {
+    const r = balanceReport(24, SAMPLE_CONTENT);
+    expect(r.matches).toBe(24);
+    expect(r.crashes).toBe(0);
+    expect(Object.keys(r.wins).sort()).toEqual(['bot', 'honest', 'liar', 'mixed']);
+    expect(Object.values(r.wins).reduce((a, b) => a + b, 0)).toBeGreaterThanOrEqual(24);
   });
 });
