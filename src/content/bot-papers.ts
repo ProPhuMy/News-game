@@ -1,22 +1,20 @@
 import type { Personality } from '../shared/ids.ts';
 
 export interface BotPaperConfig {
-  readonly id: string;
-  readonly name: string; // ≤ 24 chars
-  readonly editorName: string; // ≤ 20 chars
-  readonly personality: Personality;
-  readonly tagline: string;
-  readonly preferredColorIndex: number;
+  id: string;
+  name: string;
+  editorName: string;
+  personality: Personality;
+  tagline: string;
 }
 
-export const BOT_NEWSPAPERS: readonly BotPaperConfig[] = [
+export const BOT_NEWSPAPERS: BotPaperConfig[] = [
   {
     id: 'bot-tabloid',
     name: 'The Daily Gasp',
     editorName: 'Barnaby Blitz',
     personality: 'tabloid',
     tagline: 'The Juiciest News First!',
-    preferredColorIndex: 1, // Megaphone / Orange-Red
   },
   {
     id: 'bot-gazette',
@@ -24,7 +22,6 @@ export const BOT_NEWSPAPERS: readonly BotPaperConfig[] = [
     editorName: 'Prudence Quill',
     personality: 'gazette',
     tagline: 'Fact, Decency, and Order.',
-    preferredColorIndex: 0, // Quill / Blue
   },
   {
     id: 'bot-wildcard',
@@ -32,20 +29,11 @@ export const BOT_NEWSPAPERS: readonly BotPaperConfig[] = [
     editorName: 'Ziggy Zoom',
     personality: 'wildcard',
     tagline: 'If You Heard It, We Print It!',
-    preferredColorIndex: 2, // Lightning / Yellow
   },
-] as const;
+];
 
-export const BOT_PAPERS: Readonly<Record<Personality, string>> = {
+export const BOT_PAPERS: Record<Personality, string> = {
   tabloid: 'The Daily Gasp',
   gazette: 'The Morning Ledger',
   wildcard: 'Rumor Mill Weekly',
-} as const;
-
-export function getBotPaperConfig(personality: Personality): BotPaperConfig {
-  const found = BOT_NEWSPAPERS.find((p) => p.personality === personality);
-  if (!found) {
-    throw new Error(`Unknown bot personality: ${personality}`);
-  }
-  return found;
-}
+};

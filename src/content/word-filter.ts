@@ -1,44 +1,60 @@
-export const BLOCKED_WORDS: readonly string[] = [
+/**
+ * Prohibited terms and phrases for the lock-time profanity filter.
+ * Normalization, punctuation preservation, and matching logic are implemented in Codex's AI module (src/ai/).
+ * Every entry must be lowercase and conform to /^[a-z][a-z' -]*$/ per ContentSchema.
+ */
+export const WORD_LIST: string[] = [
   'fuck',
+  'fucking',
+  'fucked',
+  'fucker',
+  'fuckers',
   'shit',
+  'shits',
+  'shitty',
+  'bullshit',
+  'shithead',
   'bitch',
+  'bitches',
+  'bitching',
   'asshole',
+  'assholes',
   'bastard',
+  'bastards',
   'cunt',
+  'cunts',
   'dick',
+  'dicks',
   'pussy',
+  'pussies',
   'nigger',
+  'niggers',
   'nigga',
+  'niggas',
   'faggot',
+  'faggots',
   'retard',
+  'retards',
   'kike',
+  'kikes',
   'spic',
+  'spics',
   'chink',
+  'chinks',
   'whore',
+  'whores',
   'slut',
+  'sluts',
   'nazi',
+  'nazis',
   'hitler',
   'kill yourself',
   'kys',
   'pedophile',
+  'pedophiles',
   'rape',
-] as const;
+  'rapist',
+];
 
-export const PROFANITY_WORD_LIST = BLOCKED_WORDS;
-export const WORD_LIST = [...BLOCKED_WORDS];
-
-const COMPILED_PATTERN = new RegExp(
-  `\\b(${BLOCKED_WORDS.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})\\b`,
-  'i',
-);
-
-export function containsProfanity(text: string): boolean {
-  const normalized = text
-    .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, '')
-    .replace(/\s+/g, ' ');
-
-  return COMPILED_PATTERN.test(normalized);
-}
-
-export const checkProfanity = containsProfanity;
+export const BLOCKED_WORDS = WORD_LIST;
+export const PROFANITY_WORD_LIST = WORD_LIST;

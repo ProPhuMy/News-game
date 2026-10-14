@@ -1,6 +1,6 @@
 import type { Location } from '../shared/ids.ts';
 
-export const QUIET_DAYS: Readonly<Record<Location, { readonly evidence: string; readonly explanation: string }>> = {
+export const QUIET_DAYS: Record<Location, { evidence: string; explanation: string }> = {
   bakery: {
     evidence: 'Flour bins inspected and ovens running on regular schedule.',
     explanation: 'A normal quiet morning of baking bread at the Bakery.',
@@ -21,4 +21,4 @@ export const QUIET_DAYS: Readonly<Record<Location, { readonly evidence: string; 
     evidence: 'Medicine cabinets locked and waiting room calm.',
     explanation: 'Doctor Finch tending routine check-ups at the Clinic.',
   },
-} as const;
+};
