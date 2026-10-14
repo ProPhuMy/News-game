@@ -13,7 +13,7 @@ function round5(): MatchState {
 }
 
 describe('finishMatch', () => {
-  it('gives +2 per true claim headline without evidence (not exposes, not evidenced)', () => {
+  it('gives the bonus per true headline without evidence, exposes included', () => {
     const s = round5();
     s.headlines = [
       makeHeadline({ seatId: 0, round: 1, isTrue: true }),
@@ -23,8 +23,9 @@ describe('finishMatch', () => {
       makeHeadline({ seatId: 0, round: 5, isTrue: false, exposedRound: 5 }),
     ];
     finishMatch(s);
-    expect(s.final!.trustBonuses.find((b) => b.seatId === 0)!.amount).toBe(4);
-    expect(s.seats[0]!.trust).toBe(54);
+    const bonus = 3 * TUNING.trust.unevidencedTruthBonus; // rounds 1, 2 and the expose
+    expect(s.final!.trustBonuses.find((b) => b.seatId === 0)!.amount).toBe(bonus);
+    expect(s.seats[0]!.trust).toBe(50 + bonus);
   });
 
   it('rolls every hidden lie at the Final Edition multiplier', () => {

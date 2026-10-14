@@ -14,7 +14,7 @@ Change these values in `src/shared/tuning.ts`. No rule or formula changes; the F
 | `trust.exposedBase` | 10 | 3 |
 | `trust.exposedPerJuice` | 2 | 1 |
 | `townExposure.base` | 0.05 | 0.02 |
-| `townExposure.perJuice` | 0.05 | 0.025 |
+| `townExposure.perJuice` | 0.05 | 0.02 |
 | `townExposure.perRoundSurvived` | 0.10 | 0.02 |
 | `investigation.proofChance` | 0.60 | 0.40 |
 
@@ -36,3 +36,7 @@ Two values differ from the first proposal shown to the user:
 ## Result
 
 `npm run sim -- --matches 500` (sample content): honest 0.390, mixed 0.304, bot 0.200, liar 0.112, 0 crashes, pass.
+
+## Follow-up: real content (2026-10-13)
+
+After Gemini 3's content merged (`d9eafcf`), the 500-match sim on real content gave liar 0.098 and failed. The user approved one more change: `townExposure.perJuice` 0.025 → 0.02.

@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { applyCommand, createMatch, privateView, publicView, tick } from '../../src/engine/index.ts';
+import { applyCommand, createMatch, privateView, publicView, tick, type MatchState } from '../../src/engine/index.ts';
 import { PrivateSnapshotSchema, PublicSnapshotSchema } from '../../src/shared/snapshots.ts';
 import { TUNING } from '../../src/shared/tuning.ts';
 import { SAMPLE_CONTENT } from '../../src/sim/sample-content.ts';
-import { HUMAN, advanceTo, run, skipIntro, skipInvestigate, skipWrite, soloMatch } from './helpers.ts';
+import { HUMAN, advanceTo, checkLocation, lockClaim, run, skipIntro, skipInvestigate, skipWrite, soloMatch } from './helpers.ts';
 
 describe('createMatch', () => {
   it('fills empty seats with Tabloid, Gazette, Wildcard and free colors', () => {
@@ -76,6 +76,11 @@ describe('phase machine', () => {
     expect([s.round, s.phase]).toEqual([1, 'investigate']);
   });
 
+  it('throws instead of looping forever on an unknown phase', () => {
+    const s = { ...soloMatch(), phase: 'bogus' as unknown as MatchState['phase'], deadlineMs: 0 };
+    expect(() => tick(s, 1)).toThrow(/unknown phase/);
+  });
+
   it('produces schema-valid snapshots in every phase', () => {
     let s = soloMatch();
     while (s.phase !== 'ended') {
@@ -106,6 +111,25 @@ describe('commands', () => {
     const s = soloMatch();
     expect(applyCommand(s, 1, skipIntro(s), 0).result).toEqual({ ok: false, error: 'NOT_ALLOWED' });
     expect(applyCommand(s, 9, skipIntro(s), 0).result).toEqual({ ok: false, error: 'NOT_ALLOWED' });
+  });
+
+  it('accepts actions until the deadline and rejects them at or after it', () => {
+    const s = advanceTo(soloMatch(), 'write', 1);
+    const lock = lockClaim(s, 'bank', 'scandal');
+    expect(applyCommand(s, 0, lock, s.deadlineMs - 1).result).toEqual({ ok: true });
+    expect(applyCommand(s, 0, lock, s.deadlineMs).result).toEqual({ ok: false, error: 'STALE_PHASE' });
+    expect(applyCommand(s, 0, lock, s.deadlineMs + 1).result).toEqual({ ok: false, error: 'STALE_PHASE' });
+  });
+
+  it('a disconnect after the deadline hands over the seat but the Caretaker does not act in the expired phase', () => {
+    const inv = advanceTo(soloMatch(), 'investigate', 1);
+    const s = advanceTo(run(inv, 0, checkLocation(inv, inv.seats[0]!.tip!.location)), 'write', 1);
+    // Sanity: with this card, an in-time disconnect makes the Caretaker lock a headline.
+    expect(applyCommand(s, 0, { type: 'connection', connected: false }, s.deadlineMs - 1).state.headlines.some((h) => h.seatId === 0)).toBe(true);
+    const r = applyCommand(s, 0, { type: 'connection', connected: false }, s.deadlineMs + 1);
+    expect(r.state.seats[0]!.controller).toBe('caretaker');
+    expect(r.state.headlines.filter((h) => h.seatId === 0)).toEqual([]);
+    expect(r.events).toEqual([]);
   });
 
   it('hands a disconnected seat to the Caretaker; its action stands after reconnect', () => {

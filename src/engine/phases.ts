@@ -54,6 +54,9 @@ function advance(s: MatchState, nowMs: number, events: EngineEvent[]): void {
       return;
     case 'ended':
       return;
+    default:
+      // Unreachable for valid state; throwing lets the server close just this room instead of spinning forever.
+      throw new Error(`unknown phase: ${String(s.phase)}`);
   }
 }
 
