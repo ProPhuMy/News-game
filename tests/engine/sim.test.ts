@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { publicView, type MatchState } from '../../src/engine/index.ts';
 import { PublicSnapshotSchema } from '../../src/shared/snapshots.ts';
 import { TUNING } from '../../src/shared/tuning.ts';
-import { balanceReport } from '../../src/sim/report.ts';
+import { balanceReport, meetsTargets } from '../../src/sim/report.ts';
 import { runMatch } from '../../src/sim/runner.ts';
 import { SAMPLE_CONTENT } from '../../src/sim/sample-content.ts';
 import { HONEST, LIAR, MIXED } from '../../src/sim/strategies.ts';
@@ -38,5 +38,14 @@ describe('balanceReport', () => {
     expect(r.crashes).toBe(0);
     expect(Object.keys(r.wins).sort()).toEqual(['bot', 'honest', 'liar', 'mixed']);
     expect(Object.values(r.wins).reduce((a, b) => a + b, 0)).toBeGreaterThanOrEqual(24);
+  });
+});
+
+describe('meetsTargets', () => {
+  it('needs honest ≤ 50%, mixed ≥ 20% and the always-liar ≥ 10%', () => {
+    expect(meetsTargets({ honest: 0.44, mixed: 0.27, liar: 0.11, bot: 0.19 })).toBe(true);
+    expect(meetsTargets({ honest: 0.51, mixed: 0.27, liar: 0.11 })).toBe(false);
+    expect(meetsTargets({ honest: 0.44, mixed: 0.19, liar: 0.11 })).toBe(false);
+    expect(meetsTargets({ honest: 0.44, mixed: 0.27, liar: 0.09 })).toBe(false);
   });
 });

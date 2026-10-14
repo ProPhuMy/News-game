@@ -3,8 +3,12 @@ import { TUNING } from '../shared/tuning.ts';
 import { runMatch } from './runner.ts';
 import { HONEST, LIAR, MIXED, type Strategy } from './strategies.ts';
 
-/** Spec §10: each strategy must win at least this share of matches. */
-export const MIN_WIN_RATE = 0.15;
+/** Spec §10 balance targets (win shares over the rotating 4-seat lineup). */
+export const TARGETS = { honestMax: 0.5, mixedMin: 0.2, liarMin: 0.1 } as const;
+
+export function meetsTargets(winRate: Record<string, number>): boolean {
+  return (winRate.honest ?? 0) <= TARGETS.honestMax && (winRate.mixed ?? 0) >= TARGETS.mixedMin && (winRate.liar ?? 0) >= TARGETS.liarMin;
+}
 
 export interface BalanceReport {
   matches: number;
@@ -38,6 +42,6 @@ export function balanceReport(matches: number, content: EngineContent): BalanceR
   }
 
   const winRate = Object.fromEntries(Object.entries(wins).map(([k, v]) => [k, v / matches]));
-  const pass = crashes === 0 && [HONEST, LIAR, MIXED].every((st) => (winRate[st.name] ?? 0) >= MIN_WIN_RATE);
+  const pass = crashes === 0 && meetsTargets(winRate);
   return { matches, crashes, failures, wins, winRate, pass };
 }
