@@ -36,12 +36,13 @@ export interface TownCamera {
   startIntroSweep(durationSeconds?: number): void;
   isSweeping(): boolean;
   update(deltaSeconds: number): void;
+  setReducedMotion(on: boolean): void;
 }
 
 export function createTownCamera(options: TownCameraOptions = {}): TownCamera {
   const fov = options.fov ?? DEFAULT_FOV;
   const pitchRad = ((options.pitchDegrees ?? DEFAULT_PITCH_DEG) * Math.PI) / 180;
-  const reducedMotion = options.reducedMotion ?? false;
+  let isReducedMotion = options.reducedMotion ?? false;
   const minDistance = options.minDistance ?? MIN_DISTANCE;
   const maxDistance = options.maxDistance ?? MAX_DISTANCE;
 
@@ -81,6 +82,9 @@ export function createTownCamera(options: TownCameraOptions = {}): TownCamera {
     },
 
     setTarget(x: number, z: number): void {
+      if (sweepActive) {
+        sweepActive = false;
+      }
       target.x = x;
       target.z = z;
       clampTarget();
@@ -103,7 +107,7 @@ export function createTownCamera(options: TownCameraOptions = {}): TownCamera {
     },
 
     startIntroSweep(durationSeconds = 20): void {
-      if (reducedMotion) {
+      if (isReducedMotion) {
         sweepActive = false;
         target.set(0, 0, 0);
         updateCameraTransform();
@@ -116,6 +120,15 @@ export function createTownCamera(options: TownCameraOptions = {}): TownCamera {
 
     isSweeping(): boolean {
       return sweepActive;
+    },
+
+    setReducedMotion(on: boolean): void {
+      isReducedMotion = on;
+      if (on && sweepActive) {
+        sweepActive = false;
+        target.set(0, 0, 0);
+        updateCameraTransform();
+      }
     },
 
     update(deltaSeconds: number): void {

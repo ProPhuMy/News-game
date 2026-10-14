@@ -11,8 +11,9 @@ import { createRouteInterpolator } from './movement.ts';
 import { createPoofEffect } from './particles.ts';
 import { createPlaybackCoordinator } from './playback.ts';
 import { createTownScene } from './scene.ts';
-import type { TownLayout } from './types.ts';
 import { attachContextLossHandler, createFallbackView, isWebGL2Supported, type FallbackView } from './webgl.ts';
+import { attachTownControls } from './controls.ts';
+import type { TownLayout } from './types.ts';
 
 export interface TownViewOptions {
   container?: HTMLElement;
@@ -30,7 +31,7 @@ export interface TownView {
   resize(): void;
   dispose(): void;
   syncFromSnapshot(snapshot: PublicSnapshot): void;
-  getCitizenPosition(id: number): THREE.Vector3;
+  getCitizenPosition(id: number, out?: THREE.Vector3): THREE.Vector3;
   getCitizenRotation(id: number): number;
   setCitizenPosition(id: number, pos: THREE.Vector3): void;
   setCitizenRotation(id: number, angleY: number): void;
@@ -51,7 +52,7 @@ function createFallbackTownView(container: HTMLElement, layout?: TownLayout): To
     resize: () => {},
     dispose: () => fallback.dispose(),
     syncFromSnapshot: () => {},
-    getCitizenPosition: () => new THREE.Vector3(),
+    getCitizenPosition: (_id: number, out?: THREE.Vector3) => (out ? out.set(0, 0, 0) : new THREE.Vector3()),
     getCitizenRotation: () => 0,
     setCitizenPosition: () => {},
     setCitizenRotation: () => {},
@@ -88,6 +89,55 @@ export function createTownView(
   }
 
   let canvas: HTMLCanvasElement | null = null;
+  let scene: ReturnType<typeof createTownScene> | null = null;
+  let poof: ReturnType<typeof createPoofEffect> | null = null;
+  let citizens: ReturnType<typeof createCitizenManager> | null = null;
+  let bubbles: ReturnType<typeof createBubbleManager> | null = null;
+  let coordinator: ReturnType<typeof createPlaybackCoordinator> | null = null;
+  let fallbackView: FallbackView | null = null;
+  let animFrameId: number | null = null;
+  let lastTime = performance.now();
+  let resizeObserver: ResizeObserver | null = null;
+  let cleanupContextLoss: (() => void) | null = null;
+  let cleanupControls: (() => void) | null = null;
+  let isDisposed = false;
+
+  const cleanupResources = (): void => {
+    if (isDisposed) return;
+    isDisposed = true;
+
+    if (animFrameId !== null) {
+      cancelAnimationFrame(animFrameId);
+      animFrameId = null;
+    }
+    if (resizeObserver) {
+      resizeObserver.disconnect();
+      resizeObserver = null;
+    }
+    if (fallbackView) {
+      fallbackView.dispose();
+      fallbackView = null;
+    }
+    if (cleanupControls) {
+      cleanupControls();
+      cleanupControls = null;
+    }
+    if (cleanupContextLoss) {
+      cleanupContextLoss();
+      cleanupContextLoss = null;
+    }
+    coordinator?.dispose();
+    bubbles?.dispose();
+    citizens?.dispose();
+    poof?.dispose();
+    scene?.dispose();
+
+    if (canvas && canvas.parentElement === container) {
+      container.removeChild(canvas);
+      canvas = null;
+    }
+  };
+
   try {
     const renderCanvas = options.customRenderer?.domElement ?? document.createElement('canvas');
     if (!options.customRenderer?.domElement) {
@@ -105,36 +155,37 @@ export function createTownView(
 
     const layout = createTownLayout();
     const camera = createTownCamera({ reducedMotion: currentReducedMotion });
-    const scene = createTownScene(canvas, { renderer: options.customRenderer });
+    const activeScene = createTownScene(canvas, { renderer: options.customRenderer });
+    scene = activeScene;
     const environment = createTownEnvironment(layout);
     const buildings = createTownBuildings(layout);
-    const poof = createPoofEffect(scene.scene);
-    const citizens = createCitizenManager(layout, scene.scene, poof, {
+    const activePoof = createPoofEffect(activeScene.scene);
+    poof = activePoof;
+    const activeCitizens = createCitizenManager(layout, activeScene.scene, activePoof, {
       reducedMotion: currentReducedMotion,
     });
+    citizens = activeCitizens;
     const interpolator = createRouteInterpolator(layout);
-    const bubbles = createBubbleManager(container, camera.camera);
+    const activeBubbles = createBubbleManager(container, camera.camera);
+    bubbles = activeBubbles;
 
-    scene.scene.add(environment);
-    scene.scene.add(buildings.group);
+    activeScene.scene.add(environment);
+    activeScene.scene.add(buildings.group);
 
-    const coordinator = createPlaybackCoordinator({
+    const activeCoordinator = createPlaybackCoordinator({
       layout,
       buildings,
-      citizens,
+      citizens: activeCitizens,
       interpolator,
-      bubbles,
-      poof,
+      bubbles: activeBubbles,
+      poof: activePoof,
       get reducedMotion() {
         return currentReducedMotion;
       },
     });
+    coordinator = activeCoordinator;
 
-    let fallbackView: FallbackView | null = null;
-    let animFrameId: number | null = null;
-    let lastTime = performance.now();
-
-    const cleanupContextLoss = attachContextLossHandler(scene.renderer.domElement || canvas, {
+    cleanupContextLoss = attachContextLossHandler(activeScene.renderer.domElement || canvas, {
       onLost: () => {
         if (animFrameId !== null) {
           cancelAnimationFrame(animFrameId);
@@ -159,6 +210,8 @@ export function createTownView(
       },
     });
 
+    cleanupControls = attachTownControls(canvas, camera);
+
     function animate(now: number): void {
       if (animFrameId === null) return;
       const deltaSeconds = Math.max(0, Math.min(0.1, (now - lastTime) / 1000));
@@ -166,10 +219,10 @@ export function createTownView(
 
       try {
         camera.update(deltaSeconds);
-        poof.update(deltaSeconds);
-        citizens.update(deltaSeconds);
-        coordinator.update(deltaSeconds);
-        scene.render(camera.camera);
+        activePoof.update(deltaSeconds);
+        activeCitizens.update(deltaSeconds);
+        activeCoordinator.update(deltaSeconds);
+        activeScene.render(camera.camera);
       } catch {
         // Catch unexpected errors in an update so loop does not permanently stop
       }
@@ -179,20 +232,17 @@ export function createTownView(
       }
     }
 
-    animFrameId = requestAnimationFrame(animate);
-
     const handleResize = (): void => {
       const w = container.clientWidth || 800;
       const h = container.clientHeight || 600;
       camera.camera.aspect = w / h;
       camera.camera.updateProjectionMatrix();
-      scene.resize(w, h);
-      bubbles.update();
+      activeScene.resize(w, h);
+      activeBubbles.update();
     };
 
     handleResize();
 
-    let resizeObserver: ResizeObserver | null = null;
     const ResizeObserverClass =
       typeof ResizeObserver !== 'undefined'
         ? ResizeObserver
@@ -208,11 +258,14 @@ export function createTownView(
       resizeObserver.observe(container);
     }
 
+    // Only start animation loop after resize and observer setup succeed
+    animFrameId = requestAnimationFrame(animate);
+
     return {
       isWebGLSupported: () => true,
 
       playReactionPlan(plan: ReactionPlan, durationSeconds?: number): Promise<void> {
-        return coordinator.startPlan(plan, durationSeconds);
+        return activeCoordinator.startPlan(plan, durationSeconds);
       },
 
       setPhase(phase: Phase): void {
@@ -234,25 +287,26 @@ export function createTownView(
 
       setReducedMotion(enabled: boolean): void {
         currentReducedMotion = enabled;
-        citizens.setReducedMotion(enabled);
+        camera.setReducedMotion(enabled);
+        activeCitizens.setReducedMotion(enabled);
       },
 
       syncFromSnapshot(snapshot: PublicSnapshot): void {
-        coordinator.stop();
-        bubbles.clear();
+        activeCoordinator.stop();
+        activeBubbles.clear();
         if (snapshot.citizens && snapshot.papers) {
-          citizens.syncCitizens(snapshot.citizens, snapshot.papers);
+          activeCitizens.syncCitizens(snapshot.citizens, snapshot.papers);
         }
         if (snapshot.papers) {
           buildings.syncOffices(snapshot.papers);
         }
       },
 
-      getCitizenPosition: (id: number) => citizens.getCitizenPosition(id),
-      getCitizenRotation: (id: number) => citizens.getCitizenRotation(id),
-      setCitizenPosition: (id: number, pos: THREE.Vector3) => citizens.setCitizenPosition(id, pos),
-      setCitizenRotation: (id: number, angleY: number) => citizens.setCitizenRotation(id, angleY),
-      getCitizenHatColor: (id: number) => citizens.getCitizenHatColor(id),
+      getCitizenPosition: (id: number, out?: THREE.Vector3) => activeCitizens.getCitizenPosition(id, out),
+      getCitizenRotation: (id: number) => activeCitizens.getCitizenRotation(id),
+      setCitizenPosition: (id: number, pos: THREE.Vector3) => activeCitizens.setCitizenPosition(id, pos),
+      setCitizenRotation: (id: number, angleY: number) => activeCitizens.setCitizenRotation(id, angleY),
+      getCitizenHatColor: (id: number) => activeCitizens.getCitizenHatColor(id),
       getNodeWorldPosition: (nodeId: string) => {
         const p = layout.getNodeWorldPos(nodeId);
         return new THREE.Vector3(p.x, p.y, p.z);
@@ -262,36 +316,14 @@ export function createTownView(
       resize: handleResize,
 
       dispose(): void {
-        if (animFrameId !== null) {
-          cancelAnimationFrame(animFrameId);
-          animFrameId = null;
-        }
-        if (resizeObserver) {
-          resizeObserver.disconnect();
-          resizeObserver = null;
-        }
-        if (fallbackView) {
-          fallbackView.dispose();
-          fallbackView = null;
-        }
-        cleanupContextLoss();
-        coordinator.dispose();
-        bubbles.dispose();
-        citizens.dispose();
-        poof.dispose();
-        scene.dispose();
-
-        if (canvas && canvas.parentElement === container) {
-          container.removeChild(canvas);
-        }
+        cleanupResources();
       },
     };
   } catch {
-    if (canvas && canvas.parentElement === container) {
-      container.removeChild(canvas);
-    }
+    cleanupResources();
     return createFallbackTownView(container);
   }
 }
+
 
 export { mountTown, type MountTownOptions } from './mount.ts';

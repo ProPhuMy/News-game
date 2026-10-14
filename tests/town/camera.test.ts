@@ -61,4 +61,25 @@ describe('TownCamera', () => {
     reducedCam.startIntroSweep(20);
     expect(reducedCam.isSweeping()).toBe(false);
   });
+
+  it('stops active intro sweep when setReducedMotion(true) is called dynamically', () => {
+    const cam = createTownCamera({ reducedMotion: false });
+    cam.startIntroSweep(20);
+    expect(cam.isSweeping()).toBe(true);
+
+    cam.setReducedMotion(true);
+    expect(cam.isSweeping()).toBe(false);
+    expect(cam.getTarget().x).toBe(0);
+    expect(cam.getTarget().z).toBe(0);
+  });
+
+  it('stops active intro sweep when setTarget is called early (skipping intro to investigate)', () => {
+    const cam = createTownCamera({ reducedMotion: false });
+    cam.startIntroSweep(20);
+    expect(cam.isSweeping()).toBe(true);
+
+    cam.setTarget(0, 0);
+    expect(cam.isSweeping()).toBe(false);
+  });
 });
+

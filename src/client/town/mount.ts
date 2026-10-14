@@ -39,6 +39,7 @@ export function mountTown(
 
   let lastPhase: Phase | null = null;
   let lastPlayedRound = -1;
+  let lastSessionKey: string | null = null;
 
   let observer: MutationObserver | null = null;
   if (
@@ -79,11 +80,22 @@ export function mountTown(
 
   const handleUpdate = () => {
     const state = store.getState();
-    if (!state.publicSnapshot) {
-      return;
+    const currentSessionKey = state.session ? `${state.session.code}:${state.session.seatId}` : null;
+    const sessionChanged = lastSessionKey !== null && currentSessionKey !== lastSessionKey;
+    lastSessionKey = currentSessionKey;
+
+    if (!state.publicSnapshot || sessionChanged) {
+      lastPhase = null;
+      lastPlayedRound = -1;
+      if (!state.publicSnapshot) {
+        return;
+      }
     }
 
     const snapshot = state.publicSnapshot;
+    if (snapshot.round < lastPlayedRound) {
+      lastPlayedRound = -1;
+    }
 
     // Avoid aborting an active reveal playback on duplicate snapshot events of the same round
     const isSameRevealRound =

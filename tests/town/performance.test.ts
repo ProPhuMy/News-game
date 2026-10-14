@@ -69,5 +69,38 @@ describe('Town Performance & Resource Lifecycle', () => {
       expect(cloneSpy).not.toHaveBeenCalled();
       manager.dispose();
     });
+
+    it('supports anchor getter receiving an out Vector3 target to avoid allocations', () => {
+      const container = document.createElement('div');
+      const camera = new THREE.PerspectiveCamera(60, 1.33, 0.1, 1000);
+      const manager = createBubbleManager(container, camera);
+
+      let receivedOutVector: THREE.Vector3 | undefined;
+      manager.showBubble(1, 'Target buffer test', (out) => {
+        receivedOutVector = out;
+        if (out) out.set(1, 2, 3);
+        return out ?? new THREE.Vector3(1, 2, 3);
+      });
+
+      manager.update();
+      expect(receivedOutVector).toBeDefined();
+      expect(receivedOutVector instanceof THREE.Vector3).toBe(true);
+      manager.dispose();
+    });
+  });
+
+  describe('Route Interpolator Cache Management & Prepared Route Interpolation', () => {
+    it('provides clearCache to empty routeCache and interpolatePreparedRoute for zero allocation updates', () => {
+      const layout = createTownLayout();
+      const interpolator = createRouteInterpolator(layout);
+      const route = ['r0c0', 'r0c1'];
+
+      const prepared = interpolator.setRoute(route);
+      const state = interpolator.interpolatePreparedRoute(prepared, 0.5);
+      expect(state.position.x).toBeDefined();
+
+      expect(() => interpolator.clearCache()).not.toThrow();
+    });
   });
 });
+

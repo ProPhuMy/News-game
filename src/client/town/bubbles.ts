@@ -4,7 +4,7 @@ export interface ActiveBubble {
   id: number;
   citizenId: number;
   element: HTMLElement;
-  getAnchorPos: () => THREE.Vector3;
+  getAnchorPos: (out?: THREE.Vector3) => THREE.Vector3;
   timerId: ReturnType<typeof setTimeout> | null;
 }
 
@@ -12,7 +12,7 @@ export interface BubbleManager {
   showBubble(
     citizenId: number,
     text: string,
-    getAnchorPos: () => THREE.Vector3,
+    getAnchorPos: (out?: THREE.Vector3) => THREE.Vector3,
     durationMs?: number,
   ): void;
   update(): void;
@@ -123,8 +123,7 @@ export function createBubbleManager(
           continue;
         }
 
-        const anchor = bubble.getAnchorPos();
-        scratchPos.copy(anchor);
+        bubble.getAnchorPos(scratchPos);
         scratchPos.y += 1.6; // Position above head
 
         scratchPos.project(camera);

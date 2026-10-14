@@ -328,4 +328,55 @@ describe('Town View Integration', () => {
     view.dispose();
     vi.restoreAllMocks();
   });
+
+  it('cleans up partially initialized resources if setup throws before completion', () => {
+    const container = document.createElement('div');
+    const disposeSpy = vi.fn();
+    const mockRenderer = {
+      setSize: vi.fn(() => {
+        throw new Error('Resize failed during setup');
+      }),
+      setPixelRatio: vi.fn(),
+      render: vi.fn(),
+      dispose: disposeSpy,
+      domElement: document.createElement('canvas'),
+      shadowMap: { enabled: false, type: 0 },
+    } as unknown as THREE.WebGLRenderer;
+
+    const cancelRafSpy = vi.spyOn(window, 'cancelAnimationFrame');
+    const townView = createTownView(container, {
+      forceWebGL: true,
+      customRenderer: mockRenderer,
+    });
+
+    expect(townView.isWebGLSupported()).toBe(false);
+    expect(disposeSpy).toHaveBeenCalled();
+    townView.dispose();
+    cancelRafSpy.mockRestore();
+  });
+
+  it('stops intro sweep when players skip intro early with setPhase(investigate)', () => {
+    const container = document.createElement('div');
+    const mockRenderer = {
+      setSize: vi.fn(),
+      setPixelRatio: vi.fn(),
+      render: vi.fn(),
+      dispose: vi.fn(),
+      domElement: document.createElement('canvas'),
+      shadowMap: { enabled: false, type: 0 },
+    } as unknown as THREE.WebGLRenderer;
+
+    const townView = createTownView(container, {
+      forceWebGL: true,
+      customRenderer: mockRenderer,
+    });
+
+    townView.setPhase('intro');
+    // Skipping intro to investigate stops the sweep and sets target back to center
+    townView.setPhase('investigate');
+    expect(() => townView.resize()).not.toThrow();
+
+    townView.dispose();
+  });
 });
+

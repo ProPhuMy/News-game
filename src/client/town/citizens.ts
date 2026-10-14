@@ -32,7 +32,7 @@ export interface CitizenManager {
   syncCitizens(citizens: readonly CitizenPublic[], papers: readonly PaperPublic[]): void;
   getCitizenHatColor(citizenId: number): number;
   setCitizenPosition(citizenId: number, pos: THREE.Vector3): void;
-  getCitizenPosition(citizenId: number): THREE.Vector3;
+  getCitizenPosition(citizenId: number, out?: THREE.Vector3): THREE.Vector3;
   setCitizenRotation(citizenId: number, angleY: number): void;
   getCitizenRotation(citizenId: number): number;
   setReducedMotion(enabled: boolean): void;
@@ -256,8 +256,13 @@ export function createCitizenManager(
       }
     },
 
-    getCitizenPosition(citizenId: number): THREE.Vector3 {
+    getCitizenPosition(citizenId: number, out?: THREE.Vector3): THREE.Vector3 {
       const c = citizens[citizenId];
+      if (out) {
+        if (c) out.copy(c.mesh.position);
+        else out.set(0, 0, 0);
+        return out;
+      }
       return c ? c.mesh.position.clone() : new THREE.Vector3();
     },
 

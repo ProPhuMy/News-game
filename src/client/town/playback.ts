@@ -3,7 +3,7 @@ import type { ReactionEntry, ReactionPlan } from '../../shared/snapshots.ts';
 import { applyCitizenBehaviorPose } from './behaviors.ts';
 import type { TownBuildings } from './buildings.ts';
 import type { CitizenManager } from './citizens.ts';
-import type { RouteInterpolator } from './movement.ts';
+import type { PreparedRoute, RouteInterpolator } from './movement.ts';
 import type { PoofSystem } from './particles.ts';
 import { getGatheringSlotOffset } from './slots.ts';
 import type { TownLayout, Vector3Coord } from './types.ts';
@@ -17,7 +17,7 @@ export interface PlaybackDependencies {
     showBubble(
       citizenId: number,
       text: string,
-      getAnchorPos: () => THREE.Vector3,
+      getAnchorPos: (out?: THREE.Vector3) => THREE.Vector3,
       durationMs?: number,
     ): void;
     update(): void;
@@ -38,6 +38,7 @@ export interface PlaybackCoordinator {
 interface CitizenPlanContext {
   destPos: THREE.Vector3;
   slotOffset: { x: number; z: number };
+  preparedRoute?: PreparedRoute;
 }
 
 const warnedPlaybackNodes = new Set<string>();
@@ -115,6 +116,7 @@ export function createPlaybackCoordinator(
     shownBubbles.clear();
     switchedPapers.clear();
     citizenContexts.clear();
+    deps.interpolator.clearCache?.();
     if (resolveCurrent) {
       const resolve = resolveCurrent;
       resolveCurrent = null;
@@ -156,7 +158,8 @@ export function createPlaybackCoordinator(
           0,
           basePos.z + slotOffset.z,
         );
-        citizenContexts.set(entry.citizenId, { destPos, slotOffset });
+        const preparedRoute = deps.interpolator.setRoute(entry.route, slotOffset);
+        citizenContexts.set(entry.citizenId, { destPos, slotOffset, preparedRoute });
       });
 
       // Highlight exposed offices
@@ -234,7 +237,7 @@ export function createPlaybackCoordinator(
             deps.bubbles.showBubble(
               entry.citizenId,
               entry.bubble,
-              () => deps.citizens.getCitizenPosition(entry.citizenId),
+              (out) => deps.citizens.getCitizenPosition(entry.citizenId, out),
             );
           }
         } else if (progress < transitStart) {
@@ -247,12 +250,14 @@ export function createPlaybackCoordinator(
         } else {
           // Walking along route with trajectory blending toward destination slot
           const transitT = (progress - transitStart) / (transitEnd - transitStart);
-          const state = deps.interpolator.interpolateRoute(
-            entry.route,
-            transitT,
-            undefined,
-            ctx?.slotOffset,
-          );
+          const state = ctx?.preparedRoute
+            ? deps.interpolator.interpolatePreparedRoute(ctx.preparedRoute, transitT)
+            : deps.interpolator.interpolateRoute(
+                entry.route,
+                transitT,
+                undefined,
+                ctx?.slotOffset,
+              );
           deps.citizens.setCitizenPosition(entry.citizenId, state.position);
           deps.citizens.setCitizenRotation(entry.citizenId, state.headingAngle);
 

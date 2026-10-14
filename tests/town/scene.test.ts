@@ -30,4 +30,13 @@ describe('TownScene', () => {
     townScene.dispose();
     expect(townScene.scene.children.length).toBe(0);
   });
+
+  it('throws when WebGLRenderer construction fails instead of substituting a fake renderer', () => {
+    const mockCanvas = document.createElement('canvas');
+    // In jsdom without canvas/WebGL support, new THREE.WebGLRenderer({ canvas }) naturally throws.
+    // createTownScene must let this error propagate instead of swallowing it.
+    expect(() => createTownScene(mockCanvas)).toThrow();
+  });
 });
+
+

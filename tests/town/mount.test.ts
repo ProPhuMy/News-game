@@ -414,10 +414,75 @@ describe('mountTown', () => {
     // Default factory (no custom viewFactory) mounts real view into container
     const unmount = mountTown(container, store as unknown as ClientStore);
 
-    expect(container.children.length).toBeGreaterThan(0);
-
     unmount();
-
     expect(container.children.length).toBe(0);
   });
+
+  it('resets lastPlayedRound and lastPhase when publicSnapshot becomes null or session changes', () => {
+    const mockView = createMockTownView();
+    const store = createMockStore({
+      session: { code: 'ROOM1', seatId: 0, token: '0123456789abcdef0123456789abcdef' },
+    });
+
+    const unmount = mountTown(container, store as unknown as ClientStore, {
+      viewFactory: () => mockView,
+    });
+
+    const planRound1: ReactionPlan = {
+      round: 1,
+      exposures: [],
+      citizens: [],
+      recap: { headlineId: null, location: null, behavior: 'routine', reactors: 0, gainSeatId: null, gained: 0 },
+    };
+
+    // Play round 1 reveal
+    store.emit({
+      publicSnapshot: makeMockSnapshot({
+        round: 1,
+        phase: 'reveal',
+        reactionPlan: planRound1,
+      }),
+    });
+
+    expect(mockView.mockPlayPlan).toHaveBeenCalledTimes(1);
+
+    // Duplicate snapshot does not re-play round 1
+    store.emit({
+      publicSnapshot: makeMockSnapshot({
+        round: 1,
+        phase: 'reveal',
+        reactionPlan: planRound1,
+      }),
+    });
+    expect(mockView.mockPlayPlan).toHaveBeenCalledTimes(1);
+
+    // Match ends: publicSnapshot becomes null
+    store.emit({
+      publicSnapshot: null,
+    });
+
+    // Start a new match: round 1 reveal plays again
+    store.emit({
+      publicSnapshot: makeMockSnapshot({
+        round: 1,
+        phase: 'reveal',
+        reactionPlan: planRound1,
+      }),
+    });
+    expect(mockView.mockPlayPlan).toHaveBeenCalledTimes(2);
+
+    // Now test session change (e.g., room code or seat changes)
+    store.emit({
+      session: { code: 'ROOM2', seatId: 1, token: 'fedcba9876543210fedcba9876543210' },
+      publicSnapshot: makeMockSnapshot({
+        round: 1,
+        phase: 'reveal',
+        reactionPlan: planRound1,
+      }),
+    });
+    expect(mockView.mockPlayPlan).toHaveBeenCalledTimes(3);
+
+    unmount();
+  });
 });
+

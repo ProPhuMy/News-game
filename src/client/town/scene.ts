@@ -34,25 +34,15 @@ export function createTownScene(
   if (options.renderer) {
     renderer = options.renderer;
   } else {
-    try {
-      renderer = new THREE.WebGLRenderer({
-        canvas,
-        antialias: true,
-        powerPreference: 'default',
-      });
-      renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.0;
-    } catch {
-      renderer = {
-        setSize: () => {},
-        setPixelRatio: () => {},
-        render: () => {},
-        dispose: () => {},
-        domElement: canvas,
-        shadowMap: { enabled: false, type: 0 },
-      } as unknown as THREE.WebGLRenderer;
-    }
+    renderer = new THREE.WebGLRenderer({
+      canvas,
+      antialias: true,
+      powerPreference: 'default',
+    });
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.0;
   }
+
 
   return {
     scene,

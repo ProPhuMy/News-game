@@ -18,6 +18,12 @@ export interface RouteInterpolator {
     routeNodeIds: readonly string[],
     destinationOffset?: { x: number; z: number },
   ): PreparedRoute;
+  interpolatePreparedRoute(
+    prepared: PreparedRoute,
+    progress: number,
+    jitterOffset?: { x: number; z: number },
+    target?: THREE.Vector3,
+  ): RouteState;
   interpolateRoute(
     routeNodeIds: readonly string[],
     progress: number,
@@ -25,6 +31,7 @@ export interface RouteInterpolator {
     destinationOffset?: { x: number; z: number },
     target?: THREE.Vector3,
   ): RouteState;
+  clearCache(): void;
 }
 
 const warnedNodes = new Set<string>();
@@ -142,8 +149,102 @@ export function createRouteInterpolator(layout: TownLayout): RouteInterpolator {
     return prepared;
   }
 
+  function interpolatePreparedRoute(
+    prepared: PreparedRoute,
+    progress: number,
+    jitterOffset?: { x: number; z: number },
+    target?: THREE.Vector3,
+  ): RouteState {
+    const { points, segmentLengths, totalLength } = prepared;
+    const outPos = target ?? scratchPos;
+
+    if (points.length === 0) {
+      outPos.set(
+        jitterOffset?.x ?? 0,
+        0,
+        jitterOffset?.z ?? 0,
+      );
+      scratchState.position = outPos;
+      scratchState.headingAngle = 0;
+      return scratchState;
+    }
+
+    if (points.length === 1) {
+      const p0 = points[0]!;
+      outPos.set(
+        p0.x + (jitterOffset?.x ?? 0),
+        0,
+        p0.z + (jitterOffset?.z ?? 0),
+      );
+      scratchState.position = outPos;
+      scratchState.headingAngle = 0;
+      return scratchState;
+    }
+
+    if (totalLength === 0) {
+      const p0 = points[0]!;
+      outPos.set(
+        p0.x + (jitterOffset?.x ?? 0),
+        0,
+        p0.z + (jitterOffset?.z ?? 0),
+      );
+      scratchState.position = outPos;
+      scratchState.headingAngle = 0;
+      return scratchState;
+    }
+
+    const clampedProgress = Math.max(0, Math.min(1, progress));
+    const targetDist = clampedProgress * totalLength;
+
+    let accumulated = 0;
+    for (let i = 0; i < segmentLengths.length; i++) {
+      const segLen = segmentLengths[i] ?? 0;
+      const pA = points[i];
+      const pB = points[i + 1];
+
+      if (!pA || !pB) {
+        continue;
+      }
+
+      if (accumulated + segLen >= targetDist || i === segmentLengths.length - 1) {
+        const segDist = Math.max(0, targetDist - accumulated);
+        const segT = segLen > 0 ? segDist / segLen : 0;
+
+        scratchStart.set(pA.x, 0, pA.z);
+        scratchEnd.set(pB.x, 0, pB.z);
+        outPos.lerpVectors(scratchStart, scratchEnd, segT);
+
+        if (jitterOffset) {
+          outPos.x += jitterOffset.x;
+          outPos.z += jitterOffset.z;
+        }
+
+        const dx = pB.x - pA.x;
+        const dz = pB.z - pA.z;
+        const heading = Math.atan2(dx, dz);
+
+        scratchState.position = outPos;
+        scratchState.headingAngle = heading;
+        return scratchState;
+      }
+
+      accumulated += segLen;
+    }
+
+    const last = points[points.length - 1]!;
+    outPos.set(
+      last.x + (jitterOffset?.x ?? 0),
+      0,
+      last.z + (jitterOffset?.z ?? 0),
+    );
+    scratchState.position = outPos;
+    scratchState.headingAngle = 0;
+    return scratchState;
+  }
+
   return {
     setRoute,
+    interpolatePreparedRoute,
 
     interpolateRoute(
       routeNodeIds: readonly string[],
@@ -153,91 +254,11 @@ export function createRouteInterpolator(layout: TownLayout): RouteInterpolator {
       target?: THREE.Vector3,
     ): RouteState {
       const prepared = setRoute(routeNodeIds, destinationOffset);
-      const { points, segmentLengths, totalLength } = prepared;
-      const outPos = target ?? scratchPos;
+      return interpolatePreparedRoute(prepared, progress, jitterOffset, target);
+    },
 
-      if (points.length === 0) {
-        outPos.set(
-          (destinationOffset?.x ?? 0) + (jitterOffset?.x ?? 0),
-          0,
-          (destinationOffset?.z ?? 0) + (jitterOffset?.z ?? 0),
-        );
-        scratchState.position = outPos;
-        scratchState.headingAngle = 0;
-        return scratchState;
-      }
-
-      if (points.length === 1) {
-        const p0 = points[0]!;
-        outPos.set(
-          p0.x + (jitterOffset?.x ?? 0),
-          0,
-          p0.z + (jitterOffset?.z ?? 0),
-        );
-        scratchState.position = outPos;
-        scratchState.headingAngle = 0;
-        return scratchState;
-      }
-
-      if (totalLength === 0) {
-        const p0 = points[0]!;
-        outPos.set(
-          p0.x + (jitterOffset?.x ?? 0),
-          0,
-          p0.z + (jitterOffset?.z ?? 0),
-        );
-        scratchState.position = outPos;
-        scratchState.headingAngle = 0;
-        return scratchState;
-      }
-
-      const clampedProgress = Math.max(0, Math.min(1, progress));
-      const targetDist = clampedProgress * totalLength;
-
-      let accumulated = 0;
-      for (let i = 0; i < segmentLengths.length; i++) {
-        const segLen = segmentLengths[i] ?? 0;
-        const pA = points[i];
-        const pB = points[i + 1];
-
-        if (!pA || !pB) {
-          continue;
-        }
-
-        if (accumulated + segLen >= targetDist || i === segmentLengths.length - 1) {
-          const segDist = Math.max(0, targetDist - accumulated);
-          const segT = segLen > 0 ? segDist / segLen : 0;
-
-          scratchStart.set(pA.x, 0, pA.z);
-          scratchEnd.set(pB.x, 0, pB.z);
-          outPos.lerpVectors(scratchStart, scratchEnd, segT);
-
-          if (jitterOffset) {
-            outPos.x += jitterOffset.x;
-            outPos.z += jitterOffset.z;
-          }
-
-          const dx = pB.x - pA.x;
-          const dz = pB.z - pA.z;
-          const heading = Math.atan2(dx, dz);
-
-          scratchState.position = outPos;
-          scratchState.headingAngle = heading;
-          return scratchState;
-        }
-
-        accumulated += segLen;
-      }
-
-      const last = points[points.length - 1]!;
-      outPos.set(
-        last.x + (jitterOffset?.x ?? 0),
-        0,
-        last.z + (jitterOffset?.z ?? 0),
-      );
-      scratchState.position = outPos;
-      scratchState.headingAngle = 0;
-      return scratchState;
+    clearCache(): void {
+      routeCache.clear();
     },
   };
 }
