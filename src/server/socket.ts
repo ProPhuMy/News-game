@@ -1,0 +1,87 @@
+import type { Server } from 'socket.io';
+import { ActionIdSchema, AckSchema, CLIENT_EVENT, ClientMessageSchema, SERVER_EVENTS,
+  type Ack, type ClientMessage } from '../shared/protocol.ts';
+import type { Room, RoomManager } from './rooms.ts';
+import { RoomError } from './rooms.ts';
+
+export interface MatchHandlers {
+  handle(room: Room, seatId: number, message: ClientMessage, nowMs: number): Ack['error'] | undefined;
+  connection(room: Room, seatId: number, connected: boolean, nowMs: number): void;
+}
+
+export function broadcastRoom(io: Server, rooms: RoomManager, room: Room): void {
+  for (const seat of room.seats) if (seat.socketId) {
+    io.to(seat.socketId).emit(SERVER_EVENTS.room, rooms.snapshot(room.code, seat.seatId));
+  }
+}
+
+export function registerSocketHandlers(io: Server, rooms: RoomManager, matches?: MatchHandlers): void {
+  io.on('connection', (socket) => {
+    const receipts = new Map<string, Ack>();
+    socket.on(CLIENT_EVENT, (raw: unknown) => {
+      const nowMs = Date.now();
+      const parsed = ClientMessageSchema.safeParse(raw);
+      const possibleId = raw && typeof raw === 'object' && 'actionId' in raw ? raw.actionId : undefined;
+      const id = ActionIdSchema.safeParse(possibleId);
+      if (!id.success) return;
+      const current = rooms.authorized(socket.id);
+      const previous = receipts.get(id.data) ?? current?.seat.receipts.get(id.data);
+      if (previous) { socket.emit(SERVER_EVENTS.ack, previous); return; }
+      let ack: Ack = { actionId: id.data, ok: false, serverNowMs: nowMs };
+      if (!parsed.success) ack.error = 'MALFORMED';
+      else {
+        const message = parsed.data;
+        try {
+          switch (message.type) {
+            case 'createRoom':
+            case 'playSolo': {
+              // Peer address is authoritative; arbitrary forwarded headers never bypass limits.
+              ack.session = rooms.create(message, socket.id, socket.handshake.address, nowMs);
+              if (message.type === 'playSolo') {
+                const error = matches?.handle(rooms.require(ack.session.code), ack.session.seatId,
+                  { type: 'startMatch', actionId: message.actionId }, nowMs);
+                if (!matches || error) {
+                  rooms.remove(ack.session.code);
+                  throw new RoomError(error ?? 'NOT_ALLOWED');
+                }
+              }
+              break;
+            }
+            case 'joinRoom': ack.session = rooms.join(message.code, message, socket.id, nowMs); break;
+            case 'reconnect': {
+              ack.session = rooms.reconnect(message.code, message.token, socket.id, nowMs);
+              matches?.connection(rooms.require(message.code), ack.session.seatId, true, nowMs);
+              break;
+            }
+            default: {
+              if (!current) throw new RoomError('NOT_ALLOWED');
+              const error = matches?.handle(current.room, current.seatId, message, nowMs);
+              if (!matches || error) throw new RoomError(error ?? 'NOT_ALLOWED');
+            }
+          }
+          ack.ok = true;
+        } catch (error) {
+          if (!(error instanceof RoomError)) throw error;
+          ack = { actionId: id.data, ok: false, error: error.code, serverNowMs: nowMs };
+          if (error.code === 'COLOR_TAKEN' && message.type === 'joinRoom') {
+            ack.takenColors = rooms.require(message.code).seats.map((seat) => seat.color);
+          }
+        }
+      }
+      ack = AckSchema.parse(ack);
+      receipts.set(id.data, ack);
+      const found = rooms.authorized(socket.id);
+      found?.seat.receipts.set(id.data, ack);
+      socket.emit(SERVER_EVENTS.ack, ack);
+      if (found) broadcastRoom(io, rooms, found.room);
+    });
+    socket.on('disconnect', () => {
+      const nowMs = Date.now();
+      const found = rooms.disconnect(socket.id, nowMs);
+      if (found) {
+        matches?.connection(found.room, found.seatId, false, nowMs);
+        broadcastRoom(io, rooms, found.room);
+      }
+    });
+  });
+}
