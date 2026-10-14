@@ -37,6 +37,7 @@ export function createBubbleManager(
   container.appendChild(overlay);
 
   const activeBubbles: ActiveBubble[] = [];
+  const scratchPos = new THREE.Vector3();
   let nextBubbleId = 1;
 
   function removeBubble(bubble: ActiveBubble): void {
@@ -116,21 +117,27 @@ export function createBubbleManager(
       const width = container.clientWidth || 800;
       const height = container.clientHeight || 600;
 
-      activeBubbles.forEach((bubble) => {
-        const anchor = bubble.getAnchorPos().clone();
-        anchor.y += 1.6; // Position above head
+      for (let i = 0; i < activeBubbles.length; i++) {
+        const bubble = activeBubbles[i];
+        if (!bubble) {
+          continue;
+        }
 
-        anchor.project(camera);
+        const anchor = bubble.getAnchorPos();
+        scratchPos.copy(anchor);
+        scratchPos.y += 1.6; // Position above head
 
-        if (anchor.z > 1.0) {
+        scratchPos.project(camera);
+
+        if (scratchPos.z > 1.0) {
           bubble.element.style.display = 'none';
         } else {
           bubble.element.style.display = 'block';
-          const screenX = (anchor.x * 0.5 + 0.5) * width;
-          const screenY = (-(anchor.y * 0.5) + 0.5) * height;
+          const screenX = (scratchPos.x * 0.5 + 0.5) * width;
+          const screenY = (-(scratchPos.y * 0.5) + 0.5) * height;
           bubble.element.style.transform = `translate(-50%, -100%) translate(${screenX}px, ${screenY}px)`;
         }
-      });
+      }
     },
 
     getVisibleBubbleCount(): number {
