@@ -1,5 +1,7 @@
-import type { Location, SeatId } from '../../shared/ids.ts';
+import type { Color, Location, SeatId } from '../../shared/ids.ts';
 import type { StreetNode } from '../../shared/town-map.ts';
+
+export type SeatColorMap = Record<number, Color>;
 
 export interface Vector3Coord {
   x: number;
