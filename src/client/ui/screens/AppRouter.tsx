@@ -11,7 +11,6 @@ import { RevealScreen } from './RevealScreen.tsx';
 import { FinalEditionScreen } from './FinalEditionScreen.tsx';
 import { ServerRestartScreen } from './ServerRestartScreen.tsx';
 import { ConnectionOverlay } from './ConnectionOverlay.tsx';
-import { WebGLFallbackScreen } from './WebGLFallbackScreen.tsx';
 import { HUD } from '../hud/HUD.tsx';
 import { SoundProvider } from '../audio/SoundContext.tsx';
 import {
@@ -36,19 +35,6 @@ export const AppRouter: React.FC<AppRouterProps> = ({ store = defaultStore }) =>
   const state = useSyncExternalStore(store.subscribe, store.getState);
   const [joinTarget, setJoinTarget] = useState<{ mode: 'solo' | 'create' | 'join'; code?: string } | null>(null);
   const [nowMs, setNowMs] = useState(() => Date.now());
-
-  const [isWebGLAvailable] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return true;
-    try {
-      const canvas = document.createElement('canvas');
-      return !!(
-        window.WebGLRenderingContext &&
-        (canvas.getContext('webgl') || canvas.getContext('experimental-webgl'))
-      );
-    } catch {
-      return false;
-    }
-  });
 
   // Connect net transport on mount
   useEffect(() => {
@@ -309,8 +295,6 @@ export const AppRouter: React.FC<AppRouterProps> = ({ store = defaultStore }) =>
   return (
     <SoundProvider>
       <div className="app-layout" data-testid="app-layout">
-        {!isWebGLAvailable && <WebGLFallbackScreen />}
-
         {connection !== 'connected' && (
           <ConnectionOverlay
             status={connection === 'connecting' && session ? 'reconnecting' : connection}

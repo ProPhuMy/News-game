@@ -638,4 +638,13 @@ describe('AppRouter Integration with ClientStore', () => {
 
     window.localStorage.removeItem('news-town:ABCDE');
   });
+
+  it('does not render a WebGL fallback banner in AppRouter, leaving fallback handling to the town view', () => {
+    const { store } = setupTestStore();
+    render(<AppRouter store={store} />);
+
+    expect(screen.queryByTestId('webgl-fallback')).toBeNull();
+    expect(screen.queryByText(/3D town view unavailable/i)).toBeNull();
+  });
 });
+

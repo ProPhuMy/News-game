@@ -15,25 +15,60 @@ body, html {
 }
 
 #town-canvas-container {
-  position: absolute;
-  top: 0;
-  left: 0;
+  position: fixed;
+  inset: 0;
   width: 100%;
   height: 100%;
-  z-index: 1;
+  z-index: 0;
 }
 
 #ui-root {
-  position: absolute;
-  top: 0;
-  left: 0;
+  position: fixed;
+  inset: 0;
   width: 100%;
   height: 100%;
   z-index: 10;
   pointer-events: none;
 }
 
-#ui-root > * {
+/* Full-screen layout wrappers pass pointer events through to 3D town canvas */
+.app-layout,
+.screen-container,
+.hud-overlay,
+.hud-body,
+.hud-center-content {
+  pointer-events: none;
+}
+
+/* Interactive UI panels, cards, overlays, inputs, and controls capture pointer events */
+.app-layout button,
+.app-layout input,
+.app-layout textarea,
+.app-layout select,
+.app-layout a,
+.app-layout [role="button"],
+.home-card,
+.join-profile-card,
+.lobby-card,
+.loading-card,
+.error-card,
+.locked-card,
+.editor-card,
+.investigate-panel,
+.choice-section,
+.write-screen,
+.front-pages-carousel,
+.front-page-card,
+.final-card,
+.hud-top-bar,
+.hud-side-panel,
+.connection-modal,
+.connection-modal-backdrop,
+.reconnecting-pill,
+.screen-error-banner,
+.speech-bubbles-overlay,
+.citizen-speech-bubble,
+.fixture-player-toolbar {
   pointer-events: auto;
 }
 
