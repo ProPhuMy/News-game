@@ -1,11 +1,14 @@
 /** @vitest-environment jsdom */
 import React from 'react';
-import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, it, expect, afterEach } from 'vitest';
+import { render, screen, cleanup } from '@testing-library/react';
 import { RevealScreen } from '../../src/client/ui/screens/RevealScreen';
 import type { FrontPageView } from '../../src/client/ui/components/FrontPageCard';
 
 describe('RevealScreen', () => {
+  afterEach(() => {
+    cleanup();
+  });
   const mockFrontPages: FrontPageView[] = [
     {
       seatId: 0,
@@ -33,6 +36,7 @@ describe('RevealScreen', () => {
         exposures={[{ paperName: 'The Daily Gasp', reason: 'Town council verified it was just fountain bubbles.' }]}
         recap="9 citizens rushed the square; 3 cancelled their subscriptions."
         bubbles={['What a scandal!', 'I saw it too!']}
+        showBubbles={true}
       />
     );
 
@@ -41,6 +45,42 @@ describe('RevealScreen', () => {
     expect(screen.getByText('THE TRUTH COMES OUT')).toBeDefined();
     expect(screen.getByText('9 citizens rushed the square; 3 cancelled their subscriptions.')).toBeDefined();
     expect(screen.getByText('What a scandal!')).toBeDefined();
+  });
+
+  it('suppresses 2D speech bubbles overlay when 3D town is active without fallback container', () => {
+    render(
+      <RevealScreen
+        frontPages={mockFrontPages}
+        exposures={[]}
+        recap="Citizens went about their day."
+        bubbles={['Town rumor 1', 'Town rumor 2']}
+      />
+    );
+
+    expect(screen.queryByLabelText('Citizen reactions')).toBeNull();
+    expect(screen.queryByText('Town rumor 1')).toBeNull();
+  });
+
+  it('renders 2D speech bubbles overlay when .town-fallback-container is present in the document', () => {
+    const fallbackDiv = document.createElement('div');
+    fallbackDiv.className = 'town-fallback-container';
+    document.body.appendChild(fallbackDiv);
+
+    try {
+      render(
+        <RevealScreen
+          frontPages={mockFrontPages}
+          exposures={[]}
+          recap="Citizens went about their day."
+          bubbles={['Fallback rumor 1']}
+        />
+      );
+
+      expect(screen.getByLabelText('Citizen reactions')).toBeDefined();
+      expect(screen.getByText('Fallback rumor 1')).toBeDefined();
+    } finally {
+      fallbackDiv.remove();
+    }
   });
 
   it('formats recap text cleanly with deriveRecapText, falling back when location is missing', async () => {

@@ -5,11 +5,20 @@ import { store } from './net/index.ts';
 import { mountTown } from './town/index.ts';
 
 const townContainer = document.getElementById('town-canvas-container');
+let townCleanup: (() => void) | undefined;
 if (townContainer) {
-  mountTown(townContainer, store);
+  townCleanup = mountTown(townContainer, store);
+  const canvas = townContainer.querySelector('canvas');
+  if (canvas) {
+    canvas.setAttribute('aria-hidden', 'true');
+  }
 }
 
-store.connect();
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => {
+    townCleanup?.();
+  });
+}
 
 const container = document.getElementById('ui-root');
 if (container) {

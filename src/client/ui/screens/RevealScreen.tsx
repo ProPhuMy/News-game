@@ -11,6 +11,7 @@ export interface RevealScreenProps {
   exposures: ExposureEvent[];
   recap: string;
   bubbles?: string[];
+  showBubbles?: boolean;
 }
 
 export const RevealScreen: React.FC<RevealScreenProps> = ({
@@ -18,7 +19,13 @@ export const RevealScreen: React.FC<RevealScreenProps> = ({
   exposures,
   recap,
   bubbles = [],
+  showBubbles,
 }) => {
+  // Bubbles are rendered by the 3D town view; only render in 2D UI when in fallback mode or explicitly requested
+  const isTownFallback =
+    typeof document !== 'undefined' && Boolean(document.querySelector('.town-fallback-container'));
+  const shouldRenderBubbles = showBubbles ?? isTownFallback;
+
   // Respect spec limit of at most TUNING.limits.maxBubbles
   const displayBubbles = bubbles.slice(0, TUNING.limits.maxBubbles);
 
@@ -32,7 +39,7 @@ export const RevealScreen: React.FC<RevealScreenProps> = ({
         ))}
       </div>
 
-      {displayBubbles.length > 0 && (
+      {shouldRenderBubbles && displayBubbles.length > 0 && (
         <div className="speech-bubbles-overlay" aria-label="Citizen reactions">
           {displayBubbles.map((msg, i) => (
             <div key={i} className="citizen-speech-bubble">

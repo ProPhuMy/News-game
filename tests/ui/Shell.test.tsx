@@ -37,4 +37,23 @@ describe('Client Shell Layout', () => {
 
     cleanup();
   });
+
+  it('keeps #town-canvas-container accessible so screen readers reach the fallback status', () => {
+    const townContainer = document.createElement('div');
+    townContainer.id = 'town-canvas-container';
+    document.body.appendChild(townContainer);
+
+    // town-canvas-container must NOT hide its children from assistive technologies
+    expect(townContainer.getAttribute('aria-hidden')).toBeNull();
+
+    const store = createClientStore({ send: () => {} });
+    const cleanup = mountTown(townContainer, store);
+
+    // In fallback mode, the status message is present and exposed to screen readers
+    const fallbackStatus = townContainer.querySelector('[role="status"]');
+    expect(fallbackStatus).not.toBeNull();
+    expect(fallbackStatus?.closest('[aria-hidden="true"]')).toBeNull();
+
+    cleanup();
+  });
 });
