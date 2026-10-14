@@ -4,7 +4,7 @@ import { stream } from './rng.ts';
 import { scoreOf } from './score.ts';
 import type { MatchState } from './state.ts';
 
-/** Spec §4.4: last exposure rolls, delayed +2 for honest unevidenced claims, scores and winners. */
+/** Spec §4.4: last exposure rolls, delayed bonus for every true headline without evidence (exposes included), scores and winners. */
 export function finishMatch(s: MatchState): void {
   const round = TUNING.rounds + 1;
   const doomed = s.headlines.filter((h) =>
@@ -14,7 +14,7 @@ export function finishMatch(s: MatchState): void {
   const trustBonuses = s.seats.map((seat) => ({
     seatId: seat.seatId,
     amount: TUNING.trust.unevidencedTruthBonus *
-      s.headlines.filter((h) => h.seatId === seat.seatId && h.isTrue && !h.evidence && h.claim !== 'expose').length,
+      s.headlines.filter((h) => h.seatId === seat.seatId && h.isTrue && !h.evidence).length,
   }));
   for (const b of trustBonuses) s.seats[b.seatId]!.trust += b.amount;
   clampTrust(s);

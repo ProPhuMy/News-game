@@ -37,7 +37,8 @@ function setConnection(state: MatchState, seatId: number, connected: boolean, no
   const s = structuredClone(state);
   s.seats[seatId]!.controller = controller;
   const events: EngineEvent[] = [];
-  if (!connected) runBotTurns(s, nowMs, events); // the Caretaker acts at once if the seat hasn't acted
+  // The Caretaker acts at once if the seat hasn't acted — but never in a phase whose deadline has passed.
+  if (!connected && nowMs < state.deadlineMs) runBotTurns(s, nowMs, events);
   s.version++;
   return { state: s, result: { ok: true }, events };
 }
@@ -51,6 +52,8 @@ export function applyCommand(state: MatchState, seatId: number, command: MatchCo
   if (command.round !== state.round || command.phase !== state.phase || COMMAND_PHASE[command.type] !== state.phase) {
     return reject(state, 'STALE_PHASE');
   }
+  // The phase ends at its deadline even if no tick has run yet (spec §4.3: nothing is published after the timer).
+  if (nowMs >= state.deadlineMs) return reject(state, 'STALE_PHASE');
   if (seat.acted) return reject(state, 'ALREADY_ACTED');
 
   const s = structuredClone(state);
