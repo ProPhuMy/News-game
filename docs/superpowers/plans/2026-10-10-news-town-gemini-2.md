@@ -1,6 +1,6 @@
 # Gemini 2: Client UI Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Build the complete React-based client user interface for News Town, featuring responsive screens, vintage newspaper theming, accessible HUD controls, real-time match state synchronization, and failure/fallback views.
 
@@ -37,7 +37,7 @@
 - Consumes: Standard React DOM mount APIs.
 - Produces: Base HTML layout with `#town-canvas-container` for Gemini 1's 3D scene and `#ui-root` for Gemini 2's React UI overlay.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```tsx
 // tests/ui/Shell.test.tsx
@@ -57,12 +57,12 @@ describe('Client Shell Layout', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it passes baseline check**
+- [x] **Step 2: Run test to verify it passes baseline check**
 
 Run: `npx vitest run tests/ui/Shell.test.tsx`
 Expected: PASS
 
-- [ ] **Step 3: Write HTML, CSS, and Root Entry**
+- [x] **Step 3: Write HTML, CSS, and Root Entry**
 
 ```html
 <!-- src/client/index.html -->
@@ -177,12 +177,12 @@ if (container) {
 }
 ```
 
-- [ ] **Step 4: Verify test passes**
+- [x] **Step 4: Verify test passes**
 
 Run: `npx vitest run tests/ui/Shell.test.tsx`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/client/index.html src/client/styles/ src/client/main.tsx tests/ui/Shell.test.tsx
@@ -202,7 +202,7 @@ git commit -m "ui: setup client html, css theme tokens and root entry"
 - Consumes: Web Audio API / Audio elements from `public/sounds/`.
 - Produces: `SoundProvider` and `useSound()` hook exposing `playSound(cue: SoundCue)` and `toggleMute()`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```tsx
 // tests/ui/SoundContext.test.tsx
@@ -235,12 +235,12 @@ describe('SoundContext', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run tests/ui/SoundContext.test.tsx`
 Expected: FAIL with "Cannot find module '../../src/client/ui/audio/SoundContext'"
 
-- [ ] **Step 3: Implement SoundProvider and useSound**
+- [x] **Step 3: Implement SoundProvider and useSound**
 
 ```tsx
 // src/client/ui/audio/SoundContext.tsx
@@ -312,12 +312,12 @@ export const useSound = (): SoundContextValue => {
 };
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run tests/ui/SoundContext.test.tsx`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/client/ui/audio/ tests/ui/SoundContext.test.tsx
@@ -340,7 +340,7 @@ git commit -m "ui: implement SoundContext and useSound hook"
 - Consumes: Server deadline timestamp (`deadlineMs`) and server offset (`serverTimeOffset`).
 - Produces: Reusable UI widgets with paper styling, accessible labels, and timer display.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 ```tsx
 // tests/ui/CountdownTimer.test.tsx
@@ -387,12 +387,12 @@ describe('PaperBadge', () => {
 });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run tests/ui/CountdownTimer.test.tsx tests/ui/PaperBadge.test.tsx`
 Expected: FAIL (modules not found)
 
-- [ ] **Step 3: Implement components**
+- [x] **Step 3: Implement components**
 
 ```tsx
 // src/client/ui/components/CountdownTimer.tsx
@@ -539,12 +539,12 @@ export const Chip: React.FC<ChipProps> = ({ label, selected, onClick, disabled }
 };
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run tests/ui/CountdownTimer.test.tsx tests/ui/PaperBadge.test.tsx`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/client/ui/components/ tests/ui/CountdownTimer.test.tsx tests/ui/PaperBadge.test.tsx
@@ -565,7 +565,7 @@ git commit -m "ui: implement Button, Chip, CountdownTimer, and PaperBadge primit
 - Consumes: Public match snapshot (`round`, `phase`, `deadlineMs`, `papers: PaperView[]`).
 - Produces: Persistent HUD wrapper displaying round, phase, countdown, paper readers, trust bar, and current score.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```tsx
 // tests/ui/HUD.test.tsx
@@ -622,12 +622,12 @@ describe('HUD', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run tests/ui/HUD.test.tsx`
 Expected: FAIL (HUD not found)
 
-- [ ] **Step 3: Implement TopBar, SidePanel, and HUD**
+- [x] **Step 3: Implement TopBar, SidePanel, and HUD**
 
 ```tsx
 // src/client/ui/hud/TopBar.tsx
@@ -781,12 +781,12 @@ export const HUD: React.FC<HUDProps> = ({
 };
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run tests/ui/HUD.test.tsx`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/client/ui/hud/ tests/ui/HUD.test.tsx
@@ -807,7 +807,7 @@ git commit -m "ui: implement HUD TopBar, SidePanel and overlay wrapper"
 - Consumes: Action callbacks `onPlaySolo`, `onCreateRoom`, `onJoinRoom`.
 - Produces: Landing view with single-click Play Solo, room creation, 5-char code entry, and player/newspaper profile setup.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 ```tsx
 // tests/ui/HomeScreen.test.tsx
@@ -869,12 +869,12 @@ describe('JoinScreen', () => {
 });
 ```
 
-- [ ] **Step 2: Run tests to verify failure**
+- [x] **Step 2: Run tests to verify failure**
 
 Run: `npx vitest run tests/ui/HomeScreen.test.tsx tests/ui/JoinScreen.test.tsx`
 Expected: FAIL
 
-- [ ] **Step 3: Implement HomeScreen and JoinScreen**
+- [x] **Step 3: Implement HomeScreen and JoinScreen**
 
 ```tsx
 // src/client/ui/screens/HomeScreen.tsx
@@ -1058,12 +1058,12 @@ export const JoinScreen: React.FC<JoinScreenProps> = ({
 };
 ```
 
-- [ ] **Step 4: Run tests to verify pass**
+- [x] **Step 4: Run tests to verify pass**
 
 Run: `npx vitest run tests/ui/HomeScreen.test.tsx tests/ui/JoinScreen.test.tsx`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/client/ui/screens/HomeScreen.tsx src/client/ui/screens/JoinScreen.tsx tests/ui/HomeScreen.test.tsx tests/ui/JoinScreen.test.tsx
@@ -1082,7 +1082,7 @@ git commit -m "ui: implement HomeScreen and JoinScreen with color/name validatio
 - Consumes: Room state (`roomCode`, `isHost`, `seats: Seat[]`), `onStartMatch()`, `onCopyLink()`.
 - Produces: 4-seat lobby visualization displaying connected humans and AI placeholders, room invite link, and host start action.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```tsx
 // tests/ui/LobbyScreen.test.tsx
@@ -1121,12 +1121,12 @@ describe('LobbyScreen', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify failure**
+- [x] **Step 2: Run test to verify failure**
 
 Run: `npx vitest run tests/ui/LobbyScreen.test.tsx`
 Expected: FAIL
 
-- [ ] **Step 3: Implement LobbyScreen**
+- [x] **Step 3: Implement LobbyScreen**
 
 ```tsx
 // src/client/ui/screens/LobbyScreen.tsx
@@ -1220,12 +1220,12 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({
 };
 ```
 
-- [ ] **Step 4: Run test to verify pass**
+- [x] **Step 4: Run test to verify pass**
 
 Run: `npx vitest run tests/ui/LobbyScreen.test.tsx`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/client/ui/screens/LobbyScreen.tsx tests/ui/LobbyScreen.test.tsx
@@ -1244,7 +1244,7 @@ git commit -m "ui: implement LobbyScreen with 4-seat display and host start trig
 - Consumes: Server countdown deadline, `onSkipIntro()` callback.
 - Produces: 3 readable rule cards explaining the core game loop, 20s server timer, and early Skip button.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```tsx
 // tests/ui/IntroScreen.test.tsx
@@ -1275,12 +1275,12 @@ describe('IntroScreen', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify failure**
+- [x] **Step 2: Run test to verify failure**
 
 Run: `npx vitest run tests/ui/IntroScreen.test.tsx`
 Expected: FAIL
 
-- [ ] **Step 3: Implement IntroScreen**
+- [x] **Step 3: Implement IntroScreen**
 
 ```tsx
 // src/client/ui/screens/IntroScreen.tsx
@@ -1341,12 +1341,12 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({
 };
 ```
 
-- [ ] **Step 4: Run test to verify pass**
+- [x] **Step 4: Run test to verify pass**
 
 Run: `npx vitest run tests/ui/IntroScreen.test.tsx`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/client/ui/screens/IntroScreen.tsx tests/ui/IntroScreen.test.tsx
@@ -1366,7 +1366,7 @@ git commit -m "ui: implement IntroScreen with 3 rule cards and skip trigger"
 - Consumes: Private tip text, round number, rival headlines list, `onInvestigateLocation()`, `onInvestigateRival()`, `onSkip()`.
 - Produces: 15s Investigate phase control panel.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```tsx
 // tests/ui/InvestigateScreen.test.tsx
@@ -1403,12 +1403,12 @@ describe('InvestigateScreen', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify failure**
+- [x] **Step 2: Run test to verify failure**
 
 Run: `npx vitest run tests/ui/InvestigateScreen.test.tsx`
 Expected: FAIL
 
-- [ ] **Step 3: Implement TipCard and InvestigateScreen**
+- [x] **Step 3: Implement TipCard and InvestigateScreen**
 
 ```tsx
 // src/client/ui/components/TipCard.tsx
@@ -1539,12 +1539,12 @@ export const InvestigateScreen: React.FC<InvestigateScreenProps> = ({
 };
 ```
 
-- [ ] **Step 4: Run test to verify pass**
+- [x] **Step 4: Run test to verify pass**
 
 Run: `npx vitest run tests/ui/InvestigateScreen.test.tsx`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/client/ui/components/TipCard.tsx src/client/ui/screens/InvestigateScreen.tsx tests/ui/InvestigateScreen.test.tsx
@@ -1565,7 +1565,7 @@ git commit -m "ui: implement TipCard and InvestigateScreen with location and riv
 - Consumes: Evidence cards, proof cards, locked state, `onLockHeadline()`, `onSkipWrite()`.
 - Produces: 45s Write phase editor with character counter (1-100), claim chips, local word moderation check, and proof expose toggle.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```tsx
 // tests/ui/WriteScreen.test.tsx
@@ -1610,12 +1610,12 @@ describe('WriteScreen', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify failure**
+- [x] **Step 2: Run test to verify failure**
 
 Run: `npx vitest run tests/ui/WriteScreen.test.tsx`
 Expected: FAIL
 
-- [ ] **Step 3: Implement WriteScreen and components**
+- [x] **Step 3: Implement WriteScreen and components**
 
 ```tsx
 // src/client/ui/components/CharacterCounter.tsx
@@ -1898,12 +1898,12 @@ export const WriteScreen: React.FC<WriteScreenProps> = ({
 };
 ```
 
-- [ ] **Step 4: Run test to verify pass**
+- [x] **Step 4: Run test to verify pass**
 
 Run: `npx vitest run tests/ui/WriteScreen.test.tsx`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/client/ui/components/CharacterCounter.tsx src/client/ui/components/EvidenceSelector.tsx src/client/ui/screens/WriteScreen.tsx tests/ui/WriteScreen.test.tsx
@@ -1925,7 +1925,7 @@ git commit -m "ui: implement WriteScreen editor with claim chips, live counter, 
 - Consumes: Revealed headlines of all 4 seats, exposure events, recap line, and active speech bubbles.
 - Produces: 20s Front Page presentation sliding 4 newspapers side-by-side with dramatic exposure stamps.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```tsx
 // tests/ui/RevealScreen.test.tsx
@@ -1974,12 +1974,12 @@ describe('RevealScreen', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify failure**
+- [x] **Step 2: Run test to verify failure**
 
 Run: `npx vitest run tests/ui/RevealScreen.test.tsx`
 Expected: FAIL
 
-- [ ] **Step 3: Implement components and RevealScreen**
+- [x] **Step 3: Implement components and RevealScreen**
 
 ```tsx
 // src/client/ui/components/FrontPageCard.tsx
@@ -2121,12 +2121,12 @@ export const RevealScreen: React.FC<RevealScreenProps> = ({
 };
 ```
 
-- [ ] **Step 4: Run test to verify pass**
+- [x] **Step 4: Run test to verify pass**
 
 Run: `npx vitest run tests/ui/RevealScreen.test.tsx`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/client/ui/components/FrontPageCard.tsx src/client/ui/components/ExposureBanner.tsx src/client/ui/components/RecapBanner.tsx src/client/ui/screens/RevealScreen.tsx tests/ui/RevealScreen.test.tsx
@@ -2146,7 +2146,7 @@ git commit -m "ui: implement RevealScreen with 4 front pages, exposure stamps, a
 - Consumes: Final scores, truth audit stats, truth reveals, `onPlayAgain()`.
 - Produces: 40s Final Edition sequence (doubled-odds lie reveals, truth disclosures, final score leaderboard).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```tsx
 // tests/ui/FinalEditionScreen.test.tsx
@@ -2197,12 +2197,12 @@ describe('FinalEditionScreen', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify failure**
+- [x] **Step 2: Run test to verify failure**
 
 Run: `npx vitest run tests/ui/FinalEditionScreen.test.tsx`
 Expected: FAIL
 
-- [ ] **Step 3: Implement ScoreboardTable and FinalEditionScreen**
+- [x] **Step 3: Implement ScoreboardTable and FinalEditionScreen**
 
 ```tsx
 // src/client/ui/components/ScoreboardTable.tsx
@@ -2302,12 +2302,12 @@ export const FinalEditionScreen: React.FC<FinalEditionScreenProps> = ({
 };
 ```
 
-- [ ] **Step 4: Run test to verify pass**
+- [x] **Step 4: Run test to verify pass**
 
 Run: `npx vitest run tests/ui/FinalEditionScreen.test.tsx`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/client/ui/components/ScoreboardTable.tsx src/client/ui/screens/FinalEditionScreen.tsx tests/ui/FinalEditionScreen.test.tsx
@@ -2329,7 +2329,7 @@ git commit -m "ui: implement FinalEditionScreen and ScoreboardTable with win for
 - Consumes: Store connection status, WebGL capability check, match phase router.
 - Produces: Top-level AppRouter switching between views, handling disconnect overlays, server-restarted screens, and WebGL 2D panel mode.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```tsx
 // tests/ui/AppRouter.test.tsx
@@ -2347,12 +2347,12 @@ describe('AppRouter', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify failure**
+- [x] **Step 2: Run test to verify failure**
 
 Run: `npx vitest run tests/ui/AppRouter.test.tsx`
 Expected: FAIL
 
-- [ ] **Step 3: Implement fallbacks and AppRouter**
+- [x] **Step 3: Implement fallbacks and AppRouter**
 
 ```tsx
 // src/client/ui/screens/ConnectionOverlay.tsx
@@ -2493,12 +2493,12 @@ export const AppRouter: React.FC = () => {
 };
 ```
 
-- [ ] **Step 4: Run test to verify pass**
+- [x] **Step 4: Run test to verify pass**
 
 Run: `npx vitest run tests/ui/AppRouter.test.tsx`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/client/ui/screens/ConnectionOverlay.tsx src/client/ui/screens/ServerRestartScreen.tsx src/client/ui/screens/WebGLFallbackScreen.tsx src/client/ui/screens/AppRouter.tsx tests/ui/AppRouter.test.tsx
@@ -2517,7 +2517,7 @@ git commit -m "ui: implement AppRouter with fallback views and screen switching"
 - Consumes: Sample recorded fixture matches in `src/sim/fixtures/`.
 - Produces: Visual test stepper allowing jumping between any match round/phase and mocking state in isolation without a backend server.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```tsx
 // tests/ui/FixturePlayer.test.tsx
@@ -2545,12 +2545,12 @@ describe('FixturePlayer Harness', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify failure**
+- [x] **Step 2: Run test to verify failure**
 
 Run: `npx vitest run tests/ui/FixturePlayer.test.tsx`
 Expected: FAIL
 
-- [ ] **Step 3: Implement FixturePlayer**
+- [x] **Step 3: Implement FixturePlayer**
 
 ```tsx
 // src/client/ui/dev/FixturePlayer.tsx
@@ -2608,12 +2608,12 @@ export const FixturePlayer: React.FC<FixturePlayerProps> = ({ steps, onStepChang
 };
 ```
 
-- [ ] **Step 4: Run test to verify pass**
+- [x] **Step 4: Run test to verify pass**
 
 Run: `npx vitest run tests/ui/FixturePlayer.test.tsx`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/client/ui/dev/FixturePlayer.tsx tests/ui/FixturePlayer.test.tsx

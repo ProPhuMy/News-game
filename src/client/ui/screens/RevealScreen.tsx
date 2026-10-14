@@ -26,8 +26,8 @@ export const RevealScreen: React.FC<RevealScreenProps> = ({
       <ExposureBanner exposures={exposures} />
 
       <div className="front-pages-carousel">
-        {frontPages.map((page) => (
-          <FrontPageCard key={page.seatId} page={page} />
+        {frontPages.map((page, index) => (
+          <FrontPageCard key={page.id ?? `${page.seatId}-${index}`} page={page} />
         ))}
       </div>
 

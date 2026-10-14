@@ -3,6 +3,7 @@ import type { PaperColor } from './PaperBadge';
 import { PaperBadge } from './PaperBadge';
 
 export interface FrontPageView {
+  id?: string;
   seatId: number;
   paperName: string;
   color: PaperColor;
