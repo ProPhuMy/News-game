@@ -10,15 +10,17 @@
 
 **Spec:** [News Town design](../specs/2026-10-09-news-town-design.md), especially §§4, 9, and 10. Repository rules: [AGENTS.md](../../../AGENTS.md).
 
-## Execution Status — October 13, 2026
+## Execution Status — October 14, 2026
 
-Codex work is isolated in `/home/agent/.codex/worktrees/afb0/game` on `codex/project-work`. Claude's real engine, recorded fixtures, and fallback contract through main commit `aef0f58` are merged into this branch. No Codex changes have been merged or pushed to main.
+Work remains isolated on `codex/project-work` in `/home/agent/.codex/worktrees/afb0/game`. Main through `6bf63e3` is merged into this branch. Real content, engine, and Claude's review fixes are available; client UI/town are still absent from this branch. The user merges Codex's branch.
 
-Implemented and verified: text boundaries, rooms/seat authorization, socket idempotency and ingress limits, engine scheduling and private views, provider adapters, human/bot/Caretaker asynchronous ratings, bot headline generation, client store/reconnect, recorded playback, static/Vite service, and deployment configuration. An independent review's four significant findings have regression-tested fixes. Real-engine socket matches finish five rounds and the finale; all three Claude recordings play through their scoreboards. Engine fallback ratings are validated and copied on provider failure or none mode; fallback context never enters model requests.
+Initial server/AI/net implementation passed 195 tests, typecheck and lint before peer-review repairs. Implemented review repairs: unexpected socket errors receive safe failure acknowledgments; broken rooms are removed and their sockets disconnected without stopping healthy-room ticks; failed reconnect cannot acknowledge a deleted room; matched snapshot pairs remain visible during split delivery; Docker starts Node directly; Render checks `/`; startup diagnostics are allowlisted and failed listening cleans up resources. Regression tests were observed failing before fixes. Current repair verification: 202 tests pass, typecheck/lint and `git diff --check` pass.
 
-Remaining: content and client UI are not yet on main, so the production build/browser acceptance cannot run. Docker daemon access is denied; the image is not built. Live provider/model smoke checks need credentials and a selected model. No deployment or paid provisioning has occurred.
+Pending shared contract: `docs/contract-requests/2026-10-14-codex-bot-fallback-text.md` requests engine fallback text, exposed paper identity and generation cache context. The user approved the repair plan; Claude must supply shared/engine additions before Codex integrates them. Bot text preservation and generation cache repairs remain unfinished. The earlier fallback-rating request is implemented.
 
-Verification: `npm test` — 189 passed, 1 skipped (real content absent); `npm run typecheck`, `npm run lint`, and `git diff --check` pass. The updated shared tuning from Claude is used directly; server/client contain no copied balance values.
+Production browser, client build, Docker image, live providers and deployed Render service remain unverified. No deployment or paid provisioning has occurred. The task checkboxes below are the original task breakdown; this status and actual test output distinguish verified work from pending acceptance.
+
+Render's HTTP health-check field verified against https://render.com/docs/health-checks on October 14, 2026.
 
 ## Global Constraints
 
