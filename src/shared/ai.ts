@@ -11,7 +11,14 @@ export const RatingSchema = z.object({
 export type Rating = z.infer<typeof RatingSchema>;
 
 /** Headline text is untrusted data: always sent to the model inside a delimited data block. */
-export interface RateHeadlineInput { text: string; location: Location; claim: Claim; exposedHeadlineText?: string }
+export interface RateHeadlineInput {
+  text: string;
+  location: Location;
+  claim: Claim;
+  exposedHeadlineText?: string;
+  /** Prepared by the engine (headlineLocked.fallbackRating); the adapter returns it only on provider failure. Never sent to the model. */
+  fallbackRating?: Rating;
+}
 export interface WriteBotHeadlineInput { personality: Personality; location: Location; claim: Claim; exposedHeadlineText?: string }
 
 /** Implemented by Codex in src/ai/. Never rejects: falls back on timeout (TUNING.limits.aiTimeoutMs) or bad output. */

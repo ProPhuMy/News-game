@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { applyCommand, privateView, publicView, type MatchState } from '../../src/engine/index.ts';
 import type { TownEvent } from '../../src/engine/state.ts';
+import { RatingSchema } from '../../src/shared/ai.ts';
 import type { Location, TownClaim } from '../../src/shared/ids.ts';
+import { TUNING } from '../../src/shared/tuning.ts';
 import { advanceTo, checkLocation, lockClaim, lockExpose, quietMatch, run, withHeadline } from './helpers.ts';
 
 const BAKERY: TownEvent = { templateId: 'bakery_truck', location: 'bakery', claim: 'health_scare', real: true };
@@ -27,6 +29,12 @@ describe('locking a claim', () => {
     expect(privateView(r.state, 0).lockedHeadline?.story).toEqual({ kind: 'claim', location: 'bakery', claim: 'health_scare', attachEvidence: true });
     expect(publicView(r.state).headlines).toEqual([]);
     expect(r.state.seats[0]!.lockedVisibleAtMs).toBe(1_000);
+  });
+
+  it('a human lock event carries the base-hype fallback rating', () => {
+    const r = lock(round1Write(), 'bank', 'scandal');
+    expect(r.events[0]).toMatchObject({ type: 'headlineLocked', fallbackRating: { juiciness: TUNING.baseHype.scandal, onTopic: true, inappropriate: false } });
+    expect(RatingSchema.safeParse((r.events[0] as { fallbackRating?: unknown }).fallbackRating).success).toBe(true);
   });
 
   it('rejects evidence that does not match the story', () => {
