@@ -2,6 +2,7 @@ import type { ErrorCode, Phase } from '../shared/ids.ts';
 import type { MatchCommand } from '../shared/protocol.ts';
 import { runBotTurns } from './bot-turns.ts';
 import { investigate } from './investigate.ts';
+import { lockHeadline } from './write.ts';
 import type { CommandOutcome, EngineEvent, MatchState, Seat } from './state.ts';
 
 type PlayerCommand = Exclude<MatchCommand, { type: 'connection' }>;
@@ -17,12 +18,14 @@ const COMMAND_PHASE = {
 const reject = (state: MatchState, error: ErrorCode): CommandOutcome => ({ state, result: { ok: false, error }, events: [] });
 
 /** Returns an error code, or null on success. May mutate `s` only when it succeeds. */
-function perform(s: MatchState, seat: Seat, command: PlayerCommand, _nowMs: number, _events: EngineEvent[]): ErrorCode | null {
+function perform(s: MatchState, seat: Seat, command: PlayerCommand, nowMs: number, events: EngineEvent[]): ErrorCode | null {
   switch (command.type) {
     case 'investigate':
       return investigate(s, seat, command.target);
+    case 'lockHeadline':
+      return lockHeadline(s, seat, command.story, command.text, nowMs, events);
     default:
-      return null; // skips; lockHeadline is wired in Task 10
+      return null; // skips
   }
 }
 
