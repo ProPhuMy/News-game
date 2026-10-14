@@ -191,6 +191,8 @@ export function createTownView(
           cancelAnimationFrame(animFrameId);
           animFrameId = null;
         }
+        // The bubble overlay is plain DOM, so it stays visible over the fallback view unless cleared.
+        activeBubbles.clear();
         if (canvas) canvas.style.display = 'none';
         if (!fallbackView) {
           fallbackView = createFallbackView(container);
