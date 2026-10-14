@@ -123,7 +123,10 @@ export function createBubbleManager(
           continue;
         }
 
-        bubble.getAnchorPos(scratchPos);
+        const returned = bubble.getAnchorPos(scratchPos);
+        if (returned && returned !== scratchPos) {
+          scratchPos.copy(returned);
+        }
         scratchPos.y += 1.6; // Position above head
 
         scratchPos.project(camera);

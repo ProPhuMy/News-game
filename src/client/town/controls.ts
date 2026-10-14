@@ -4,6 +4,9 @@ export function attachTownControls(
   canvas: HTMLCanvasElement,
   camera: TownCamera,
 ): () => void {
+  const prevTouchAction = canvas.style.touchAction;
+  canvas.style.touchAction = 'none';
+
   let isDragging = false;
   let lastPointerX = 0;
   let lastPointerY = 0;
@@ -97,6 +100,7 @@ export function attachTownControls(
   canvas.addEventListener('wheel', onWheel, { passive: false });
 
   return () => {
+    canvas.style.touchAction = prevTouchAction;
     canvas.removeEventListener('pointerdown', onPointerDown);
     canvas.removeEventListener('pointermove', onPointerMove);
     canvas.removeEventListener('pointerup', onPointerUp);

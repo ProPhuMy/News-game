@@ -62,4 +62,32 @@ describe('Speech Bubble Manager', () => {
 
     bubbleMgr.dispose();
   });
+
+  it('positions bubble correctly when anchor callback returns a new Vector3 without mutating out', () => {
+    const container = document.createElement('div');
+    Object.defineProperty(container, 'clientWidth', { value: 800 });
+    Object.defineProperty(container, 'clientHeight', { value: 600 });
+
+    const camera = new THREE.PerspectiveCamera(45, 800 / 600, 0.1, 100);
+    camera.position.set(0, 0, 10);
+    camera.lookAt(0, 0, 0);
+    camera.updateMatrixWorld();
+
+    const bubbleMgr = createBubbleManager(container, camera);
+
+    // Callback returns its own vector and does not mutate out
+    bubbleMgr.showBubble(1, 'Callback returning vector', () => new THREE.Vector3(5, 0, 0));
+    bubbleMgr.update();
+
+    const bubbleEl = container.querySelector('.speech-bubble') as HTMLElement;
+    expect(bubbleEl).not.toBeNull();
+    // At x=5 with camera at (0, 0, 10), projected screenX will be significantly greater than 400 (center of 800px width)
+    expect(bubbleEl.style.transform).toContain('px');
+    const match = bubbleEl.style.transform.match(/translate\(([^,]+)px,\s*([^)]+)px\)/);
+    expect(match).not.toBeNull();
+    const screenX = parseFloat(match![1]);
+    expect(screenX).toBeGreaterThan(450);
+
+    bubbleMgr.dispose();
+  });
 });
