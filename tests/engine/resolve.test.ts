@@ -93,3 +93,37 @@ describe('revealRound', () => {
     expect(done.seats.every((seat) => seat.readers.length === 1)).toBe(true);
   });
 });
+
+describe('revealRound, all steps together', () => {
+  /** Round 2 write: seat 0 exposes seat 1's lie; seat 2's old lie may be town-exposed; seat 3 prints a true story with evidence. */
+  function scenario(seed: number): MatchState {
+    let s = withHeadline(advanceTo(quietMatch(seed), 'write', 2), { seatId: 1, round: 1, location: 'bank', claim: 'weird_sighting', rating: rated(5) });
+    s = withHeadline(s, { seatId: 2, round: 1, location: 'clinic', claim: 'weird_sighting', rating: rated(5) });
+    s.events[2] = [];
+    s.seats[0]!.proofs.push({ headlineId: 'h1-1', round: 2 });
+    s.seats[1]!.trust = 2; // the exposure must clamp at 0, not go negative
+    s.seats[3]!.trust = 99; // the evidence bonus must clamp at 100
+    s.seats[3]!.evidence.push({ round: 2, location: 'bakery', claim: 'all_clear', text: 'x' });
+    s.citizens.forEach((c, i) => { c.paper = i % 2 === 0 ? 1 : null; });
+    s = run(s, 0, lockExpose(s, 'h1-1'));
+    s = run(s, 3, lockClaim(s, 'bakery', 'all_clear', true));
+    return tick(s, s.deadlineMs).state;
+  }
+
+  it('applies player exposes, town rolls, evidence, clamping and loyalty loss in order', () => {
+    const seed = Array.from({ length: 400 }, (_, i) => i + 1).find((n) => scenario(n).exposures.some((e) => e.source === 'town'));
+    expect(seed).toBeDefined();
+    const s = scenario(seed!);
+    expect(s.exposures.map((e) => [e.headlineId, e.source])).toEqual([['h1-1', 'player'], ['h1-2', 'town']]);
+    expect(s.seats.map((seat) => seat.trust)).toEqual([
+      50 + TUNING.trust.exposeBonus,
+      0,
+      50 - penalty(5),
+      100,
+    ]);
+    const plan = s.reactionPlan!;
+    const leftExposed = plan.citizens.filter((c) => c.fromPaper === 1 && c.toPaper !== 1);
+    expect(leftExposed.length).toBeGreaterThan(0);
+    for (const c of leftExposed) expect(c.behavior).toBe('angry_mob');
+  });
+});
