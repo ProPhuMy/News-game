@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import type { Location, Phase } from '../../shared/ids.ts';
-import type { ReactionPlan } from '../../shared/snapshots.ts';
+import type { Location, Phase, SeatId } from '../../shared/ids.ts';
+import type { PublicSnapshot, ReactionPlan } from '../../shared/snapshots.ts';
 import { createBubbleManager } from './bubbles.ts';
 import { createTownBuildings } from './buildings.ts';
 import { createTownCamera } from './camera.ts';
@@ -18,6 +18,7 @@ import {
 } from './webgl.ts';
 
 export interface TownViewOptions {
+  container?: HTMLElement;
   reducedMotion?: boolean;
   forceWebGL?: boolean;
   customRenderer?: THREE.WebGLRenderer;
@@ -30,16 +31,36 @@ export interface TownView {
   setTargetLocation(location: Location | null): void;
   resize(): void;
   dispose(): void;
+  syncFromSnapshot(snapshot: PublicSnapshot): void;
+  getCitizenPosition(id: number): THREE.Vector3;
+  getCitizenHatColor(id: number): number;
+  getNodeWorldPosition(nodeId: string): THREE.Vector3;
+  getOfficeBannerColor(seatId: SeatId): number;
 }
 
 export function createTownView(
-  container: HTMLElement,
-  options: TownViewOptions = {},
+  containerOrOptions: HTMLElement | (TownViewOptions & { container: HTMLElement }),
+  maybeOptions: TownViewOptions = {},
 ): TownView {
+  let container: HTMLElement;
+  let options: TownViewOptions;
+
+  if (containerOrOptions instanceof HTMLElement) {
+    container = containerOrOptions;
+    options = maybeOptions;
+  } else {
+    container = containerOrOptions.container;
+    options = {
+      forceWebGL: containerOrOptions.forceWebGL ?? true,
+      ...containerOrOptions,
+    };
+  }
+
   const supportsWebGL = options.forceWebGL || checkWebGLSupport();
 
   if (!supportsWebGL) {
     const fallback = createFallbackView(container);
+    const layout = createTownLayout();
     return {
       isWebGLSupported: () => false,
       playReactionPlan: async () => {},
@@ -49,6 +70,14 @@ export function createTownView(
       dispose: () => {
         fallback.dispose();
       },
+      syncFromSnapshot: () => {},
+      getCitizenPosition: () => new THREE.Vector3(),
+      getCitizenHatColor: () => 0x7f8c8d,
+      getNodeWorldPosition: (nodeId: string) => {
+        const p = layout.getNodeWorldPos(nodeId);
+        return new THREE.Vector3(p.x, p.y, p.z);
+      },
+      getOfficeBannerColor: () => 0,
     };
   }
 
@@ -136,6 +165,34 @@ export function createTownView(
       } else {
         camera.setTarget(0, 0);
       }
+    },
+
+    syncFromSnapshot(snapshot: PublicSnapshot): void {
+      coordinator.stop();
+      bubbles.clear();
+      if (snapshot.citizens && snapshot.papers) {
+        citizens.syncCitizens(snapshot.citizens, snapshot.papers);
+      }
+      if (snapshot.papers) {
+        buildings.syncOffices(snapshot.papers);
+      }
+    },
+
+    getCitizenPosition(id: number): THREE.Vector3 {
+      return citizens.getCitizenPosition(id);
+    },
+
+    getCitizenHatColor(id: number): number {
+      return citizens.getCitizenHatColor(id);
+    },
+
+    getNodeWorldPosition(nodeId: string): THREE.Vector3 {
+      const p = layout.getNodeWorldPos(nodeId);
+      return new THREE.Vector3(p.x, p.y, p.z);
+    },
+
+    getOfficeBannerColor(seatId: SeatId): number {
+      return buildings.getOfficeBannerColor(seatId);
     },
 
     resize: handleResize,

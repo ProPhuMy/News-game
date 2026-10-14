@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { Color, SeatId } from '../../shared/ids.ts';
+import type { CitizenPublic, PaperPublic } from '../../shared/snapshots.ts';
 import { HOME_NODES } from '../../shared/town-map.ts';
 import { createTownLayout } from './layout.ts';
 import { createPoofEffect, type PoofSystem } from './particles.ts';
@@ -17,12 +18,9 @@ export interface CitizenInstance {
 export interface CitizenManager {
   getCitizen(citizenId: number): CitizenInstance;
   getAllCitizens(): readonly CitizenInstance[];
-  setCitizenPaper(
-    citizenId: number,
-    seatId: SeatId | null,
-    options?: { reducedMotion?: boolean },
-  ): void;
+  setCitizenPaper(citizenId: number, seatId: SeatId | null, options?: { reducedMotion?: boolean }): void;
   setSeatColors(seatColors: SeatColorMap): void;
+  syncCitizens(citizens: readonly CitizenPublic[], papers: readonly PaperPublic[]): void;
   getCitizenHatColor(citizenId: number): number;
   setCitizenPosition(citizenId: number, pos: THREE.Vector3): void;
   getCitizenPosition(citizenId: number): THREE.Vector3;
@@ -80,47 +78,27 @@ function buildCitizenMesh(id: number): {
   group.add(hat);
 
   // Visual distinction accessories per paper color:
-  // Red / quill: feather quill accessory attached to the side of the hat
-  const featherGeo = new THREE.ConeGeometry(0.06, 0.45, 4);
-  const feather = new THREE.Mesh(featherGeo, accessoryMat);
-  feather.name = 'accessory-feather';
-  feather.position.set(0.18, 1.45, 0);
-  feather.rotation.z = -Math.PI / 6;
-  feather.visible = false;
-  group.add(feather);
-
-  // Blue / megaphone: horn/cone accessory projecting forward from the hat
-  const hornGeo = new THREE.ConeGeometry(0.14, 0.32, 8);
-  const horn = new THREE.Mesh(hornGeo, accessoryMat);
-  horn.name = 'accessory-horn';
-  horn.position.set(0, 1.4, 0.22);
-  horn.rotation.x = Math.PI / 2;
-  horn.visible = false;
-  group.add(horn);
-
-  // Green / eye: ring badge emblem
-  const ringGeo = new THREE.TorusGeometry(0.12, 0.04, 8, 16);
-  const ring = new THREE.Mesh(ringGeo, accessoryMat);
-  ring.name = 'accessory-ring';
-  ring.position.set(0, 1.35, 0.22);
-  ring.visible = false;
-  group.add(ring);
-
-  // Gold / lightning: star pin
-  const starGeo = new THREE.OctahedronGeometry(0.12);
-  const star = new THREE.Mesh(starGeo, accessoryMat);
-  star.name = 'accessory-star';
-  star.position.set(0, 1.35, 0.22);
-  star.rotation.z = Math.PI / 4;
-  star.visible = false;
-  group.add(star);
-
-  const accessoryMeshes: Record<Color, THREE.Mesh> = {
-    red: feather,
-    blue: horn,
-    green: ring,
-    gold: star,
+  const createAccessory = (
+    geo: THREE.BufferGeometry,
+    name: string,
+    pos: [number, number, number],
+    rot?: [number, number, number],
+  ): THREE.Mesh => {
+    const mesh = new THREE.Mesh(geo, accessoryMat);
+    mesh.name = name;
+    mesh.position.set(...pos);
+    if (rot) mesh.rotation.set(...rot);
+    mesh.visible = false;
+    group.add(mesh);
+    return mesh;
   };
+
+  const feather = createAccessory(new THREE.ConeGeometry(0.06, 0.45, 4), 'accessory-feather', [0.18, 1.45, 0], [0, 0, -Math.PI / 6]);
+  const horn = createAccessory(new THREE.ConeGeometry(0.14, 0.32, 8), 'accessory-horn', [0, 1.4, 0.22], [Math.PI / 2, 0, 0]);
+  const ring = createAccessory(new THREE.TorusGeometry(0.12, 0.04, 8, 16), 'accessory-ring', [0, 1.35, 0.22]);
+  const star = createAccessory(new THREE.OctahedronGeometry(0.12), 'accessory-star', [0, 1.35, 0.22], [0, 0, Math.PI / 4]);
+
+  const accessoryMeshes: Record<Color, THREE.Mesh> = { red: feather, blue: horn, green: ring, gold: star };
 
   return { group, accessoryMaterial: accessoryMat, accessoryMeshes };
 }
@@ -200,6 +178,42 @@ export function createCitizenManager(
           c.accessoryMaterial.color.setHex(hex);
           updateCitizenAccessory(c, colorName ?? null);
         }
+      }
+    },
+
+    syncCitizens(
+      snapshotCitizens: readonly CitizenPublic[],
+      papers: readonly PaperPublic[],
+    ): void {
+      const newSeatColors: Record<number, Color> = {};
+      for (const p of papers) {
+        newSeatColors[p.seatId] = p.color;
+      }
+      seatColors = { ...seatColors, ...newSeatColors };
+
+      for (const cSnap of snapshotCitizens) {
+        const c = citizens[cSnap.id];
+        if (!c) {
+          continue;
+        }
+        c.homeNodeId = cSnap.home;
+        const homePos = actualLayout.getNodeWorldPos(cSnap.home);
+        c.mesh.position.set(homePos.x, 0, homePos.z);
+        c.mesh.rotation.set(0, 0, 0);
+        c.mesh.scale.set(1, 1, 1);
+        c.currentPaper = cSnap.paper;
+
+        const colorName =
+          cSnap.paper === null
+            ? null
+            : (seatColors[cSnap.paper] ?? DEFAULT_SEAT_COLORS[cSnap.paper] ?? null);
+        const newColorHex =
+          colorName === null
+            ? PAPER_GREY_HEX
+            : (PAPER_COLOR_HEX[colorName] ?? PAPER_GREY_HEX);
+
+        c.accessoryMaterial.color.setHex(newColorHex);
+        updateCitizenAccessory(c, colorName);
       }
     },
 

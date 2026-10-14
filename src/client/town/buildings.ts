@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import type { Location, SeatId } from '../../shared/ids.ts';
 import { COLORS, LOCATIONS } from '../../shared/ids.ts';
+import type { PaperPublic } from '../../shared/snapshots.ts';
+import { PAPER_COLOR_HEX } from './citizens.ts';
 import type { TownLayout } from './types.ts';
 
 export interface TownBuildings {
@@ -8,6 +10,8 @@ export interface TownBuildings {
   getLocationAnchor(location: Location): THREE.Vector3;
   getOfficeAnchor(seatId: SeatId): THREE.Vector3;
   setOfficeHighlight(seatId: SeatId, active: boolean): void;
+  syncOffices(papers: readonly PaperPublic[]): void;
+  getOfficeBannerColor(seatId: SeatId): number;
 }
 
 const SEAT_HEX_COLORS: readonly number[] = [
@@ -229,6 +233,23 @@ export function createTownBuildings(layout: TownLayout): TownBuildings {
         mat.emissive.setHex(0x000000);
         mat.emissiveIntensity = 0;
       }
+    },
+
+    syncOffices(papers: readonly PaperPublic[]): void {
+      for (const paper of papers) {
+        const mat = officeBanners[paper.seatId];
+        if (mat) {
+          const hex = PAPER_COLOR_HEX[paper.color];
+          if (hex !== undefined) {
+            mat.color.setHex(hex);
+          }
+        }
+      }
+    },
+
+    getOfficeBannerColor(seatId: SeatId): number {
+      const mat = officeBanners[seatId];
+      return mat ? mat.color.getHex() : 0;
     },
   };
 }
