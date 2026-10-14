@@ -5,7 +5,7 @@ import { createMatchRunner } from '../../src/server/matches.ts';
 import { SAMPLE_CONTENT } from '../../src/sim/sample-content.ts';
 import { COLORS, LOCATIONS, EVENT_CLAIMS, PULLED_TEXT } from '../../src/shared/ids.ts';
 import { publicView } from '../../src/engine/index.ts';
-import type { Rating } from '../../src/shared/ai.ts';
+import type { Rating, WriteBotHeadlineInput } from '../../src/shared/ai.ts';
 import { createAiAdapter } from '../../src/ai/adapter.ts';
 import { fallbackRating } from '../../src/engine/rating.ts';
 
@@ -57,6 +57,62 @@ describe('asynchronous rating lifecycle', () => {
       }
     });
     expect(room.state!.headlines.find((headline) => headline.authorPersonality === 'gazette')!.rating!.juiciness).toBe(2);
+  });
+
+  it.each(['none', 'http'])('keeps every engine-selected bot text with provider %s', async (provider) => {
+    const rooms = createRoomManager();
+    const session = rooms.create({ displayName: 'Editor', paperName: 'Daily', color: COLORS[0] }, 'a', 'ip', 0);
+    const room = rooms.require(session.code);
+    const adapter = createAiAdapter({ provider: provider === 'none' ? 'none' : 'openai', model: 'test', apiKey: 'test',
+      content: SAMPLE_CONTENT, fetch: async () => new Response('', { status: 500 }) });
+    const runner = createMatchRunner(rooms, SAMPLE_CONTENT, () => {}, adapter);
+    runner.handle(room, 0, { type: 'startMatch', actionId: 'start' }, 0);
+    runner.handle(room, 0, { type: 'skipIntro', actionId: 'intro', round: 0, phase: 'intro' }, 1);
+    runner.handle(room, 0, { type: 'skipInvestigate', actionId: 'investigate', round: 1, phase: 'investigate' }, 2);
+    const original = room.state!.headlines.map((h) => ({ id: h.id, text: h.text }));
+    await vi.waitFor(() => expect(room.state!.headlines.every((h) => h.rating !== null)).toBe(true));
+    expect(room.state!.headlines.map((h) => ({ id: h.id, text: h.text }))).toEqual(original);
+  });
+
+  it.each(['The Other Daily', 'Darn Daily'])('preserves a Caretaker expose naming %s with the real none adapter', async (name) => {
+    const { room, rooms } = ratingSetup();
+    const rival = room.state!.headlines.find((h) => h.seatId !== 0)!;
+    room.state!.seats[rival.seatId]!.paperName = name;
+    rival.round = 0;
+    rival.isTrue = false;
+    rival.revealed = true;
+    room.state!.seats[0]!.proofs.push({ headlineId: rival.id, round: 1 });
+    const runner = createMatchRunner(rooms, SAMPLE_CONTENT, () => {}, createAiAdapter({ provider: 'none', content: SAMPLE_CONTENT }));
+    runner.connection(room, 0, false, 3);
+    const original = room.state!.headlines.find((h) => h.seatId === 0)!;
+    const text = original.text;
+    const paperName = room.state!.seats[rival.seatId]!.paperName;
+    expect(text).toContain(paperName);
+    await vi.waitFor(() => expect(room.state!.headlines.find((h) => h.id === original.id)!.rating).not.toBeNull());
+    expect(room.state!.headlines.find((h) => h.id === original.id)!.text).toBe(text);
+  });
+
+  it('passes expose context and scopes generation IDs across reused room codes', async () => {
+    const { room, rooms } = ratingSetup();
+    const inputs: WriteBotHeadlineInput[] = [];
+    const rater = createHeadlineRater(rooms, {
+      writeBotHeadline: async (input) => { inputs.push(input); return input.fallbackText; },
+      rateHeadline: async (input) => input.fallbackRating ?? rated,
+    }, () => {});
+    const h = room.state!.headlines.find((h) => h.botAuthored)!;
+    const event = { type: 'headlineLocked' as const, headlineId: h.id, seatId: h.seatId, text: h.text,
+      location: h.location, claim: h.claim, botPersonality: h.authorPersonality,
+      fallbackRating: rated, exposedHeadlineText: 'Exposed story', exposedPaperName: 'The Other Daily' };
+    await rater.rate(room, event);
+    await rater.rate(room, event);
+    const replacement = structuredClone(room);
+    rooms.rooms.set(room.code, replacement);
+    await rater.rate(replacement, event);
+    expect(inputs[0]).toMatchObject({ fallbackText: event.text, exposedHeadlineText: 'Exposed story', exposedPaperName: 'The Other Daily' });
+    expect(inputs[0]!.generationId).toContain(event.headlineId);
+    expect(inputs[0]!.generationId).toContain(room.code);
+    expect(inputs[1]!.generationId).toBe(inputs[0]!.generationId);
+    expect(inputs[2]!.generationId).not.toBe(inputs[0]!.generationId);
   });
 
   it('processes a new Caretaker headline event when a human disconnects', async () => {

@@ -39,6 +39,22 @@ describe('match runner', () => {
     } finally { log.mockRestore(); }
   });
 
+  it('isolates an unknown engine phase without blocking another room', () => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      const { rooms, room, runner } = setup();
+      const session = rooms.create({ displayName: 'Other', paperName: 'Weekly', color: COLORS[1] }, 'other', 'other-ip', 0);
+      const healthy = rooms.require(session.code);
+      runner.handle(room, 0, { type: 'startMatch', actionId: 'bad-start' }, 0);
+      runner.handle(healthy, 0, { type: 'startMatch', actionId: 'good-start' }, 0);
+      Object.defineProperty(room.state, 'phase', { value: 'corrupted-runtime-phase', writable: true });
+      expect(() => runner.tick(20_000)).not.toThrow();
+      expect(rooms.rooms.has(room.code)).toBe(false);
+      expect(healthy.state!.phase).toBe('investigate');
+      expect(log).toHaveBeenCalled();
+    } finally { log.mockRestore(); }
+  });
+
   it('starts one human plus three bots and follows engine deadlines to completion', () => {
     const { runner, room } = setup();
     expect(runner.handle(room, 0, { type: 'startMatch', actionId: 'start' }, 0)).toBeUndefined();

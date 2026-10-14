@@ -1,6 +1,6 @@
 # Preserve engine bot text and expose identity
 
-Status: requested; implementation awaits Claude. The user approved the repair plan on October 14.
+Status: implemented on codex/project-work on October 14. The user approved the repair plan; Claude supplied shared/engine additions in main commit 48fe4d1 (included in main 0126df1). Codex merged main, wired the server/adapter, and verified 219 passing tests, typecheck and lint. Fallback text and generation IDs never enter model requests; exposed identity is escaped DATA. Generation IDs include an opaque per-room scope so recycled codes/IDs cannot share cache entries.
 
 Provider none/failure currently replaces engine-selected bot text with the adapter’s first generic template, losing variation and the exposed paper name. Codex cannot change frozen shared interfaces.
 

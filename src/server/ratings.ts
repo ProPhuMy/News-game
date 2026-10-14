@@ -1,9 +1,11 @@
+import { randomUUID } from 'node:crypto';
 import { applyRating, type EngineEvent } from '../engine/index.ts';
 import type { AiAdapter } from '../shared/ai.ts';
 import type { Room, RoomManager } from './rooms.ts';
 
 export function createHeadlineRater(rooms: RoomManager, ai: AiAdapter, publish: (room: Room) => void) {
   let disposed = false;
+  const generationScopes = new WeakMap<Room, string>();
   return {
     async rate(room: Room, event: Extract<EngineEvent, { type: 'headlineLocked' }>) {
       const round = room.state?.round;
@@ -11,9 +13,13 @@ export function createHeadlineRater(rooms: RoomManager, ai: AiAdapter, publish: 
         room.state?.round === round && room.state?.phase === 'write';
       if (!current()) return;
       try {
+        if (!generationScopes.has(room)) generationScopes.set(room, randomUUID());
         const exposed = event.exposedHeadlineText !== undefined ? { exposedHeadlineText: event.exposedHeadlineText } : {};
         const botText = event.botPersonality === null ? undefined : await ai.writeBotHeadline({
           personality: event.botPersonality, location: event.location, claim: event.claim, ...exposed,
+          fallbackText: event.text,
+          ...(event.exposedPaperName !== undefined ? { exposedPaperName: event.exposedPaperName } : {}),
+          generationId: `${room.code}:${generationScopes.get(room)}:${event.headlineId}`,
         });
         if (!current()) return;
         const rating = await ai.rateHeadline({ text: botText ?? event.text, location: event.location, claim: event.claim,
