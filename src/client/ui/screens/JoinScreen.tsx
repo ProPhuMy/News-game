@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import type { Color } from '../../../shared/ids';
-import { COLORS } from '../../../shared/ids';
-import { Button } from '../components/Button';
-import { PAPER_ICONS } from '../components/PaperBadge';
+import React, { useState, useEffect } from 'react';
+import type { Color } from '../../../shared/ids.ts';
+import { COLORS } from '../../../shared/ids.ts';
+import { TUNING } from '../../../shared/tuning.ts';
+import { Button } from '../components/Button.tsx';
+import { PAPER_ICONS } from '../components/PaperBadge.tsx';
 
 export interface JoinProfile {
   playerName: string;
@@ -12,29 +13,46 @@ export interface JoinProfile {
 
 export interface JoinScreenProps {
   onSubmit: (profile: JoinProfile) => void;
+  onBack?: () => void;
   takenColors?: Color[];
   defaultPlayerName?: string;
   defaultPaperName?: string;
+  pending?: boolean;
+  error?: string | null;
 }
 
 export const JoinScreen: React.FC<JoinScreenProps> = ({
   onSubmit,
+  onBack,
   takenColors = [],
   defaultPlayerName = '',
   defaultPaperName = '',
+  pending = false,
+  error,
 }) => {
   const [playerName, setPlayerName] = useState(defaultPlayerName);
   const [paperName, setPaperName] = useState(defaultPaperName);
   const [color, setColor] = useState<Color | null>(() => {
-    return COLORS.find((c) => !takenColors.includes(c)) || COLORS[0];
+    return COLORS.find((c) => !takenColors.includes(c)) ?? null;
   });
+
+  // Revalidate selection if takenColors changes
+  useEffect(() => {
+    if (color && takenColors.includes(color)) {
+      const nextAvailable = COLORS.find((c) => !takenColors.includes(c)) ?? null;
+      setColor(nextAvailable);
+    }
+  }, [takenColors, color]);
+
+  const allTaken = COLORS.every((c) => takenColors.includes(c));
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (pending || allTaken) return;
     if (!playerName.trim() || !paperName.trim() || !color) return;
     onSubmit({
-      playerName: playerName.trim().slice(0, 20),
-      paperName: paperName.trim().slice(0, 24),
+      playerName: playerName.trim().slice(0, TUNING.limits.displayNameChars),
+      paperName: paperName.trim().slice(0, TUNING.limits.paperNameChars),
       color,
     });
   };
@@ -44,16 +62,29 @@ export const JoinScreen: React.FC<JoinScreenProps> = ({
       <form onSubmit={handleSubmit} className="join-profile-card">
         <h2>Establish Your Press</h2>
 
+        {error && (
+          <div className="screen-error-banner" role="alert" data-testid="join-error">
+            {error}
+          </div>
+        )}
+
+        {allTaken && (
+          <div className="screen-error-banner" role="alert" data-testid="all-colors-taken">
+            All 4 seats in this town are already occupied.
+          </div>
+        )}
+
         <div className="form-group">
           <label htmlFor="player-name">Your Name</label>
           <input
             id="player-name"
             type="text"
-            maxLength={20}
+            maxLength={TUNING.limits.displayNameChars}
             required
+            disabled={pending}
             value={playerName}
             onChange={(e) => setPlayerName(e.target.value)}
-            placeholder="Editor Name (max 20)"
+            placeholder={`Editor Name (max ${TUNING.limits.displayNameChars})`}
           />
         </div>
 
@@ -62,16 +93,17 @@ export const JoinScreen: React.FC<JoinScreenProps> = ({
           <input
             id="paper-name"
             type="text"
-            maxLength={24}
+            maxLength={TUNING.limits.paperNameChars}
             required
+            disabled={pending}
             value={paperName}
             onChange={(e) => setPaperName(e.target.value)}
-            placeholder="The Daily Chronicle (max 24)"
+            placeholder={`The Daily Chronicle (max ${TUNING.limits.paperNameChars})`}
           />
         </div>
 
         <div className="form-group">
-          <span className="form-label-title">Pick Ink Color & Emblem</span>
+          <span className="form-label-title">Pick Ink Color &amp; Emblem</span>
           <div className="color-picker-grid">
             {COLORS.map((c) => {
               const isTaken = takenColors.includes(c);
@@ -81,7 +113,7 @@ export const JoinScreen: React.FC<JoinScreenProps> = ({
                 <button
                   key={c}
                   type="button"
-                  disabled={isTaken}
+                  disabled={isTaken || pending}
                   aria-label={`Select ${c.charAt(0).toUpperCase() + c.slice(1)}`}
                   className={`color-choice-btn color-${c} ${isSelected ? 'selected' : ''}`}
                   onClick={() => setColor(c)}
@@ -95,13 +127,22 @@ export const JoinScreen: React.FC<JoinScreenProps> = ({
           </div>
         </div>
 
-        <Button
-          type="submit"
-          variant="primary"
-          disabled={!playerName.trim() || !paperName.trim() || !color}
-        >
-          Ready to Print
-        </Button>
+        <div className="join-actions">
+          <Button
+            type="submit"
+            variant="primary"
+            disabled={pending || allTaken || !color || !playerName.trim() || !paperName.trim()}
+            className="btn-large"
+          >
+            {pending ? 'Establishing...' : 'Claim Printing Press'}
+          </Button>
+
+          {onBack && (
+            <Button type="button" variant="retro" onClick={onBack} disabled={pending}>
+              Back
+            </Button>
+          )}
+        </div>
       </form>
     </div>
   );

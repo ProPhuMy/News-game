@@ -19,6 +19,7 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({
   const [secondsLeft, setSecondsLeft] = useState<number>(computeSecondsLeft);
 
   useEffect(() => {
+    setSecondsLeft(computeSecondsLeft());
     const interval = setInterval(() => {
       const remaining = computeSecondsLeft();
       setSecondsLeft(remaining);

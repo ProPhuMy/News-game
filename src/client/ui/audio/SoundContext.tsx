@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 
-export type SoundCue = 'paper_slap' | 'gasp' | 'murmur' | 'poof' | 'click';
+export type SoundCue = 'paper_slap' | 'gasp' | 'murmur' | 'poof' | 'paperSlap';
 
 export interface SoundContextValue {
   isMuted: boolean;
@@ -11,24 +11,41 @@ export interface SoundContextValue {
 const SoundContext = createContext<SoundContextValue | null>(null);
 
 const SOUND_PATHS: Record<SoundCue, string> = {
-  paper_slap: '/sounds/paper_slap.mp3',
+  paper_slap: '/sounds/paper-slap.mp3',
+  paperSlap: '/sounds/paper-slap.mp3',
   gasp: '/sounds/gasp.mp3',
-  murmur: '/sounds/murmur.mp3',
+  murmur: '/sounds/crowd-murmur.mp3',
   poof: '/sounds/poof.mp3',
-  click: '/sounds/click.mp3',
 };
 
+function getInitialMute(): boolean {
+  try {
+    if (typeof window !== 'undefined' && typeof window.localStorage !== 'undefined') {
+      return localStorage.getItem('news_town_muted') === 'true';
+    }
+  } catch {
+    // Storage access denied (e.g. incognito or restricted iframe)
+  }
+  return false;
+}
+
+function persistMute(muted: boolean): void {
+  try {
+    if (typeof window !== 'undefined' && typeof window.localStorage !== 'undefined') {
+      localStorage.setItem('news_town_muted', String(muted));
+    }
+  } catch {
+    // Storage access denied
+  }
+}
+
 export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isMuted, setIsMuted] = useState<boolean>(() => {
-    return typeof window !== 'undefined' && localStorage.getItem('news_town_muted') === 'true';
-  });
+  const [isMuted, setIsMuted] = useState<boolean>(getInitialMute);
 
   const toggleMute = useCallback(() => {
     setIsMuted((prev) => {
       const next = !prev;
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('news_town_muted', String(next));
-      }
+      persistMute(next);
       return next;
     });
   }, []);

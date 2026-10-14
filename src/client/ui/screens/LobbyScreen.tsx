@@ -17,6 +17,8 @@ export interface LobbyScreenProps {
   seats: LobbySeat[];
   onStartMatch: () => void;
   onLeaveRoom?: () => void;
+  pending?: boolean;
+  error?: string | null;
 }
 
 export const LobbyScreen: React.FC<LobbyScreenProps> = ({
@@ -25,6 +27,8 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({
   seats,
   onStartMatch,
   onLeaveRoom,
+  pending = false,
+  error,
 }) => {
   const [copied, setCopied] = useState(false);
 
@@ -53,6 +57,12 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({
           </div>
         </div>
 
+        {error && (
+          <div className="screen-error-banner" role="alert" data-testid="lobby-error">
+            {error}
+          </div>
+        )}
+
         <div className="seats-grid">
           {seats.map((seat) => (
             <div
@@ -76,14 +86,14 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({
 
         <div className="lobby-footer">
           {isHost ? (
-            <Button variant="primary" onClick={onStartMatch} className="btn-large">
-              Start Match
+            <Button variant="primary" onClick={onStartMatch} disabled={pending} className="btn-large">
+              {pending ? 'Starting...' : 'Start Match'}
             </Button>
           ) : (
             <div className="waiting-message">Waiting for the host to start the presses...</div>
           )}
           {onLeaveRoom && (
-            <Button variant="secondary" onClick={onLeaveRoom}>
+            <Button variant="secondary" onClick={onLeaveRoom} disabled={pending}>
               Leave Room
             </Button>
           )}

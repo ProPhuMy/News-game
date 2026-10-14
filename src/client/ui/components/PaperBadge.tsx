@@ -1,13 +1,20 @@
-import React from 'react';
-import type { Color } from '../../../shared/ids';
+import type { Color } from '../../../shared/ids.ts';
+import { COLOR_ICONS } from '../../../shared/ids.ts';
 
 export type PaperColor = Color | 'grey';
 
+const ICON_SYMBOLS = {
+  quill: { label: 'Quill icon', symbol: '🪶' },
+  megaphone: { label: 'Megaphone icon', symbol: '📢' },
+  eye: { label: 'Eye icon', symbol: '👁️' },
+  lightning: { label: 'Lightning bolt icon', symbol: '⚡' },
+} as const;
+
 export const PAPER_ICONS: Record<PaperColor, { label: string; symbol: string }> = {
-  red: { label: 'Quill icon', symbol: '🪶' },
-  blue: { label: 'Megaphone icon', symbol: '📢' },
-  green: { label: 'Eye icon', symbol: '👁️' },
-  gold: { label: 'Lightning bolt icon', symbol: '⚡' },
+  red: ICON_SYMBOLS[COLOR_ICONS.red],
+  blue: ICON_SYMBOLS[COLOR_ICONS.blue],
+  green: ICON_SYMBOLS[COLOR_ICONS.green],
+  gold: ICON_SYMBOLS[COLOR_ICONS.gold],
   grey: { label: 'Neutral icon', symbol: '📰' },
 };
 

@@ -1,13 +1,8 @@
 import React, { useState } from 'react';
 import type { Phase } from '../../../shared/ids';
 import type { Fixture, FixtureFrame } from '../../../shared/fixture';
-import type { PaperPublic, HeadlinePublic, Exposure, FinalResult } from '../../../shared/snapshots';
 import { Button } from '../components/Button';
 import { HUD } from '../hud/HUD';
-import type { PaperView } from '../hud/SidePanel';
-import type { FrontPageView } from '../components/FrontPageCard';
-import type { FinalScoreRow } from '../components/ScoreboardTable';
-import type { ExposureEvent } from '../components/ExposureBanner';
 import { IntroScreen } from '../screens/IntroScreen';
 import { InvestigateScreen } from '../screens/InvestigateScreen';
 import { WriteScreen } from '../screens/WriteScreen';
@@ -76,63 +71,25 @@ export const FixturePlayer: React.FC<FixturePlayerProps> = ({ steps, onStepChang
   );
 };
 
-export function paperPublicToView(p: PaperPublic): PaperView {
-  return {
-    seatId: p.seatId,
-    paperName: p.paperName,
-    playerName: p.displayName,
-    color: p.color,
-    readers: p.readers,
-    trust: p.trust,
-    score: p.score,
-    isBot: p.controller === 'bot',
-    isCaretaker: p.controller === 'caretaker',
-    hasLocked: p.lockedVisibleAtMs !== null,
-  };
-}
-
-export function headlineToFrontPageView(
-  h: HeadlinePublic,
-  papers: PaperPublic[],
-  exposures: Exposure[]
-): FrontPageView {
-  const paper = papers.find((p) => p.seatId === h.seatId);
-  const exposure = exposures.find((e) => e.headlineId === h.id);
-  return {
-    id: h.id,
-    seatId: h.seatId,
-    paperName: paper?.paperName ?? `Paper ${h.seatId}`,
-    color: paper?.color ?? 'grey',
-    headlineText: h.text,
-    hasEvidence: h.evidence,
-    isExposed: h.exposed,
-    exposureReason: exposure?.explanation,
-  };
-}
-
-export function finalToScoreRows(
-  final: FinalResult | null,
-  papers: PaperPublic[]
-): FinalScoreRow[] {
-  if (!final) return [];
-  return papers.map((p) => {
-    const record = final.records.find((r) => r.seatId === p.seatId);
-    const truthRecord = record
-      ? `${record.liesTold} lies told, ${record.liesCaught} caught, ${record.liesEscaped} got away`
-      : 'No record';
-    return {
-      seatId: p.seatId,
-      paperName: p.paperName,
-      playerName: p.displayName,
-      color: p.color,
-      totalReaders: p.totalReaders,
-      finalTrust: p.trust,
-      finalScore: p.score,
-      truthRecord,
-      isWinner: final.winners.includes(p.seatId),
-    };
-  });
-}
+export {
+  paperPublicToView,
+  headlineToFrontPageView,
+  finalToScoreRows,
+  deriveFrontPages,
+  deriveProofCards,
+  deriveEvidenceCards,
+  deriveExposures,
+  deriveRecapText,
+} from '../mapper.ts';
+import {
+  paperPublicToView,
+  finalToScoreRows,
+  deriveFrontPages,
+  deriveProofCards,
+  deriveEvidenceCards,
+  deriveExposures,
+  deriveRecapText,
+} from '../mapper.ts';
 
 export interface FixturePlaybackViewProps {
   fixture: Fixture;
@@ -172,27 +129,12 @@ export const FixturePlaybackView: React.FC<FixturePlaybackViewProps> = ({
 
   const pub = currentFrame.public;
   const priv = currentFrame.private;
-  const papersView = pub.papers.map(paperPublicToView);
-
-  // In reveal phase, display current round headlines and any headlines exposed this round
-  const activeHeadlines = pub.headlines.filter(
-    (h) => h.round === pub.round || pub.exposures.some((e) => e.headlineId === h.id)
-  );
-  const frontPages: FrontPageView[] = (activeHeadlines.length > 0 ? activeHeadlines : pub.headlines).map((h) =>
-    headlineToFrontPageView(h, pub.papers, pub.exposures)
-  );
-
-  const exposuresEvents: ExposureEvent[] = pub.exposures.map((e) => {
-    const paper = pub.papers.find((p) => p.seatId === e.seatId);
-    return {
-      paperName: paper?.paperName ?? `Paper ${e.seatId}`,
-      reason: e.explanation,
-    };
-  });
-
-  const recapText = pub.reactionPlan?.recap
-    ? `${pub.reactionPlan.recap.reactors} citizens reacted at the ${pub.reactionPlan.recap.location ?? 'town'}; ${pub.reactionPlan.recap.gained} citizens changed papers.`
-    : 'Citizens are reacting to the latest publications.';
+  const papersView = pub.papers.map((p) => paperPublicToView(p, Date.now()));
+  const frontPages = deriveFrontPages(pub);
+  const exposuresEvents = deriveExposures(pub.exposures, pub.papers);
+  const recapText = deriveRecapText(pub.reactionPlan, pub.papers);
+  const evidenceCards = deriveEvidenceCards(priv.evidence, pub.round);
+  const proofCards = deriveProofCards(priv.proofs, pub);
 
   const bubbles = pub.reactionPlan?.citizens
     .map((c) => c.bubble)
@@ -250,20 +192,8 @@ export const FixturePlaybackView: React.FC<FixturePlaybackViewProps> = ({
           {pub.phase === 'write' && (
             <WriteScreen
               hasLocked={priv.acted}
-              evidenceCards={priv.evidence.map((e, idx) => ({
-                id: `ev-${idx}`,
-                round: e.round,
-                location: e.location,
-                claimType: e.claim,
-                description: e.text,
-              }))}
-              proofCards={priv.proofs.map((p) => ({
-                id: `proof-${p.headlineId}`,
-                targetPaperName: `Target ${p.headlineId}`,
-                headlineText: p.headlineId,
-                location: 'town_hall',
-                claimType: 'expose',
-              }))}
+              evidenceCards={evidenceCards}
+              proofCards={proofCards}
               onLockHeadline={handleNext}
               onSkipWrite={handleNext}
             />

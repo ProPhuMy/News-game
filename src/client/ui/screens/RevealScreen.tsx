@@ -1,9 +1,10 @@
 import React from 'react';
-import type { FrontPageView } from '../components/FrontPageCard';
-import { FrontPageCard } from '../components/FrontPageCard';
-import type { ExposureEvent } from '../components/ExposureBanner';
-import { ExposureBanner } from '../components/ExposureBanner';
-import { RecapBanner } from '../components/RecapBanner';
+import type { FrontPageView } from '../components/FrontPageCard.tsx';
+import { FrontPageCard } from '../components/FrontPageCard.tsx';
+import type { ExposureEvent } from '../components/ExposureBanner.tsx';
+import { ExposureBanner } from '../components/ExposureBanner.tsx';
+import { RecapBanner } from '../components/RecapBanner.tsx';
+import { TUNING } from '../../../shared/tuning.ts';
 
 export interface RevealScreenProps {
   frontPages: FrontPageView[];
@@ -18,8 +19,8 @@ export const RevealScreen: React.FC<RevealScreenProps> = ({
   recap,
   bubbles = [],
 }) => {
-  // Respect spec limit of at most 6 bubbles
-  const displayBubbles = bubbles.slice(0, 6);
+  // Respect spec limit of at most TUNING.limits.maxBubbles
+  const displayBubbles = bubbles.slice(0, TUNING.limits.maxBubbles);
 
   return (
     <div className="screen-container reveal-screen" data-testid="reveal-screen">

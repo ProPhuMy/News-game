@@ -30,3 +30,13 @@
     --transition-normal: 0s !important;
   }
 }
+
+:root[data-reduced-motion="true"],
+.reduced-motion,
+.reduced-motion * {
+  --transition-fast: 0s !important;
+  --transition-normal: 0s !important;
+  animation-duration: 0.001s !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0s !important;
+}

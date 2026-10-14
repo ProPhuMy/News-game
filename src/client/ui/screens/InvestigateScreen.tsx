@@ -19,6 +19,8 @@ export interface InvestigateScreenProps {
   onInvestigateLocation: (loc: Location) => void;
   onInvestigateRival: (headlineId: string) => void;
   onSkip: () => void;
+  pending?: boolean;
+  serverError?: string | null;
 }
 
 export const InvestigateScreen: React.FC<InvestigateScreenProps> = ({
@@ -29,6 +31,8 @@ export const InvestigateScreen: React.FC<InvestigateScreenProps> = ({
   onInvestigateLocation,
   onInvestigateRival,
   onSkip,
+  pending = false,
+  serverError,
 }) => {
   const [selectedRivalId, setSelectedRivalId] = useState<string>('');
 
@@ -45,14 +49,21 @@ export const InvestigateScreen: React.FC<InvestigateScreenProps> = ({
     <div className="investigate-panel" data-testid="investigate-panel">
       <TipCard tipText={tipText} />
 
+      {serverError && (
+        <div className="screen-error-banner" role="alert" data-testid="investigate-error">
+          {serverError}
+        </div>
+      )}
+
       <div className="investigate-choices">
         <section className="choice-section">
-          <h3>Option A: Check a Town Location (Certain Truth & Evidence)</h3>
+          <h3>Option A: Check a Town Location (Certain Truth &amp; Evidence)</h3>
           <div className="locations-buttons">
             {LOCATIONS.map((loc) => (
               <Button
                 key={loc}
                 variant="secondary"
+                disabled={pending}
                 onClick={() => onInvestigateLocation(loc)}
               >
                 {LOCATION_NAMES[loc]}
@@ -67,6 +78,7 @@ export const InvestigateScreen: React.FC<InvestigateScreenProps> = ({
             <div className="rival-picker">
               <select
                 value={selectedRivalId}
+                disabled={pending}
                 onChange={(e) => setSelectedRivalId(e.target.value)}
                 className="rival-select"
                 aria-label="Select past rival headline"
@@ -74,13 +86,13 @@ export const InvestigateScreen: React.FC<InvestigateScreenProps> = ({
                 <option value="">Select past rival headline...</option>
                 {rivalHeadlines.map((h) => (
                   <option key={h.id} value={h.id}>
-                    R{h.round} {h.paperName}: "{h.text}"
+                    R{h.round} {h.paperName}: &ldquo;{h.text}&rdquo;
                   </option>
                 ))}
               </select>
               <Button
                 variant="secondary"
-                disabled={!selectedRivalId}
+                disabled={pending || !selectedRivalId}
                 onClick={() => onInvestigateRival(selectedRivalId)}
               >
                 Probe Headline
@@ -90,7 +102,7 @@ export const InvestigateScreen: React.FC<InvestigateScreenProps> = ({
         )}
 
         <div className="skip-action">
-          <Button variant="retro" onClick={onSkip}>
+          <Button variant="retro" onClick={onSkip} disabled={pending}>
             Skip Investigation
           </Button>
         </div>

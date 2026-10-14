@@ -1,4 +1,5 @@
 import React from 'react';
+import { TUNING } from '../../../shared/tuning.ts';
 
 export interface EvidenceCard {
   id: string;
@@ -32,7 +33,7 @@ export const EvidenceSelector: React.FC<EvidenceSelectorProps> = ({
 
   return (
     <div className="evidence-attach-panel" aria-label="Attach Evidence">
-      <h4>Attach Verified Evidence (+6 Trust)</h4>
+      <h4>Attach Verified Evidence (+{TUNING.trust.evidenceBonus} Trust)</h4>
       {matchingCards.map((card) => (
         <label key={card.id} className="evidence-card-label">
           <input

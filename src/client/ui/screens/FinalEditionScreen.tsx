@@ -12,11 +12,26 @@ export const FinalEditionScreen: React.FC<FinalEditionScreenProps> = ({
   scoreboard,
   onPlayAgain,
 }) => {
+  if (scoreboard.length === 0) {
+    return (
+      <div className="screen-container final-edition-screen" data-testid="final-edition-screen">
+        <div className="final-card">
+          <h1>Final Edition Scoreboard</h1>
+          <div className="final-loading" role="status">
+            Tabulating final editions and readers...
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const winners = scoreboard.filter((s) => s.isWinner);
   const winnerText =
     winners.length > 1
       ? `Co-Winners: ${winners.map((w) => w.paperName).join(' & ')}!`
-      : `Winner: ${winners[0]?.paperName || 'The Town'}!`;
+      : winners.length === 1
+      ? `Winner: ${winners[0]?.paperName}!`
+      : 'No Winner Announced';
 
   return (
     <div className="screen-container final-edition-screen" data-testid="final-edition-screen">

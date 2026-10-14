@@ -15,9 +15,9 @@ describe('IntroScreen', () => {
       />
     );
 
-    expect(screen.getByText('Rule 1: Print Truth or Lies')).toBeDefined();
-    expect(screen.getByText('Rule 2: Win Citizens, Risk Trust')).toBeDefined();
-    expect(screen.getByText('Rule 3: Final Score = Readers × Trust')).toBeDefined();
+    expect(screen.getByText('Run Your Town Newspaper')).toBeDefined();
+    expect(screen.getByText('Investigate or Expose')).toBeDefined();
+    expect(screen.getByText('The Final Edition')).toBeDefined();
 
     const skipBtn = screen.getByText('Skip Intro');
     fireEvent.click(skipBtn);

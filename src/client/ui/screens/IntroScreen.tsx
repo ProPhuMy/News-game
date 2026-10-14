@@ -1,47 +1,34 @@
 import React from 'react';
 import { Button } from '../components/Button';
 import { CountdownTimer } from '../components/CountdownTimer';
+import type { RuleCard } from '../../../content/rule-cards.ts';
+import { RULE_CARDS } from '../../../content/rule-cards.ts';
 
 export interface IntroScreenProps {
   deadlineMs: number;
   serverTimeOffset: number;
   onSkipIntro: () => void;
+  ruleCards?: RuleCard[];
 }
+
+const ROMAN_NUMERALS = ['I', 'II', 'III', 'IV', 'V'];
 
 export const IntroScreen: React.FC<IntroScreenProps> = ({
   deadlineMs,
   serverTimeOffset,
   onSkipIntro,
+  ruleCards = RULE_CARDS,
 }) => {
   return (
     <div className="screen-container intro-screen" data-testid="intro-screen">
       <div className="intro-card-deck">
-        <div className="rule-card">
-          <div className="card-index">I</div>
-          <h3>Rule 1: Print Truth or Lies</h3>
-          <p>
-            Every round, report town events or spin wild rumors. Honest news keeps your trust;
-            juicy lies gain immediate attention.
-          </p>
-        </div>
-
-        <div className="rule-card">
-          <div className="card-index">II</div>
-          <h3>Rule 2: Win Citizens, Risk Trust</h3>
-          <p>
-            Citizens switch papers based on appeal and trust. But beware: unexposed lies can
-            leak, and rivals can find proof to expose you!
-          </p>
-        </div>
-
-        <div className="rule-card">
-          <div className="card-index">III</div>
-          <h3>Rule 3: Final Score = Readers × Trust</h3>
-          <p>
-            In the Final Edition, all hidden truths are revealed. Only papers with both strong
-            readership and high trust will win the town.
-          </p>
-        </div>
+        {ruleCards.map((card, idx) => (
+          <div key={card.title} className="rule-card">
+            <div className="card-index">{ROMAN_NUMERALS[idx] ?? `${idx + 1}`}</div>
+            <h3>{card.title}</h3>
+            <p>{card.body}</p>
+          </div>
+        ))}
       </div>
 
       <div className="intro-footer">

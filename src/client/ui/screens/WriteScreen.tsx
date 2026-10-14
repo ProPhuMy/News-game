@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import type { Location, Claim, TownClaim } from '../../../shared/ids';
-import { LOCATIONS, LOCATION_NAMES } from '../../../shared/ids';
-import { Button } from '../components/Button';
-import { Chip } from '../components/Chip';
-import { CharacterCounter } from '../components/CharacterCounter';
-import type { EvidenceCard } from '../components/EvidenceSelector';
-import { EvidenceSelector } from '../components/EvidenceSelector';
+import type { Location, Claim, TownClaim } from '../../../shared/ids.ts';
+import { LOCATIONS, LOCATION_NAMES } from '../../../shared/ids.ts';
+import { TUNING } from '../../../shared/tuning.ts';
+import type { Story } from '../../../shared/protocol.ts';
+import { Button } from '../components/Button.tsx';
+import { Chip } from '../components/Chip.tsx';
+import { CharacterCounter } from '../components/CharacterCounter.tsx';
+import type { EvidenceCard } from '../components/EvidenceSelector.tsx';
+import { EvidenceSelector } from '../components/EvidenceSelector.tsx';
 
 export interface ProofCard {
   id: string;
@@ -16,17 +18,16 @@ export interface ProofCard {
 }
 
 export interface LockHeadlinePayload {
-  location: Location;
-  claimType: Claim;
+  story: Story;
   text: string;
-  evidenceCardId?: string;
-  proofCardId?: string;
 }
 
 export interface WriteScreenProps {
   hasLocked: boolean;
+  lockedHeadline?: { id: string; story: Story; text: string } | null;
   evidenceCards: EvidenceCard[];
   proofCards: ProofCard[];
+  serverError?: string | null;
   onLockHeadline: (payload: LockHeadlinePayload) => void;
   onSkipWrite: () => void;
 }
@@ -42,8 +43,10 @@ const CLAIM_OPTIONS: { id: TownClaim; label: string }[] = [
 
 export const WriteScreen: React.FC<WriteScreenProps> = ({
   hasLocked,
+  lockedHeadline,
   evidenceCards,
   proofCards,
+  serverError,
   onLockHeadline,
   onSkipWrite,
 }) => {
@@ -52,29 +55,51 @@ export const WriteScreen: React.FC<WriteScreenProps> = ({
   const [headlineText, setHeadlineText] = useState('');
   const [selectedEvidenceId, setSelectedEvidenceId] = useState<string | undefined>();
   const [selectedProofId, setSelectedProofId] = useState<string | undefined>();
-  const [modError, setModError] = useState<string | null>(null);
 
   const isExposeMode = selectedClaim === 'expose';
 
-  const handleLock = () => {
-    setModError(null);
-    const trimmed = headlineText.trim();
-    if (!trimmed || trimmed.length > 100) return;
-    if (!selectedLocation || !selectedClaim) return;
+  const handleLocationChange = (loc: Location) => {
+    setSelectedLocation(loc);
+    setSelectedEvidenceId(undefined);
+  };
 
-    // Local word filter simulation check
-    const forbidden = ['slur', 'hate'];
-    if (forbidden.some((w) => trimmed.toLowerCase().includes(w))) {
-      setModError('Our lawyers won’t print that — try again.');
+  const handleClaimChange = (claim: Claim) => {
+    setSelectedClaim(claim);
+    setSelectedEvidenceId(undefined);
+  };
+
+  const handleCancelExpose = () => {
+    setSelectedClaim(null);
+    setSelectedProofId(undefined);
+    setHeadlineText('');
+    setSelectedEvidenceId(undefined);
+  };
+
+  const handleLock = () => {
+    const trimmed = headlineText.trim();
+    if (!trimmed || trimmed.length > TUNING.limits.headlineChars) return;
+
+    if (isExposeMode) {
+      if (!selectedProofId) return;
+      onLockHeadline({
+        story: {
+          kind: 'expose',
+          headlineId: selectedProofId,
+        },
+        text: trimmed,
+      });
       return;
     }
 
+    if (!selectedLocation || !selectedClaim) return;
     onLockHeadline({
-      location: selectedLocation,
-      claimType: selectedClaim,
+      story: {
+        kind: 'claim',
+        location: selectedLocation,
+        claim: selectedClaim as TownClaim,
+        attachEvidence: selectedEvidenceId !== undefined,
+      },
       text: trimmed,
-      evidenceCardId: selectedEvidenceId,
-      proofCardId: selectedProofId,
     });
   };
 
@@ -84,6 +109,11 @@ export const WriteScreen: React.FC<WriteScreenProps> = ({
         <div className="locked-card">
           <h2>The Presses are Rolling!</h2>
           <p>Your headline has been locked in for publication.</p>
+          {lockedHeadline && (
+            <blockquote className="locked-headline-preview" data-testid="locked-headline-preview">
+              &ldquo;{lockedHeadline.text}&rdquo;
+            </blockquote>
+          )}
         </div>
       </div>
     );
@@ -97,24 +127,42 @@ export const WriteScreen: React.FC<WriteScreenProps> = ({
         {proofCards.length > 0 && (
           <div className="proof-exposure-banner">
             <h3>Hold Evidence of Rival Lies!</h3>
-            {proofCards.map((p) => (
-              <Button
-                key={p.id}
-                variant={selectedProofId === p.id ? 'primary' : 'secondary'}
-                onClick={() => {
-                  setSelectedProofId(p.id);
-                  setSelectedClaim('expose');
-                  setSelectedLocation(p.location);
-                  setHeadlineText(`EXPOSED: ${p.targetPaperName} lied about ${p.location}!`);
-                }}
-              >
-                Expose {p.targetPaperName}
-              </Button>
-            ))}
+            <div className="proof-buttons-row">
+              {proofCards.map((p) => {
+                const isSelected = selectedProofId === p.id;
+                return (
+                  <Button
+                    key={p.id}
+                    variant={isSelected ? 'primary' : 'secondary'}
+                    onClick={() => {
+                      if (isSelected) {
+                        handleCancelExpose();
+                      } else {
+                        setSelectedProofId(p.id);
+                        setSelectedClaim('expose');
+                        setSelectedLocation(p.location);
+                        setSelectedEvidenceId(undefined);
+                        const locName = LOCATION_NAMES[p.location] ?? p.location;
+                        setHeadlineText(`EXPOSED: ${p.targetPaperName} lied about ${locName}!`);
+                      }
+                    }}
+                  >
+                    Expose {p.targetPaperName}
+                  </Button>
+                );
+              })}
+            </div>
           </div>
         )}
 
-        {!isExposeMode && (
+        {isExposeMode ? (
+          <div className="expose-mode-header">
+            <span className="expose-badge">Exposing Rival Story</span>
+            <Button variant="secondary" onClick={handleCancelExpose}>
+              Cancel Expose
+            </Button>
+          </div>
+        ) : (
           <>
             <div className="editor-section">
               <label className="section-label">1. Pick Target Location</label>
@@ -124,7 +172,7 @@ export const WriteScreen: React.FC<WriteScreenProps> = ({
                     key={loc}
                     label={LOCATION_NAMES[loc]}
                     selected={selectedLocation === loc}
-                    onClick={() => setSelectedLocation(loc)}
+                    onClick={() => handleLocationChange(loc)}
                   />
                 ))}
               </div>
@@ -138,7 +186,7 @@ export const WriteScreen: React.FC<WriteScreenProps> = ({
                     key={c.id}
                     label={c.label}
                     selected={selectedClaim === c.id}
-                    onClick={() => setSelectedClaim(c.id)}
+                    onClick={() => handleClaimChange(c.id)}
                   />
                 ))}
               </div>
@@ -151,20 +199,24 @@ export const WriteScreen: React.FC<WriteScreenProps> = ({
             <label htmlFor="headline-input" className="section-label">
               3. Headline Text
             </label>
-            <CharacterCounter current={headlineText.length} max={100} />
+            <CharacterCounter current={headlineText.length} max={TUNING.limits.headlineChars} />
           </div>
           <textarea
             id="headline-input"
-            maxLength={100}
+            maxLength={TUNING.limits.headlineChars}
             rows={3}
-            placeholder="Write your front page headline (1–100 characters)..."
+            placeholder={`Write your front page headline (1–${TUNING.limits.headlineChars} characters)...`}
             value={headlineText}
             onChange={(e) => setHeadlineText(e.target.value)}
           />
-          {modError && <div className="mod-error-banner" role="alert">{modError}</div>}
+          {serverError && (
+            <div className="mod-error-banner" role="alert">
+              {serverError}
+            </div>
+          )}
         </div>
 
-        {selectedLocation && selectedClaim && (
+        {!isExposeMode && selectedLocation && selectedClaim && (
           <EvidenceSelector
             cards={evidenceCards}
             selectedCardId={selectedEvidenceId}
@@ -177,7 +229,11 @@ export const WriteScreen: React.FC<WriteScreenProps> = ({
         <div className="editor-actions">
           <Button
             variant="primary"
-            disabled={!selectedLocation || !selectedClaim || !headlineText.trim()}
+            disabled={
+              isExposeMode
+                ? !selectedProofId || !headlineText.trim()
+                : !selectedLocation || !selectedClaim || !headlineText.trim()
+            }
             onClick={handleLock}
             className="btn-large"
           >
