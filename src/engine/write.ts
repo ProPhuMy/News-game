@@ -1,6 +1,7 @@
 import type { ErrorCode } from '../shared/ids.ts';
 import { HeadlineTextSchema, type Story } from '../shared/protocol.ts';
 import { TUNING } from '../shared/tuning.ts';
+import { fallbackRating } from './rating.ts';
 import { stream } from './rng.ts';
 import type { EngineEvent, Headline, MatchState, Seat } from './state.ts';
 import { truthAt } from './truth.ts';
@@ -40,6 +41,7 @@ export function lockHeadline(s: MatchState, seat: Seat, story: Story, rawText: s
   events.push({
     type: 'headlineLocked', headlineId: headline.id, seatId: seat.seatId, text: headline.text,
     location: headline.location, claim: headline.claim, exposedHeadlineText, botPersonality: headline.authorPersonality,
+    fallbackRating: fallbackRating(s, headline),
   });
   return null;
 }

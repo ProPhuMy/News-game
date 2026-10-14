@@ -23,6 +23,19 @@ describe('bot turns', () => {
     expect(locked.map((e) => e.botPersonality)).toEqual(['tabloid', 'gazette', 'wildcard']);
   });
 
+  it('bot lock events carry the personality fallback rating, which reveal applies when no rating arrives', () => {
+    const before = advanceTo(soloMatch(), 'investigate', 1);
+    const { state, events } = tick(before, before.deadlineMs);
+    const locked = events.filter((e): e is Extract<EngineEvent, { type: 'headlineLocked' }> => e.type === 'headlineLocked');
+    const juice = Object.fromEntries(locked.map((e) => [e.botPersonality, e.fallbackRating.juiciness]));
+    expect(juice.tabloid).toBe(TUNING.bots.fallbackJuice.tabloid);
+    expect(juice.gazette).toBe(TUNING.bots.fallbackJuice.gazette);
+    expect(juice.wildcard).toBeGreaterThanOrEqual(TUNING.juiceMin);
+    expect(juice.wildcard).toBeLessThanOrEqual(TUNING.juiceMax);
+    const revealed = tick(state, state.deadlineMs).state;
+    for (const e of locked) expect(revealed.headlines.find((h) => h.id === e.headlineId)!.rating).toEqual(e.fallbackRating);
+  });
+
   it('the Gazette checks its tip location in round 1', () => {
     const s = advanceTo(soloMatch(), 'investigate', 1);
     expect(s.seats[2]!.evidence).toEqual([expect.objectContaining({ round: 1, location: s.seats[2]!.tip!.location })]);
