@@ -85,7 +85,7 @@ describe('Speech Bubble Manager', () => {
     expect(bubbleEl.style.transform).toContain('px');
     const match = bubbleEl.style.transform.match(/translate\(([^,]+)px,\s*([^)]+)px\)/);
     expect(match).not.toBeNull();
-    const screenX = parseFloat(match![1]);
+    const screenX = parseFloat(match?.[1] ?? '0');
     expect(screenX).toBeGreaterThan(450);
 
     bubbleMgr.dispose();
