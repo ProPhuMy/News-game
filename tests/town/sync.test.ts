@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import * as THREE from 'three';
 import { describe, it, expect } from 'vitest';
 import { createTownView } from '../../src/client/town/index.ts';
 import type { PublicSnapshot } from '../../src/shared/snapshots.ts';
@@ -6,7 +7,7 @@ import type { PublicSnapshot } from '../../src/shared/snapshots.ts';
 describe('TownView syncFromSnapshot', () => {
   it('places each citizen at its snapshot home with its snapshot paper color and updates office banners', () => {
     const container = document.createElement('div');
-    const view = createTownView({ container });
+    const view = createTownView({ container, forceWebGL: true });
     const mockSnapshot: Partial<PublicSnapshot> = {
       round: 1,
       phase: 'investigate',
@@ -38,11 +39,14 @@ describe('TownView syncFromSnapshot', () => {
 
   it('resets residual behavior hops and rotations to stand home', () => {
     const container = document.createElement('div');
-    const view = createTownView({ container });
+    const view = createTownView({ container, forceWebGL: true });
 
-    // Manually offset position y and rotations as if mid-hop/walk
-    const pos = view.getCitizenPosition(0);
-    pos.y = 0.5;
+    // Manually offset position and rotations as if mid-hop/walk
+    view.setCitizenPosition(0, new THREE.Vector3(12, 0.75, 14));
+    view.setCitizenRotation(0, 1.25);
+
+    expect(view.getCitizenPosition(0).y).toBeCloseTo(0.75, 2);
+    expect(view.getCitizenRotation(0)).toBeCloseTo(1.25, 2);
 
     const mockSnapshot: Partial<PublicSnapshot> = {
       round: 2,
@@ -57,7 +61,19 @@ describe('TownView syncFromSnapshot', () => {
 
     view.syncFromSnapshot(mockSnapshot as PublicSnapshot);
     const citizen0Pos = view.getCitizenPosition(0);
+    const expectedPos = view.getNodeWorldPosition('r1c1');
+    expect(citizen0Pos.x).toBeCloseTo(expectedPos.x, 2);
     expect(citizen0Pos.y).toBe(0);
+    expect(citizen0Pos.z).toBeCloseTo(expectedPos.z, 2);
+    expect(view.getCitizenRotation(0)).toBe(0);
+    view.dispose();
+  });
+
+  it('uses fallback view when WebGL is unavailable and forceWebGL is not specified', () => {
+    const container = document.createElement('div');
+    const view = createTownView({ container });
+    expect(view.isWebGLSupported()).toBe(false);
+    expect(container.querySelector('.town-fallback-container')).not.toBeNull();
     view.dispose();
   });
 });

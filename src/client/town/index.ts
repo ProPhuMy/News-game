@@ -33,6 +33,9 @@ export interface TownView {
   dispose(): void;
   syncFromSnapshot(snapshot: PublicSnapshot): void;
   getCitizenPosition(id: number): THREE.Vector3;
+  getCitizenRotation(id: number): number;
+  setCitizenPosition(id: number, pos: THREE.Vector3): void;
+  setCitizenRotation(id: number, angleY: number): void;
   getCitizenHatColor(id: number): number;
   getNodeWorldPosition(nodeId: string): THREE.Vector3;
   getOfficeBannerColor(seatId: SeatId): number;
@@ -51,7 +54,7 @@ export function createTownView(
   } else {
     container = containerOrOptions.container;
     options = {
-      forceWebGL: containerOrOptions.forceWebGL ?? true,
+      forceWebGL: containerOrOptions.forceWebGL ?? false,
       ...containerOrOptions,
     };
   }
@@ -72,6 +75,9 @@ export function createTownView(
       },
       syncFromSnapshot: () => {},
       getCitizenPosition: () => new THREE.Vector3(),
+      getCitizenRotation: () => 0,
+      setCitizenPosition: () => {},
+      setCitizenRotation: () => {},
       getCitizenHatColor: () => 0x7f8c8d,
       getNodeWorldPosition: (nodeId: string) => {
         const p = layout.getNodeWorldPos(nodeId);
@@ -180,6 +186,18 @@ export function createTownView(
 
     getCitizenPosition(id: number): THREE.Vector3 {
       return citizens.getCitizenPosition(id);
+    },
+
+    getCitizenRotation(id: number): number {
+      return citizens.getCitizenRotation(id);
+    },
+
+    setCitizenPosition(id: number, pos: THREE.Vector3): void {
+      citizens.setCitizenPosition(id, pos);
+    },
+
+    setCitizenRotation(id: number, angleY: number): void {
+      citizens.setCitizenRotation(id, angleY);
     },
 
     getCitizenHatColor(id: number): number {

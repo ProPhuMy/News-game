@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import * as THREE from 'three';
 import { createTownBuildings } from '../../src/client/town/buildings.ts';
+import { PAPER_COLOR_HEX } from '../../src/client/town/citizens.ts';
 import { createTownEnvironment } from '../../src/client/town/environment.ts';
 import { createTownLayout } from '../../src/client/town/layout.ts';
 import { LOCATIONS } from '../../src/shared/ids.ts';
@@ -50,6 +51,11 @@ describe('Town Environment and Buildings', () => {
       expect(anchor.z).toBeCloseTo(nodePos.z, 1);
       expect(anchor.y).toBeGreaterThan(0);
     }
+
+    expect(buildings.getOfficeBannerColor(0)).toBe(PAPER_COLOR_HEX.red);
+    expect(buildings.getOfficeBannerColor(1)).toBe(PAPER_COLOR_HEX.blue);
+    expect(buildings.getOfficeBannerColor(2)).toBe(PAPER_COLOR_HEX.green);
+    expect(buildings.getOfficeBannerColor(3)).toBe(PAPER_COLOR_HEX.gold);
   });
 
   it('allows highlighting an exposed newspaper office', () => {

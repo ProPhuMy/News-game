@@ -25,6 +25,7 @@ export interface CitizenManager {
   setCitizenPosition(citizenId: number, pos: THREE.Vector3): void;
   getCitizenPosition(citizenId: number): THREE.Vector3;
   setCitizenRotation(citizenId: number, angleY: number): void;
+  getCitizenRotation(citizenId: number): number;
   dispose(): void;
 }
 
@@ -270,9 +271,11 @@ export function createCitizenManager(
 
     setCitizenRotation(citizenId: number, angleY: number): void {
       const c = citizens[citizenId];
-      if (c) {
-        c.mesh.rotation.y = angleY;
-      }
+      if (c) c.mesh.rotation.y = angleY;
+    },
+
+    getCitizenRotation(citizenId: number): number {
+      return citizens[citizenId]?.mesh.rotation.y ?? 0;
     },
 
     dispose(): void {

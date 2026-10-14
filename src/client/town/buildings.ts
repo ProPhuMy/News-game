@@ -15,10 +15,10 @@ export interface TownBuildings {
 }
 
 const SEAT_HEX_COLORS: readonly number[] = [
-  0xd94338, // red
-  0x3478d1, // blue
-  0x2ea854, // green
-  0xe5a01a, // gold
+  PAPER_COLOR_HEX.red,
+  PAPER_COLOR_HEX.blue,
+  PAPER_COLOR_HEX.green,
+  PAPER_COLOR_HEX.gold,
 ];
 
 function buildBakeryMesh(): THREE.Group {
