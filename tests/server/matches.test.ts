@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { createRoomManager } from '../../src/server/rooms.ts';
 import { createMatchRunner } from '../../src/server/matches.ts';
 import { SAMPLE_CONTENT } from '../../src/sim/sample-content.ts';
@@ -14,6 +14,31 @@ const setup = () => {
 };
 
 describe('match runner', () => {
+  it('removes only a room whose publication throws and keeps ticking healthy rooms', () => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      const rooms = createRoomManager();
+      const profile = { displayName: 'Editor', paperName: 'Daily', color: COLORS[0] };
+      const bad = rooms.require(rooms.create(profile, 'bad', 'bad-ip', 0).code);
+      const good = rooms.require(rooms.create(profile, 'good', 'good-ip', 0).code);
+      let broken = false;
+      const disconnect = vi.fn();
+      const runner = createMatchRunner(rooms, SAMPLE_CONTENT, (socket) => {
+        if (broken && socket === 'bad') throw new Error('SECRET-state');
+      }, undefined, disconnect);
+      runner.handle(bad, 0, { type: 'startMatch', actionId: 'bad-start' }, 0);
+      runner.handle(good, 0, { type: 'startMatch', actionId: 'good-start' }, 0);
+      broken = true;
+      expect(() => runner.tick(20_000)).not.toThrow();
+      expect(rooms.rooms.has(bad.code)).toBe(false);
+      expect(disconnect.mock.calls).toEqual([['bad']]);
+      expect(good.state!.phase).toBe('investigate');
+      expect(() => runner.tick(good.state!.deadlineMs)).not.toThrow();
+      expect(good.state!.phase).toBe('write');
+      expect(JSON.stringify(log.mock.calls)).not.toContain('SECRET');
+    } finally { log.mockRestore(); }
+  });
+
   it('starts one human plus three bots and follows engine deadlines to completion', () => {
     const { runner, room } = setup();
     expect(runner.handle(room, 0, { type: 'startMatch', actionId: 'start' }, 0)).toBeUndefined();

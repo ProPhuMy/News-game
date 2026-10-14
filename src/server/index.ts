@@ -18,9 +18,13 @@ export async function createGameServer(options: { content: GameContent; distDire
   else http.on('request', createStaticHandler(options.distDirectory ?? fileURLToPath(new URL('../../dist/client/', import.meta.url))));
   const io = new Server(http, { maxHttpBufferSize: 16_384 });
   const rooms = createRoomManager();
-  const runner = createMatchRunner(rooms, content, (socket, event, payload) => io.to(socket).emit(event, payload), ai);
+  const runner = createMatchRunner(rooms, content, (socket, event, payload) => io.to(socket).emit(event, payload), ai,
+    (socketId) => { queueMicrotask(() => io.sockets.sockets.get(socketId)?.disconnect(true)); });
   registerSocketHandlers(io, rooms, runner, options.trustRenderProxy);
-  const timer = setInterval(() => runner.tick(Date.now()), 100);
+  const timer = setInterval(() => {
+    try { runner.tick(Date.now()); }
+    catch { console.error('News Town scheduler failed.'); }
+  }, 100);
   return {
     http, rooms, runner,
     listen(port: number) {
@@ -50,12 +54,28 @@ async function main() {
   const game = await createGameServer({ content: ContentSchema.parse(module.content), dev: process.env.NODE_ENV !== 'production',
     trustRenderProxy: process.env.TRUST_RENDER_PROXY === 'true',
     ai: { provider, ...(process.env.AI_MODEL ? { model: process.env.AI_MODEL } : {}), ...(key ? { apiKey: key } : {}) } });
-  await game.listen(port);
+  try { await game.listen(port); }
+  catch (error) {
+    await game.close();
+    throw error;
+  }
   const shutdown = () => { void game.close().then(() => { process.exitCode = 0; }); };
   process.once('SIGTERM', shutdown);
   process.once('SIGINT', shutdown);
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  void main().catch(() => { console.error('News Town startup failed. Check content and server configuration.'); process.exitCode = 1; });
+  void main().catch((error: unknown) => {
+    const safeMessages = [
+      'Validated src/content/index.ts is required', 'PORT must be between 1 and 65535',
+      'Invalid AI_PROVIDER', 'Invalid TRUST_RENDER_PROXY', 'AI_MODEL and provider API key are required',
+      'Content must provide safe headline and bubble fallbacks',
+    ];
+    const detail = error instanceof Error && safeMessages.includes(error.message) ? error.message
+      : error && typeof error === 'object' && 'code' in error &&
+        (error.code === 'EADDRINUSE' || error.code === 'EACCES') ? error.code
+      : 'Check content and server configuration';
+    console.error(`News Town startup failed: ${detail}.`);
+    process.exitCode = 1;
+  });
 }

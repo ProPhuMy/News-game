@@ -14,4 +14,4 @@ COPY --from=build /app/src ./src
 COPY --from=build /app/dist ./dist
 USER node
 EXPOSE 3000
-CMD ["npm", "start"]
+CMD ["node", "src/server/index.ts"]

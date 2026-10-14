@@ -5,6 +5,7 @@ services:
     plan: 0.5c-512mb
     numInstances: 1
     autoDeployTrigger: off
+    healthCheckPath: /
     envVars:
       - key: TRUST_RENDER_PROXY
         value: 'true'
