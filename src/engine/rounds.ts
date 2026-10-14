@@ -10,6 +10,6 @@ export function prepareRound(s: MatchState): void {
   s.seats.forEach((seat, i) => { seat.tip = tips[i]!; });
 }
 
-export function revealRound(_s: MatchState): void {}
+export { revealRound } from './resolve.ts';
 
 export function finishMatch(_s: MatchState): void {}
