@@ -15,6 +15,10 @@ export interface CitizenInstance {
   accessoryMeshes?: Record<Color, THREE.Mesh>;
 }
 
+export interface CitizenManagerOptions {
+  reducedMotion?: boolean;
+}
+
 export interface CitizenManager {
   getCitizen(citizenId: number): CitizenInstance;
   getAllCitizens(): readonly CitizenInstance[];
@@ -26,6 +30,8 @@ export interface CitizenManager {
   getCitizenPosition(citizenId: number): THREE.Vector3;
   setCitizenRotation(citizenId: number, angleY: number): void;
   getCitizenRotation(citizenId: number): number;
+  setReducedMotion(enabled: boolean): void;
+  update(deltaSeconds: number): void;
   dispose(): void;
 }
 
@@ -55,36 +61,20 @@ function buildCitizenMesh(id: number): {
   const group = new THREE.Group();
   group.name = `citizen-${id}`;
 
-  // Body
-  const bodyGeo = new THREE.CylinderGeometry(0.32, 0.36, 0.9, 8);
-  const bodyMat = new THREE.MeshLambertMaterial({ color: 0x566573 });
-  const body = new THREE.Mesh(bodyGeo, bodyMat);
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.36, 0.9, 8), new THREE.MeshLambertMaterial({ color: 0x566573 }));
   body.position.y = 0.45;
   group.add(body);
 
-  // Head
-  const headGeo = new THREE.SphereGeometry(0.28, 8, 8);
-  const headMat = new THREE.MeshLambertMaterial({ color: 0xf5cfb3 });
-  const head = new THREE.Mesh(headGeo, headMat);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.28, 8, 8), new THREE.MeshLambertMaterial({ color: 0xf5cfb3 }));
   head.position.y = 1.1;
   group.add(head);
 
-  // Hat / Accessory
-  const accessoryMat = new THREE.MeshLambertMaterial({
-    color: PAPER_GREY_HEX,
-  });
-  const hatGeo = new THREE.ConeGeometry(0.3, 0.35, 8);
-  const hat = new THREE.Mesh(hatGeo, accessoryMat);
+  const accessoryMat = new THREE.MeshLambertMaterial({ color: PAPER_GREY_HEX });
+  const hat = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.35, 8), accessoryMat);
   hat.position.y = 1.4;
   group.add(hat);
 
-  // Visual distinction accessories per paper color:
-  const createAccessory = (
-    geo: THREE.BufferGeometry,
-    name: string,
-    pos: [number, number, number],
-    rot?: [number, number, number],
-  ): THREE.Mesh => {
+  const createAccessory = (geo: THREE.BufferGeometry, name: string, pos: [number, number, number], rot?: [number, number, number]): THREE.Mesh => {
     const mesh = new THREE.Mesh(geo, accessoryMat);
     mesh.name = name;
     mesh.position.set(...pos);
@@ -94,12 +84,12 @@ function buildCitizenMesh(id: number): {
     return mesh;
   };
 
-  const feather = createAccessory(new THREE.ConeGeometry(0.06, 0.45, 4), 'accessory-feather', [0.18, 1.45, 0], [0, 0, -Math.PI / 6]);
-  const horn = createAccessory(new THREE.ConeGeometry(0.14, 0.32, 8), 'accessory-horn', [0, 1.4, 0.22], [Math.PI / 2, 0, 0]);
-  const ring = createAccessory(new THREE.TorusGeometry(0.12, 0.04, 8, 16), 'accessory-ring', [0, 1.35, 0.22]);
-  const star = createAccessory(new THREE.OctahedronGeometry(0.12), 'accessory-star', [0, 1.35, 0.22], [0, 0, Math.PI / 4]);
-
-  const accessoryMeshes: Record<Color, THREE.Mesh> = { red: feather, blue: horn, green: ring, gold: star };
+  const accessoryMeshes: Record<Color, THREE.Mesh> = {
+    red: createAccessory(new THREE.ConeGeometry(0.06, 0.45, 4), 'accessory-feather', [0.18, 1.45, 0], [0, 0, -Math.PI / 6]),
+    blue: createAccessory(new THREE.ConeGeometry(0.14, 0.32, 8), 'accessory-horn', [0, 1.4, 0.22], [Math.PI / 2, 0, 0]),
+    green: createAccessory(new THREE.TorusGeometry(0.12, 0.04, 8, 16), 'accessory-ring', [0, 1.35, 0.22]),
+    gold: createAccessory(new THREE.OctahedronGeometry(0.12), 'accessory-star', [0, 1.35, 0.22], [0, 0, Math.PI / 4]),
+  };
 
   return { group, accessoryMaterial: accessoryMat, accessoryMeshes };
 }
@@ -123,10 +113,20 @@ export function createCitizenManager(
   layout?: TownLayout,
   scene?: THREE.Scene,
   poofSystem?: PoofSystem,
+  options?: CitizenManagerOptions,
 ): CitizenManager {
   const actualLayout = layout ?? createTownLayout();
   const actualScene = scene ?? new THREE.Scene();
   const actualPoof = poofSystem ?? createPoofEffect(actualScene);
+
+  let isReducedMotion = options?.reducedMotion ?? false;
+  interface ColorTransition {
+    startColor: THREE.Color;
+    targetColor: THREE.Color;
+    elapsed: number;
+    duration: number;
+  }
+  const activeTransitions = new Map<number, ColorTransition>();
 
   const citizens: CitizenInstance[] = [];
   let seatColors: Record<number, Color> = { ...DEFAULT_SEAT_COLORS };
@@ -134,27 +134,11 @@ export function createCitizenManager(
   for (let i = 0; i < CITIZEN_COUNT; i++) {
     const homeNodeId = HOME_NODES[i % HOME_NODES.length] ?? 'r0c0';
     const homePos = actualLayout.getNodeWorldPos(homeNodeId);
-
     const { group, accessoryMaterial, accessoryMeshes } = buildCitizenMesh(i);
-    // Slight random offset at home node so citizens don't stack directly
     const angle = (i / CITIZEN_COUNT) * Math.PI * 2;
-    const jitter = 0.8;
-    group.position.set(
-      homePos.x + Math.cos(angle) * jitter,
-      0,
-      homePos.z + Math.sin(angle) * jitter,
-    );
-
+    group.position.set(homePos.x + Math.cos(angle) * 0.8, 0, homePos.z + Math.sin(angle) * 0.8);
     actualScene.add(group);
-
-    citizens.push({
-      id: i,
-      mesh: group,
-      accessoryMaterial,
-      currentPaper: null,
-      homeNodeId,
-      accessoryMeshes,
-    });
+    citizens.push({ id: i, mesh: group, accessoryMaterial, currentPaper: null, homeNodeId, accessoryMeshes });
   }
 
   return {
@@ -186,6 +170,7 @@ export function createCitizenManager(
       snapshotCitizens: readonly CitizenPublic[],
       papers: readonly PaperPublic[],
     ): void {
+      activeTransitions.clear();
       const newSeatColors: Record<number, Color> = {};
       for (const p of papers) {
         newSeatColors[p.seatId] = p.color;
@@ -232,27 +217,29 @@ export function createCitizenManager(
       options = {},
     ): void {
       const c = citizens[citizenId];
-      if (!c) {
-        return;
-      }
+      if (!c) return;
 
       if (c.currentPaper !== seatId) {
         const colorName =
-          seatId === null
-            ? null
-            : (seatColors[seatId] ?? DEFAULT_SEAT_COLORS[seatId] ?? null);
+          seatId === null ? null : (seatColors[seatId] ?? DEFAULT_SEAT_COLORS[seatId] ?? null);
         const newColorHex =
-          colorName === null
-            ? PAPER_GREY_HEX
-            : (PAPER_COLOR_HEX[colorName] ?? PAPER_GREY_HEX);
+          colorName === null ? PAPER_GREY_HEX : (PAPER_COLOR_HEX[colorName] ?? PAPER_GREY_HEX);
 
-        c.accessoryMaterial.color.setHex(newColorHex);
+        const shouldLerp = isReducedMotion && options.reducedMotion !== false;
+        if (shouldLerp) {
+          activeTransitions.set(citizenId, {
+            startColor: c.accessoryMaterial.color.clone(),
+            targetColor: new THREE.Color(newColorHex),
+            elapsed: 0,
+            duration: 0.3,
+          });
+        } else {
+          activeTransitions.delete(citizenId);
+          c.accessoryMaterial.color.setHex(newColorHex);
+        }
+
         updateCitizenAccessory(c, colorName);
-        actualPoof.triggerPoof(
-          c.mesh.position,
-          newColorHex,
-          options.reducedMotion,
-        );
+        actualPoof.triggerPoof(c.mesh.position, newColorHex, options.reducedMotion ?? isReducedMotion);
         c.currentPaper = seatId;
       }
     },
@@ -278,7 +265,27 @@ export function createCitizenManager(
       return citizens[citizenId]?.mesh.rotation.y ?? 0;
     },
 
+    setReducedMotion(enabled: boolean): void {
+      isReducedMotion = enabled;
+    },
+
+    update(deltaSeconds: number): void {
+      if (activeTransitions.size === 0) return;
+      for (const [id, t] of activeTransitions) {
+        t.elapsed += deltaSeconds;
+        const progress = Math.min(1, t.elapsed / t.duration);
+        const c = citizens[id];
+        if (c) {
+          c.accessoryMaterial.color.copy(t.startColor).lerp(t.targetColor, progress);
+        }
+        if (progress >= 1) {
+          activeTransitions.delete(id);
+        }
+      }
+    },
+
     dispose(): void {
+      activeTransitions.clear();
       citizens.forEach((c) => {
         actualScene.remove(c.mesh);
         c.mesh.traverse((obj) => {

@@ -4,9 +4,26 @@ import {
   attachContextLossHandler,
   checkWebGLSupport,
   createFallbackView,
+  isWebGL2Supported,
 } from '../../src/client/town/webgl.ts';
 
 describe('WebGL detection and fallback view', () => {
+  it('checks specifically for WebGL2 support', () => {
+    const canvas = document.createElement('canvas');
+    vi.spyOn(canvas, 'getContext').mockImplementation(
+      (type) => (type === 'webgl2' ? null : ({} as RenderingContext)),
+    );
+    expect(isWebGL2Supported(canvas)).toBe(false);
+  });
+
+  it('isWebGL2Supported returns true when webgl2 context is available', () => {
+    const canvas = document.createElement('canvas');
+    vi.spyOn(canvas, 'getContext').mockImplementation(
+      (type) => (type === 'webgl2' ? ({} as RenderingContext) : null),
+    );
+    expect(isWebGL2Supported(canvas)).toBe(true);
+  });
+
   it('checkWebGLSupport returns false when canvas context returns null', () => {
     const mockDoc = {
       createElement: () => ({
@@ -20,7 +37,7 @@ describe('WebGL detection and fallback view', () => {
   it('checkWebGLSupport returns true when webgl context is returned', () => {
     const mockDoc = {
       createElement: () => ({
-        getContext: (type: string) => (type === 'webgl2' || type === 'webgl' ? {} : null),
+        getContext: (type: string) => (type === 'webgl2' ? {} : null),
       }),
     } as unknown as Document;
 
@@ -71,5 +88,24 @@ describe('WebGL detection and fallback view', () => {
     cleanup();
     canvas.dispatchEvent(restoredEvent);
     expect(onRestore).toHaveBeenCalledTimes(1); // not called again after unbind
+  });
+
+  it('supports onLost and onRestore callbacks object in attachContextLossHandler', () => {
+    const canvas = document.createElement('canvas');
+    const onLost = vi.fn();
+    const onRestore = vi.fn();
+
+    const cleanup = attachContextLossHandler(canvas, { onLost, onRestore });
+
+    const lostEvent = new Event('webglcontextlost', { cancelable: true });
+    canvas.dispatchEvent(lostEvent);
+    expect(lostEvent.defaultPrevented).toBe(true);
+    expect(onLost).toHaveBeenCalledTimes(1);
+
+    const restoredEvent = new Event('webglcontextrestored');
+    canvas.dispatchEvent(restoredEvent);
+    expect(onRestore).toHaveBeenCalledTimes(1);
+
+    cleanup();
   });
 });

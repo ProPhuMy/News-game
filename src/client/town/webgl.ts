@@ -1,20 +1,28 @@
-export function checkWebGLSupport(
-  customDocument?: Document,
+export function isWebGL2Supported(
+  canvasOrDoc?: HTMLCanvasElement | Document,
 ): boolean {
   try {
-    const doc = customDocument ?? (typeof document !== 'undefined' ? document : null);
-    if (!doc) {
-      return false;
+    let canvas: HTMLCanvasElement | null = null;
+    if (typeof HTMLCanvasElement !== 'undefined' && canvasOrDoc instanceof HTMLCanvasElement) {
+      canvas = canvasOrDoc;
+    } else {
+      const doc = (canvasOrDoc as Document) ?? (typeof document !== 'undefined' ? document : null);
+      if (!doc) {
+        return false;
+      }
+      canvas = doc.createElement('canvas');
     }
-    const canvas = doc.createElement('canvas');
-    const gl =
-      canvas.getContext('webgl2') ||
-      canvas.getContext('webgl') ||
-      canvas.getContext('experimental-webgl');
+    const gl = canvas.getContext('webgl2');
     return Boolean(gl);
   } catch {
     return false;
   }
+}
+
+export function checkWebGLSupport(
+  customDocument?: Document,
+): boolean {
+  return isWebGL2Supported(customDocument);
 }
 
 export interface FallbackView {
@@ -69,16 +77,42 @@ export function createFallbackView(
   };
 }
 
+export interface ContextLossHandlers {
+  onLost?: (event: Event) => void;
+  onRestore?: () => void;
+}
+
 export function attachContextLossHandler(
   canvas: HTMLCanvasElement,
-  onRestore?: () => void,
+  onLostOrHandlersOrRestore?:
+    | ((event: Event) => void)
+    | ContextLossHandlers
+    | (() => void),
+  maybeRestore?: () => void,
 ): () => void {
+  let lostCb: ((event: Event) => void) | undefined;
+  let restoreCb: (() => void) | undefined;
+
+  if (typeof onLostOrHandlersOrRestore === 'object' && onLostOrHandlersOrRestore !== null) {
+    lostCb = onLostOrHandlersOrRestore.onLost;
+    restoreCb = onLostOrHandlersOrRestore.onRestore;
+  } else if (typeof onLostOrHandlersOrRestore === 'function') {
+    if (typeof maybeRestore === 'function') {
+      lostCb = onLostOrHandlersOrRestore;
+      restoreCb = maybeRestore;
+    } else {
+      // Single function argument: treat as restore callback (backward compatibility)
+      restoreCb = onLostOrHandlersOrRestore as () => void;
+    }
+  }
+
   const handleLost = (event: Event): void => {
     event.preventDefault();
+    lostCb?.(event);
   };
 
   const handleRestored = (): void => {
-    onRestore?.();
+    restoreCb?.();
   };
 
   canvas.addEventListener('webglcontextlost', handleLost, false);
