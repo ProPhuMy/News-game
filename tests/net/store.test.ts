@@ -45,13 +45,15 @@ describe('client store', () => {
     store.receive(SERVER_EVENTS.private, frames.private);
     expect(store.getState().privateSnapshot?.seatId).toBe(0);
     store.receive(SERVER_EVENTS.public, { ...frames.public, version: 2, round: 1, phase: 'investigate' });
-    expect(store.getState().privateSnapshot).toBeNull();
+    expect(store.getState().privateSnapshot?.version).toBe(1);
+    expect(store.getState().publicSnapshot?.version).toBe(1);
     store.receive(SERVER_EVENTS.private, { ...frames.private, version: 2 });
     store.receive(SERVER_EVENTS.public, frames.public);
     expect(store.getState().publicSnapshot?.version).toBe(2);
     expect(store.getState().privateSnapshot?.version).toBe(2);
     store.receive(SERVER_EVENTS.private, { ...frames.private, version: 3 });
-    expect(store.getState().privateSnapshot).toBeNull();
+    expect(store.getState().privateSnapshot?.version).toBe(2);
+    expect(store.getState().publicSnapshot?.version).toBe(2);
     store.receive(SERVER_EVENTS.public, { ...frames.public, version: 3 });
     expect(store.getState().privateSnapshot?.version).toBe(3);
     store.dispose();

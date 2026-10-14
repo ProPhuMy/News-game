@@ -34,8 +34,14 @@ export function createClientStore(options: StoreOptions) {
     state = { ...state, ...patch };
     for (const listener of listeners) listener();
   };
-  const snapshots = () => update({ publicSnapshot: latestPublic,
-    privateSnapshot: latestPrivate?.version === latestPublic?.version ? latestPrivate : null });
+  const snapshots = () => {
+    // Publish matching pairs atomically; keep the last coherent pair while its successor is in flight.
+    if (latestPrivate && latestPublic && latestPrivate.version === latestPublic.version) {
+      update({ publicSnapshot: latestPublic, privateSnapshot: latestPrivate });
+    } else if (!state.privateSnapshot) {
+      update({ publicSnapshot: latestPublic, privateSnapshot: null });
+    }
+  };
   const clearSnapshots = () => { latestPrivate = null; latestPublic = null; update({ room: null, publicSnapshot: null, privateSnapshot: null }); };
   const send = (raw: unknown): string | null => {
     if (disposed) return null;
