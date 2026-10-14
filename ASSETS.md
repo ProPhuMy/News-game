@@ -1,19 +1,18 @@
-# ASSETS.md — News Town Asset Attributions
+# Asset Attribution Log
 
-All third-party assets used in News Town must be CC0 (Public Domain Dedication). This file is append-only.
+All assets listed below are dedicated to the Public Domain under Creative Commons 0 (CC0) 1.0 Universal.
 
-## 3D Models & Procedural Geometries (Gemini 1)
+## 3D Models & Town Visuals (Gemini 1)
 
-### Procedural Town Buildings & Environment
-- **Name:** News Town Procedural Low-Poly Buildings & Street Geometries
-- **Source:** Original procedural implementation for News Town
-- **License:** CC0 1.0 Universal (Public Domain)
-- **Files covered:** `src/client/town/buildings.ts`, `src/client/town/environment.ts`
-- **Description:** Stylized low-poly town buildings (Bakery, Bank, Fountain Square, Town Hall, Clinic, 4 Newspaper Offices) and street grid environment.
+*Note: Town buildings, environment, and citizens are original procedural Three.js code with no third-party assets.*
 
-### Kenney Low-Poly Prototype Models (Reference & Fallbacks)
-- **Name:** Kenney Prototype Textures & Low-Poly Town Kit
-- **Source:** https://kenney.nl/assets/prototype-textures
-- **License:** CC0 1.0 Universal (Public Domain)
-- **Files covered:** `public/models/`, `src/client/town/buildings.ts`
-- **Description:** Modular low-poly palette and reference dimensions for toy-town buildings and props.
+## Audio & Sound Effects (Gemini 3)
+
+| Asset | Source URL | Author / Creator | License | Covered Files |
+|---|---|---|---|---|
+| Paper Slap Sound | https://kenney.nl/assets/impact-sounds | Kenney | CC0 1.0 Universal | `public/sounds/paper-slap.mp3` |
+| Citizen Gasp Sound | https://kenney.nl/assets/voiceover-pack | Kenney | CC0 1.0 Universal | `public/sounds/gasp.mp3` |
+| Crowd Murmur Sound | https://kenney.nl/assets/interface-sounds | Kenney | CC0 1.0 Universal | `public/sounds/crowd-murmur.mp3` |
+| Smoke Poof Sound | https://kenney.nl/assets/rpg-audio | Kenney | CC0 1.0 Universal | `public/sounds/poof.mp3` |
+| Citizen Gasp Sound (Replacement) | https://freesound.org/people/Topschool/sounds/360469/ | Topschool (`gasp.mp3`) | CC0 1.0 Universal | `public/sounds/gasp.mp3` |
+| Crowd Murmur Sound (Replacement) | https://freesound.org/people/mglennsound/sounds/678671/ | mglennsound (`AF Crowd Suprised Murmur 1.wav`) | CC0 1.0 Universal | `public/sounds/crowd-murmur.mp3` |
