@@ -1,0 +1,43 @@
+import * as THREE from 'three';
+import { STREET_EDGES } from '../../shared/town-map.ts';
+import type { TownLayout } from './types.ts';
+
+export function createTownEnvironment(layout: TownLayout): THREE.Group {
+  const group = new THREE.Group();
+  group.name = 'town-environment';
+
+  // Ground plane
+  const groundGeo = new THREE.PlaneGeometry(96, 96);
+  const groundMat = new THREE.MeshLambertMaterial({ color: 0x98b87e });
+  const groundMesh = new THREE.Mesh(groundGeo, groundMat);
+  groundMesh.name = 'ground';
+  groundMesh.rotation.x = -Math.PI / 2;
+  groundMesh.position.y = -0.05;
+  groundMesh.receiveShadow = true;
+  group.add(groundMesh);
+
+  // Roads along street edges
+  const roadMat = new THREE.MeshLambertMaterial({ color: 0xded5c5 });
+  const roadWidth = 3.4;
+
+  STREET_EDGES.forEach(([fromId, toId]) => {
+    const p1 = layout.getNodeWorldPos(fromId);
+    const p2 = layout.getNodeWorldPos(toId);
+
+    const dx = p2.x - p1.x;
+    const dz = p2.z - p1.z;
+    const length = Math.hypot(dx, dz);
+    const angle = Math.atan2(dx, dz);
+
+    const roadGeo = new THREE.BoxGeometry(roadWidth, 0.04, length);
+    const roadMesh = new THREE.Mesh(roadGeo, roadMat);
+    roadMesh.name = `road-${fromId}-${toId}`;
+    roadMesh.position.set((p1.x + p2.x) / 2, 0.01, (p1.z + p2.z) / 2);
+    roadMesh.rotation.y = angle;
+    roadMesh.receiveShadow = true;
+
+    group.add(roadMesh);
+  });
+
+  return group;
+}
