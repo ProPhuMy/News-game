@@ -1,6 +1,7 @@
 import type { SeatId } from '../shared/ids.ts';
 import type { Exposure } from '../shared/snapshots.ts';
 import { TUNING } from '../shared/tuning.ts';
+import { chooseCitizens } from './citizens.ts';
 import { fallbackRating, juiceOf } from './rating.ts';
 import { stream } from './rng.ts';
 import type { Headline, MatchState } from './state.ts';
@@ -65,7 +66,9 @@ export function revealRound(s: MatchState): void {
   clampTrust(s);
   s.exposures.push(...exposures);
 
-  // 5. Citizens choose (Task 12) and readers are counted
+  // 5. Citizens choose and readers are counted
+  const exposedSeats = new Set(exposures.map((e) => e.seatId));
+  chooseCitizens(s, fresh, exposedSeats);
   for (const seat of s.seats) seat.readers.push(s.citizens.filter((c) => c.paper === seat.seatId).length);
 
   // 6. Reaction plan (Task 13)
