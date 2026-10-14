@@ -1,4 +1,4 @@
-/** Every balance number in one place (spec §6). Starting values; tuned with `npm run sim`. */
+/** Every balance number in one place (spec §6). Tuned with `npm run sim` (see docs/contract-requests/2026-10-13-claude-tuning.md). */
 export const TUNING = {
   seats: 4,
   citizens: 30,
@@ -8,17 +8,17 @@ export const TUNING = {
   botLockDelayMs: { min: 3_000, max: 15_000 },
   trust: {
     start: 50, min: 0, max: 100,
-    exposedBase: 10, exposedPerJuice: 2,
-    exposeBonus: 8, evidenceBonus: 6, unevidencedTruthBonus: 2,
+    exposedBase: 3, exposedPerJuice: 1,
+    exposeBonus: 8, evidenceBonus: 3, unevidencedTruthBonus: 2,
   },
-  townExposure: { base: 0.05, perJuice: 0.05, perRoundSurvived: 0.1, finalMultiplier: 2, finalCap: 0.9 },
-  investigation: { proofChance: 0.6, proofChanceTipMatch: 0.85 },
+  townExposure: { base: 0.02, perJuice: 0.025, perRoundSurvived: 0.02, finalMultiplier: 2, finalCap: 0.9 },
+  investigation: { proofChance: 0.4, proofChanceTipMatch: 0.85 },
   baseHype: { danger: 4, health_scare: 4, scandal: 3, great_deal: 2, weird_sighting: 5, all_clear: 1, expose: 4 },
   allClearJuiceCap: 2,
   juiceMin: 1,
   juiceMax: 5,
   appeal: {
-    relevanceFavorite: 10, relevanceOther: 3, juicePerPoint: 4, trustDivisor: 5, evidence: 8, loyalty: 6,
+    relevanceFavorite: 10, relevanceOther: 3, juicePerPoint: 6, trustDivisor: 5, evidence: 2, loyalty: 6,
     repeatPenalty: 10, repeatMin: -20, stayNoHeadline: 6, subscribeMin: 15, reactMin: 12,
   },
   gullibility: { min: 0.1, max: 1 },
