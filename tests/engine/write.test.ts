@@ -80,6 +80,15 @@ describe('locking an expose', () => {
     expect(h).toMatchObject({ claim: 'expose', exposeOf: 'h1-1', location: 'bank', isTrue: true, evidence: false });
   });
 
+  it('names the exposed paper on the lock event, and only for exposes', () => {
+    const s = round2WithLie(true);
+    const expose = applyCommand(s, 0, lockExpose(s, 'h1-1'), 0).events[0];
+    expect(expose).toMatchObject({ type: 'headlineLocked', claim: 'expose', exposedPaperName: s.seats[1]!.paperName });
+    const claim = applyCommand(s, 0, lockClaim(s, 'bank', 'scandal'), 0).events[0];
+    expect(claim).toMatchObject({ type: 'headlineLocked', claim: 'scandal' });
+    expect(claim).not.toHaveProperty('exposedPaperName');
+  });
+
   it('rejects a proof voided because the headline was already exposed', () => {
     const s = round2WithLie(true, 1);
     expect(applyCommand(s, 0, lockExpose(s, 'h1-1'), 0).result).toEqual({ ok: false, error: 'NO_PROOF' });

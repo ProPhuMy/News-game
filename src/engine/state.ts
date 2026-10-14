@@ -75,6 +75,8 @@ export type EngineEvent =
   | {
       type: 'headlineLocked'; headlineId: string; seatId: SeatId; text: string; location: Location; claim: Claim;
       exposedHeadlineText?: string;
+      /** Exposes only: the exposed paper's public name. */
+      exposedPaperName?: string;
       /** Non-null: bot or Caretaker headline — ask the AI to write text, then rate it. */
       botPersonality: Personality | null;
       /** What reveal applies if no rating arrives; pass to rateHeadline so a provider failure returns the same value. */

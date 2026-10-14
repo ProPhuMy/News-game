@@ -19,7 +19,18 @@ export interface RateHeadlineInput {
   /** Prepared by the engine (headlineLocked.fallbackRating); the adapter returns it only on provider failure. Never sent to the model. */
   fallbackRating?: Rating;
 }
-export interface WriteBotHeadlineInput { personality: Personality; location: Location; claim: Claim; exposedHeadlineText?: string }
+export interface WriteBotHeadlineInput {
+  personality: Personality;
+  location: Location;
+  claim: Claim;
+  exposedHeadlineText?: string;
+  /** The engine's own text (headlineLocked.text). Returned unchanged when the provider is off, fails or returns bad output. Never sent to the model. */
+  fallbackText: string;
+  /** Public name of the exposed paper (headlineLocked.exposedPaperName), for exposes only. Sent to the model inside the data block. */
+  exposedPaperName?: string;
+  /** Scopes the generated-text cache to one match and headline. Never sent to the model. */
+  generationId?: string;
+}
 
 /** Implemented by Codex in src/ai/. Never rejects: falls back on timeout (TUNING.limits.aiTimeoutMs) or bad output. */
 export interface AiAdapter {

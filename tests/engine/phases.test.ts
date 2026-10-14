@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyCommand, createMatch, privateView, publicView, tick } from '../../src/engine/index.ts';
+import { applyCommand, createMatch, privateView, publicView, tick, type MatchState } from '../../src/engine/index.ts';
 import { PrivateSnapshotSchema, PublicSnapshotSchema } from '../../src/shared/snapshots.ts';
 import { TUNING } from '../../src/shared/tuning.ts';
 import { SAMPLE_CONTENT } from '../../src/sim/sample-content.ts';
@@ -74,6 +74,11 @@ describe('phase machine', () => {
     s = applyCommand(s, 0, { type: 'connection', connected: false }, now).state;
     s = tick(s, now).state;
     expect([s.round, s.phase]).toEqual([1, 'investigate']);
+  });
+
+  it('throws instead of looping forever on an unknown phase', () => {
+    const s = { ...soloMatch(), phase: 'bogus' as unknown as MatchState['phase'], deadlineMs: 0 };
+    expect(() => tick(s, 1)).toThrow(/unknown phase/);
   });
 
   it('produces schema-valid snapshots in every phase', () => {

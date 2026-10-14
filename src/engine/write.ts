@@ -19,7 +19,7 @@ export function lockHeadline(s: MatchState, seat: Seat, story: Story, rawText: s
   };
 
   let headline: Headline;
-  let exposedHeadlineText: string | undefined;
+  let exposed: { exposedHeadlineText: string; exposedPaperName: string } | undefined;
   if (story.kind === 'claim') {
     const matches = seat.evidence.some((c) => c.round === s.round && c.location === story.location && c.claim === story.claim);
     if (story.attachEvidence && !matches) return 'EVIDENCE_MISMATCH';
@@ -31,7 +31,7 @@ export function lockHeadline(s: MatchState, seat: Seat, story: Story, rawText: s
     const target = s.headlines.find((h) => h.id === story.headlineId);
     if (!target || target.exposedRound !== null || !seat.proofs.some((p) => p.headlineId === target.id)) return 'NO_PROOF';
     headline = { ...base, location: target.location, claim: 'expose', exposeOf: target.id, evidence: false, isTrue: true };
-    exposedHeadlineText = target.text;
+    exposed = { exposedHeadlineText: target.text, exposedPaperName: s.seats[target.seatId]!.paperName };
   }
 
   s.headlines.push(headline);
@@ -40,7 +40,7 @@ export function lockHeadline(s: MatchState, seat: Seat, story: Story, rawText: s
   seat.lockedVisibleAtMs = botAuthored ? nowMs + min + stream(s.seed, 'lockDelay', s.round, seat.seatId).int(max - min + 1) : nowMs;
   events.push({
     type: 'headlineLocked', headlineId: headline.id, seatId: seat.seatId, text: headline.text,
-    location: headline.location, claim: headline.claim, exposedHeadlineText, botPersonality: headline.authorPersonality,
+    location: headline.location, claim: headline.claim, ...exposed, botPersonality: headline.authorPersonality,
     fallbackRating: fallbackRating(s, headline),
   });
   return null;
