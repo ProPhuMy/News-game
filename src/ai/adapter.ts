@@ -62,11 +62,13 @@ export function createAiAdapter(options: ProviderOptions & { content: GameConten
   };
   return {
     rateHeadline(raw) {
-      const input = normalized(raw);
+      const { fallbackRating, ...data } = raw;
+      const input = normalized(data);
       const bubbles = content.bubbles[input.claim].filter(passes);
-      const fallback: Rating = { juiciness: TUNING.baseHype[input.claim], onTopic: true, inappropriate: false,
+      const defaultFallback: Rating = { juiciness: TUNING.baseHype[input.claim], onTopic: true, inappropriate: false,
         bubbles: bubbles.slice(0, 2) };
-      RatingSchema.parse(fallback);
+      const supplied = RatingSchema.safeParse(fallbackRating);
+      const fallback = supplied.success ? supplied.data : RatingSchema.parse(defaultFallback);
       return call('rateHeadline', input, fallback, (text) => {
         const rating = RatingSchema.parse(JSON.parse(text));
         return { ...rating, bubbles: rating.bubbles.map((bubble, index) => passes(bubble) ? bubble : fallback.bubbles[index % 2]!) };

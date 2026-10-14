@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { createHeadlineRater } from '../../src/server/ratings.ts';
 import { createRoomManager } from '../../src/server/rooms.ts';
 import { createMatchRunner } from '../../src/server/matches.ts';
@@ -6,6 +6,8 @@ import { SAMPLE_CONTENT } from '../../src/sim/sample-content.ts';
 import { COLORS, LOCATIONS, EVENT_CLAIMS, PULLED_TEXT } from '../../src/shared/ids.ts';
 import { publicView } from '../../src/engine/index.ts';
 import type { Rating } from '../../src/shared/ai.ts';
+import { createAiAdapter } from '../../src/ai/adapter.ts';
+import { fallbackRating } from '../../src/engine/rating.ts';
 
 const ratingSetup = (investigate = false) => {
   const rooms = createRoomManager();
@@ -16,8 +18,11 @@ const ratingSetup = (investigate = false) => {
   let resolveRating: (rating: Rating) => void = () => {};
   let calls = 0;
   const runner = createMatchRunner(rooms, SAMPLE_CONTENT, () => {}, {
-    rateHeadline: () => { calls++; return new Promise((resolve) => { resolveRating = resolve; }); },
-    writeBotHeadline: async () => 'unused',
+    rateHeadline: (input) => {
+      if (input.text !== 'Bakery danger!') return Promise.resolve(input.fallbackRating ?? rated);
+      calls++; return new Promise((resolve) => { resolveRating = resolve; });
+    },
+    writeBotHeadline: async ({ personality }) => `AI ${personality} headline`,
   });
   runner.handle(room, 0, { type: 'startMatch', actionId: 'start' }, 0);
   for (const seat of [0, 1]) runner.handle(room, seat, { type: 'skipIntro', actionId: `intro-${seat}`, round: 0, phase: 'intro' }, 1);
@@ -33,6 +38,61 @@ const lock = { type: 'lockHeadline' as const, actionId: 'lock', round: 1, phase:
 const rated = { juiciness: 5, onTopic: true, inappropriate: false, bubbles: ['Run!', 'Stay away!'] };
 
 describe('asynchronous rating lifecycle', () => {
+  it('writes bot text and preserves each engine-owned personality fallback', async () => {
+    const rooms = createRoomManager();
+    const session = rooms.create({ displayName: 'Editor', paperName: 'Daily', color: COLORS[0] }, 'a', 'ip', 0);
+    const room = rooms.require(session.code);
+    const adapter = createAiAdapter({ provider: 'none', content: SAMPLE_CONTENT });
+    const runner = createMatchRunner(rooms, SAMPLE_CONTENT, () => {}, {
+      ...adapter, writeBotHeadline: async ({ personality }) => `AI ${personality} headline`,
+    });
+    runner.handle(room, 0, { type: 'startMatch', actionId: 'start' }, 0);
+    runner.handle(room, 0, { type: 'skipIntro', actionId: 'intro', round: 0, phase: 'intro' }, 1);
+    runner.handle(room, 0, { type: 'skipInvestigate', actionId: 'investigate', round: 1, phase: 'investigate' }, 2);
+    await vi.waitFor(() => {
+      expect(room.state!.headlines.filter((headline) => headline.botAuthored)).toHaveLength(3);
+      for (const headline of room.state!.headlines) {
+        expect(headline.rating).toEqual(fallbackRating(room.state!, headline));
+        expect(headline.text).toBe(`AI ${headline.authorPersonality} headline`);
+      }
+    });
+    expect(room.state!.headlines.find((headline) => headline.authorPersonality === 'gazette')!.rating!.juiciness).toBe(2);
+  });
+
+  it('processes a new Caretaker headline event when a human disconnects', async () => {
+    const { runner, room, rooms } = ratingSetup(true);
+    rooms.disconnect('a', 3);
+    runner.connection(room, 0, false, 3);
+    await vi.waitFor(() => {
+      const headline = room.state!.headlines.find((headline) => headline.id === 'h1-0')!;
+      expect(headline.text).toBe('AI gazette headline');
+      expect(headline.rating).toEqual(fallbackRating(room.state!, headline));
+    });
+  });
+
+  it('never delays reveal for bot writing and ignores text completed after reveal', async () => {
+    const rooms = createRoomManager();
+    const session = rooms.create({ displayName: 'Editor', paperName: 'Daily', color: COLORS[0] }, 'a', 'ip', 0);
+    const room = rooms.require(session.code);
+    const writers: ((text: string) => void)[] = [];
+    let ratings = 0;
+    const runner = createMatchRunner(rooms, SAMPLE_CONTENT, () => {}, {
+      writeBotHeadline: () => new Promise((resolve) => writers.push(resolve)),
+      rateHeadline: async () => { ratings++; return rated; },
+    });
+    runner.handle(room, 0, { type: 'startMatch', actionId: 'start' }, 0);
+    runner.handle(room, 0, { type: 'skipIntro', actionId: 'intro', round: 0, phase: 'intro' }, 1);
+    runner.handle(room, 0, { type: 'skipInvestigate', actionId: 'investigate', round: 1, phase: 'investigate' }, 2);
+    expect(writers).toHaveLength(3);
+    runner.handle(room, 0, { type: 'skipWrite', actionId: 'skip', round: 1, phase: 'write' }, 3);
+    expect(room.state!.phase).toBe('reveal');
+    const original = structuredClone(room.state!.headlines);
+    for (const resolve of writers) resolve('Late bot text');
+    await Promise.resolve();
+    expect(room.state!.headlines).toEqual(original);
+    expect(ratings).toBe(0);
+  });
+
   it('acknowledges a real lock without waiting and applies an early engine rating', async () => {
     const { runner, room, resolve, calls } = ratingSetup();
     expect(runner.handle(room, 0, lock, 3)).toBeUndefined();
@@ -90,7 +150,7 @@ describe('asynchronous rating lifecycle', () => {
       writeBotHeadline: async () => 'unused',
     }, () => { published = true; });
     const result = rater.rate(room, { type: 'headlineLocked', headlineId: 'h1-0', seatId: 0,
-      text: 'Bakery danger', location: LOCATIONS[0], claim: EVENT_CLAIMS[0], botPersonality: null });
+      text: 'Bakery danger', location: LOCATIONS[0], claim: EVENT_CLAIMS[0], botPersonality: null, fallbackRating: rated });
     rooms.remove(room.code);
     resolveRating({ juiciness: 4, onTopic: true, inappropriate: false, bubbles: ['Run!', 'Stay away!'] });
     await result;

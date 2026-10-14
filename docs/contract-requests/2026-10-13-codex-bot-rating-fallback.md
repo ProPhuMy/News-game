@@ -1,6 +1,6 @@
 # Preserve engine-owned bot fallback ratings
 
-Status: approved by the user on October 13, 2026. Claude owns the shared and engine changes; Codex will integrate the approved fields once delivered.
+Status: implemented on October 13, 2026. The user approved the change; Claude delivered the shared input and engine event in main commit `aef0f58`. Codex integrated the fields on `codex/project-work`, enabled bot/Caretaker writing and rating, and verified validated fallback copies without transmitting fallback context to the model.
 
 Spec §8 requires Tabloid fallback juiciness 4, Gazette 2, and a seeded random Wildcard value. Spec §9.3 and `AiAdapter` require calls to return a valid fallback rather than reject.
 

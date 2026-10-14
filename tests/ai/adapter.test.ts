@@ -13,6 +13,38 @@ const options = { provider: 'openai' as const, model: 'test-model', apiKey: 'tes
 afterEach(() => vi.useRealTimers());
 
 describe('AI adapter', () => {
+  it.each(['none', 'failed', 'invalid', 'timeout'])('preserves a validated engine fallback on %s', async (mode) => {
+    const fallbackRating = { juiciness: 2, onTopic: true, inappropriate: false, bubbles: ['Engine bubble one', 'Engine bubble two'] };
+    vi.useFakeTimers();
+    const adapter = createAiAdapter({ ...options, provider: mode === 'none' ? 'none' : 'openai', fetch: async () => {
+      if (mode === 'timeout') return new Promise<Response>(() => {});
+      return mode === 'failed' ? new Response('', { status: 500 }) : response('{}');
+    } });
+    const pending = adapter.rateHeadline({ ...input, fallbackRating });
+    if (mode === 'timeout') await vi.advanceTimersByTimeAsync(3000);
+    const result = await pending;
+    expect(result).toEqual(fallbackRating);
+    expect(result).not.toBe(fallbackRating);
+    result.bubbles[0] = 'Changed';
+    expect(fallbackRating.bubbles[0]).toBe('Engine bubble one');
+  });
+
+  it('never sends engine fallback context to the model and uses successful provider output', async () => {
+    let request: unknown;
+    const adapter = createAiAdapter({ ...options, fetch: async (_url, init) => {
+      request = JSON.parse(String(init?.body));
+      return response(JSON.stringify(rating));
+    } });
+    expect(await adapter.rateHeadline({ ...input, fallbackRating: { ...rating, juiciness: 2, bubbles: ['PRIVATE FALLBACK ONE', 'PRIVATE FALLBACK TWO'] } })).toEqual(rating);
+    expect(JSON.stringify(request)).not.toContain('fallbackRating');
+    expect(JSON.stringify(request)).not.toContain('PRIVATE FALLBACK');
+  });
+
+  it('falls back safely when supplied engine context is invalid', async () => {
+    const adapter = createAiAdapter({ provider: 'none', content: SAMPLE_CONTENT });
+    expect((await adapter.rateHeadline({ ...input, fallbackRating: { ...rating, juiciness: 99 } })).juiciness).toBe(4);
+  });
+
   it('uses schema-valid fallbacks without network in none mode', async () => {
     const adapter = createAiAdapter({ provider: 'none', content: SAMPLE_CONTENT,
       fetch: async () => { throw new Error('none must never fetch'); } });

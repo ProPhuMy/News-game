@@ -72,7 +72,9 @@ export function createMatchRunner(rooms: RoomManager, rawContent: GameContent,
     },
     connection(room: Room, seatId: number, connected: boolean, nowMs: number) {
       if (!room.state || disposed) return;
-      room.state = applyCommand(room.state, seatId, { type: 'connection', connected }, nowMs).state;
+      const outcome = applyCommand(room.state, seatId, { type: 'connection', connected }, nowMs);
+      room.state = outcome.state;
+      for (const event of outcome.events) if (event.type === 'headlineLocked') void rater?.rate(room, event);
       advance(room, nowMs);
       publish(room);
     },
