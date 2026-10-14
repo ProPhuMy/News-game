@@ -16,7 +16,7 @@ const receive = (socket: Socket, event: string, predicate: (data: unknown) => bo
     socket.on(event, listener);
   });
 
-describe('integrated socket service with M0 engine', () => {
+describe('integrated socket service with real engine', () => {
   let game: Awaited<ReturnType<typeof createGameServer>>;
   let url: string;
   const clients: Socket[] = [];
@@ -62,6 +62,9 @@ describe('integrated socket service with M0 engine', () => {
     }
     expect(room.state!.phase).toBe('ended');
     expect(room.state!.round).toBe(5);
+    expect(room.state!.headlines.length).toBeGreaterThan(0);
+    expect(room.state!.final?.winners.length).toBeGreaterThan(0);
+    expect(room.state!.seats.flatMap((seat) => seat.readers).reduce((sum, readers) => sum + readers, 0)).toBeGreaterThan(0);
     for (const payload of payloads) expect(JSON.stringify(payload)).not.toMatch(/gullibility|templateId|"tip"|"proofs"|"token"|"isTrue"/);
   });
 

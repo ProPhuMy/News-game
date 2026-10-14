@@ -10,6 +10,16 @@
 
 **Spec:** [News Town design](../specs/2026-10-09-news-town-design.md), especially §§4, 9, and 10. Repository rules: [AGENTS.md](../../../AGENTS.md).
 
+## Execution Status — October 13, 2026
+
+Codex work is isolated in `/home/agent/.codex/worktrees/afb0/game` on `codex/project-work`. Claude's real engine and recorded fixtures from main commit `68487cf` are merged into this branch. No Codex changes have been merged or pushed to main.
+
+Implemented and verified: text boundaries, rooms/seat authorization, socket idempotency and ingress limits, engine scheduling and private views, provider adapters, human asynchronous ratings, client store/reconnect, recorded playback, static/Vite service, and deployment configuration. An independent review's four significant findings have regression-tested fixes. Real-engine socket matches finish five rounds and the finale; all three Claude recordings play through their scoreboards.
+
+Remaining: bot generation/rating integration awaits Claude's user-approved fallback contract addition in `docs/contract-requests/2026-10-13-codex-bot-rating-fallback.md`. Content and client UI are not yet on main, so the production build/browser acceptance cannot run. Docker daemon access is denied; the image is not built. Live provider/model smoke checks need credentials and a selected model. No deployment or paid provisioning has occurred.
+
+Verification: `npm test` — 178 passed, 1 skipped (real content absent); `npm run typecheck`, `npm run lint`, and `git diff --check` pass. The updated shared tuning from Claude is used directly; server/client contain no copied balance values.
+
 ## Global Constraints
 
 - Work on `codex/project-work`. The user merges; do not merge into main.

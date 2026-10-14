@@ -168,7 +168,7 @@ export function createClientStore(options: StoreOptions) {
       pending.clear();
       latestServerNowMs = -Infinity;
       clearSnapshots();
-      update({ session: null, pending: [], error: null });
+      update({ session: null, pending: [], error: null, serverOffsetMs: 0 });
     },
     dispose() {
       disposed = true;

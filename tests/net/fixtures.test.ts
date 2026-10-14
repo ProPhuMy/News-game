@@ -5,6 +5,9 @@ import { createMatch, tick, publicView, privateView } from '../../src/engine/ind
 import { createRoomManager } from '../../src/server/rooms.ts';
 import { SAMPLE_CONTENT } from '../../src/sim/sample-content.ts';
 import { COLORS } from '../../src/shared/ids.ts';
+import honest from '../../src/sim/fixtures/solo-honest.json';
+import exposures from '../../src/sim/fixtures/exposures.json';
+import caretaker from '../../src/sim/fixtures/caretaker-pulled.json';
 
 // Generate test frames from the real M0 engine; do not hand-edit Claude's recordings.
 const recording = () => {
@@ -21,6 +24,21 @@ const recording = () => {
 afterEach(() => vi.useRealTimers());
 
 describe('fixture playback', () => {
+  it.each([honest, exposures, caretaker])('plays Claude recording $name through its final scoreboard', async (fixture) => {
+    vi.useFakeTimers();
+    const store = createClientStore({ send: () => { throw new Error('no fixture network'); } });
+    const player = createFixturePlayer(fixture, store);
+    player.play();
+    await vi.runAllTimersAsync();
+    expect(store.getState().publicSnapshot?.phase).toBe('ended');
+    expect(store.getState().publicSnapshot?.round).toBe(5);
+    expect(store.getState().publicSnapshot?.final?.winners.length).toBeGreaterThan(0);
+    expect(store.getState().privateSnapshot?.version).toBe(store.getState().publicSnapshot?.version);
+    player.play();
+    expect(store.getState().publicSnapshot?.phase).toBe('intro');
+    player.dispose();
+    store.dispose();
+  });
   it('plays validated snapshots through the store without network and offsets deadlines', async () => {
     vi.useFakeTimers();
     vi.setSystemTime(100_000);
@@ -32,6 +50,19 @@ describe('fixture playback', () => {
     await vi.advanceTimersByTimeAsync(20_000);
     expect(store.getState().publicSnapshot?.phase).toBe('investigate');
     expect(store.getState().privateSnapshot?.version).toBe(store.getState().publicSnapshot?.version);
+    player.dispose();
+    store.dispose();
+  });
+
+  it('clears the live server clock offset when switching to recorded playback', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(100_000);
+    const store = createClientStore({ send: () => {} });
+    const id = store.actions.startMatch()!;
+    store.receive('ack', { actionId: id, ok: true, serverNowMs: 105_000 });
+    const player = createFixturePlayer(recording(), store);
+    player.play();
+    expect(store.remainingMs()).toBe(20_000);
     player.dispose();
     store.dispose();
   });

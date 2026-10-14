@@ -1,5 +1,7 @@
 # Preserve engine-owned bot fallback ratings
 
+Status: approved by the user on October 13, 2026. Claude owns the shared and engine changes; Codex will integrate the approved fields once delivered.
+
 Spec §8 requires Tabloid fallback juiciness 4, Gazette 2, and a seeded random Wildcard value. Spec §9.3 and `AiAdapter` require calls to return a valid fallback rather than reject.
 
 `RateHeadlineInput` currently has no fallback context. A provider failure returns claim base hype, indistinguishable from a successful rating. Applying it to a bot headline overwrites the personality fallback the engine should supply. The server cannot compute the Wildcard value because bot randomness and game rules belong to the engine.
