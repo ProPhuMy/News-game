@@ -50,4 +50,29 @@ describe('Route Interpolator', () => {
     expect(state.position.x).toBeCloseTo(center.x, 2);
     expect(state.position.z).toBeCloseTo(center.z, 2);
   });
+
+  it('interpolates route towards destination slot offset along final segment', () => {
+    const layout = createTownLayout();
+    const interpolator = createRouteInterpolator(layout);
+
+    const route = ['r0c0', 'r0c1'];
+    const slotOffset = { x: 1.5, z: 2.0 };
+    const endNode = layout.getNodeWorldPos('r0c1');
+
+    const endState = interpolator.interpolateRoute(route, 1.0, undefined, slotOffset);
+    expect(endState.position.x).toBeCloseTo(endNode.x + 1.5, 2);
+    expect(endState.position.z).toBeCloseTo(endNode.z + 2.0, 2);
+  });
+
+  it('safely skips unknown route nodes without crashing interpolation', () => {
+    const layout = createTownLayout();
+    const interpolator = createRouteInterpolator(layout);
+
+    const route = ['r0c0', 'invalid_middle_node', 'r0c1'];
+    expect(() => interpolator.interpolateRoute(route, 0.5)).not.toThrow();
+    const state = interpolator.interpolateRoute(route, 1.0);
+    const endNode = layout.getNodeWorldPos('r0c1');
+    expect(state.position.x).toBeCloseTo(endNode.x, 2);
+    expect(state.position.z).toBeCloseTo(endNode.z, 2);
+  });
 });

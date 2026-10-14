@@ -11,6 +11,8 @@ export interface Vector3Coord {
 
 export interface TownLayout {
   getNodeWorldPos(nodeId: string): Vector3Coord;
+  getNodeWorldPosition(nodeId: string): Vector3Coord;
+  hasNode(nodeId: string): boolean;
   getStreetNodes(): readonly StreetNode[];
   getLocationNode(location: Location): string;
   getOfficeNode(seatId: SeatId): string;

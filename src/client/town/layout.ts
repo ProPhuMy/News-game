@@ -23,6 +23,14 @@ export function createTownLayout(
       return { x: node.x, y: 0, z: node.z };
     },
 
+    getNodeWorldPosition(nodeId: string): Vector3Coord {
+      return this.getNodeWorldPos(nodeId);
+    },
+
+    hasNode(nodeId: string): boolean {
+      return nodeMap.has(nodeId);
+    },
+
     getStreetNodes(): readonly StreetNode[] {
       return customNodes;
     },

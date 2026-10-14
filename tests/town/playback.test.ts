@@ -97,4 +97,138 @@ describe('Playback Coordinator', () => {
       expect.any(Function),
     );
   });
+
+  function createMockPlan(): ReactionPlan {
+    const citizens = [];
+    for (let i = 0; i < 30; i++) {
+      citizens.push({
+        citizenId: i,
+        behavior: 'routine' as const,
+        route: ['r0c0', 'r0c1', 'r1c1'],
+        fromPaper: (i % 4) as 0 | 1 | 2 | 3,
+        toPaper: (i === 0 ? 0 : ((i + 1) % 4)) as 0 | 1 | 2 | 3, // citizen 0 stays loyal (fromPaper=0, toPaper=0)
+        bubble: null,
+      });
+    }
+    return {
+      round: 1,
+      exposures: [],
+      citizens,
+      recap: {
+        headlineId: 'h1',
+        location: 'bakery',
+        behavior: 'routine',
+        reactors: 30,
+        gainSeatId: 0,
+        gained: 5,
+      },
+    };
+  }
+
+  it('guarantees all citizens reach destination with toPaper when started with short duration', async () => {
+    const scene = new THREE.Scene();
+    const layout = createTownLayout();
+    const buildings = createTownBuildings(layout);
+    const poof = createPoofEffect(scene);
+    const citizenMgr = createCitizenManager(layout, scene, poof);
+    const interpolator = createRouteInterpolator(layout);
+
+    const coordinator = createPlaybackCoordinator({
+      layout,
+      buildings,
+      citizens: citizenMgr,
+      interpolator,
+      bubbles: { showBubble: vi.fn(), update: vi.fn(), clear: vi.fn() },
+      poof,
+    });
+
+    const plan = createMockPlan(); // 30 citizens, citizen 0 stays loyal (fromPaper=0, toPaper=0)
+    await coordinator.startPlan(plan, 0.3);
+    coordinator.update(0.3);
+
+    for (const entry of plan.citizens) {
+      const pos = citizenMgr.getCitizenPosition(entry.citizenId);
+      const dest = layout.getNodeWorldPosition(entry.route[entry.route.length - 1]!);
+      expect(Math.hypot(pos.x - dest.x, pos.z - dest.z)).toBeLessThan(3.0); // within slot radius
+      expect(citizenMgr.getCitizenHatColor(entry.citizenId)).not.toBe(0x7f8c8d); // not grey
+    }
+  });
+
+  it('gracefully handles unknown route node without crashing loop', () => {
+    const scene = new THREE.Scene();
+    const layout = createTownLayout();
+    const buildings = createTownBuildings(layout);
+    const poof = createPoofEffect(scene);
+    const citizenMgr = createCitizenManager(layout, scene, poof);
+    const interpolator = createRouteInterpolator(layout);
+
+    const coordinator = createPlaybackCoordinator({
+      layout,
+      buildings,
+      citizens: citizenMgr,
+      interpolator,
+      bubbles: { showBubble: vi.fn(), update: vi.fn(), clear: vi.fn() },
+      poof,
+    });
+
+    const plan = createMockPlan();
+    plan.citizens[0]!.route.push('invalid_node_xyz');
+    expect(() => coordinator.startPlan(plan, 1.0)).not.toThrow();
+    expect(() => coordinator.update(0.5)).not.toThrow();
+  });
+
+  it('assigns distinct slot offsets so citizens at the same destination do not overlap', async () => {
+    const scene = new THREE.Scene();
+    const layout = createTownLayout();
+    const buildings = createTownBuildings(layout);
+    const poof = createPoofEffect(scene);
+    const citizenMgr = createCitizenManager(layout, scene, poof);
+    const interpolator = createRouteInterpolator(layout);
+
+    const coordinator = createPlaybackCoordinator({
+      layout,
+      buildings,
+      citizens: citizenMgr,
+      interpolator,
+      bubbles: { showBubble: vi.fn(), update: vi.fn(), clear: vi.fn() },
+      poof,
+    });
+
+    const plan = createMockPlan(); // all 30 citizens heading to 'r1c1'
+    await coordinator.startPlan(plan, 0.3);
+    coordinator.update(0.3);
+
+    const positions = plan.citizens.map((c) => citizenMgr.getCitizenPosition(c.citizenId));
+    for (let i = 0; i < positions.length; i++) {
+      for (let j = i + 1; j < positions.length; j++) {
+        const dist = positions[i]!.distanceTo(positions[j]!);
+        expect(dist).toBeGreaterThanOrEqual(0.35); // distinct slot separation
+      }
+    }
+  });
+
+  it('sets loyal reader hat to fromPaper at plan start before paper switches', () => {
+    const scene = new THREE.Scene();
+    const layout = createTownLayout();
+    const buildings = createTownBuildings(layout);
+    const poof = createPoofEffect(scene);
+    const citizenMgr = createCitizenManager(layout, scene, poof);
+    const interpolator = createRouteInterpolator(layout);
+
+    const coordinator = createPlaybackCoordinator({
+      layout,
+      buildings,
+      citizens: citizenMgr,
+      interpolator,
+      bubbles: { showBubble: vi.fn(), update: vi.fn(), clear: vi.fn() },
+      poof,
+    });
+
+    const plan = createMockPlan(); // citizen 0 has fromPaper: 0, toPaper: 0
+    coordinator.startPlan(plan, 2.0);
+
+    // Initial hat color should be seat 0's color (red: 0xc0392b), not grey (0x7f8c8d)
+    expect(citizenMgr.getCitizenHatColor(0)).toBe(0xc0392b);
+  });
 });
+

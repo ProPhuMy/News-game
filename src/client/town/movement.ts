@@ -11,7 +11,49 @@ export interface RouteInterpolator {
     routeNodeIds: readonly string[],
     progress: number,
     jitterOffset?: { x: number; z: number },
+    destinationOffset?: { x: number; z: number },
   ): RouteState;
+}
+
+const warnedNodes = new Set<string>();
+
+function nodeExists(layout: TownLayout, id: string): boolean {
+  if (typeof layout.hasNode === 'function') {
+    return layout.hasNode(id);
+  }
+  try {
+    layout.getNodeWorldPos(id);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function resolveValidPoints(
+  layout: TownLayout,
+  routeNodeIds: readonly string[],
+): Vector3Coord[] {
+  const points: Vector3Coord[] = [];
+  for (const id of routeNodeIds) {
+    if (!id) continue;
+    if (!nodeExists(layout, id)) {
+      if (!warnedNodes.has(id)) {
+        warnedNodes.add(id);
+        console.warn(`[TownMovement] Unknown route node: ${id}`);
+      }
+      continue;
+    }
+
+    try {
+      points.push(layout.getNodeWorldPos(id));
+    } catch {
+      if (!warnedNodes.has(id)) {
+        warnedNodes.add(id);
+        console.warn(`[TownMovement] Unknown route node: ${id}`);
+      }
+    }
+  }
+  return points;
 }
 
 export function createRouteInterpolator(layout: TownLayout): RouteInterpolator {
@@ -20,44 +62,50 @@ export function createRouteInterpolator(layout: TownLayout): RouteInterpolator {
       routeNodeIds: readonly string[],
       progress: number,
       jitterOffset?: { x: number; z: number },
+      destinationOffset?: { x: number; z: number },
     ): RouteState {
-      if (routeNodeIds.length === 0) {
+      const points = resolveValidPoints(layout, routeNodeIds);
+
+      if (points.length === 0) {
         return {
           position: new THREE.Vector3(
-            jitterOffset?.x ?? 0,
+            (destinationOffset?.x ?? 0) + (jitterOffset?.x ?? 0),
             0,
-            jitterOffset?.z ?? 0,
+            (destinationOffset?.z ?? 0) + (jitterOffset?.z ?? 0),
           ),
           headingAngle: 0,
         };
       }
 
-      if (routeNodeIds.length === 1) {
-        const nodeId = routeNodeIds[0];
-        if (!nodeId) {
-          return { position: new THREE.Vector3(), headingAngle: 0 };
+      if (points.length === 1) {
+        const p0 = points[0]!;
+        return {
+          position: new THREE.Vector3(
+            p0.x + (destinationOffset?.x ?? 0) + (jitterOffset?.x ?? 0),
+            0,
+            p0.z + (destinationOffset?.z ?? 0) + (jitterOffset?.z ?? 0),
+          ),
+          headingAngle: 0,
+        };
+      }
+
+      const pointsWithDest: Vector3Coord[] = points.map((p, idx) => {
+        if (idx === points.length - 1 && destinationOffset) {
+          return {
+            x: p.x + destinationOffset.x,
+            y: p.y,
+            z: p.z + destinationOffset.z,
+          };
         }
-        const p = layout.getNodeWorldPos(nodeId);
-        return {
-          position: new THREE.Vector3(
-            p.x + (jitterOffset?.x ?? 0),
-            0,
-            p.z + (jitterOffset?.z ?? 0),
-          ),
-          headingAngle: 0,
-        };
-      }
-
-      const points: Vector3Coord[] = routeNodeIds.map((id) =>
-        layout.getNodeWorldPos(id),
-      );
+        return p;
+      });
 
       const segmentLengths: number[] = [];
       let totalLength = 0;
 
-      for (let i = 0; i < points.length - 1; i++) {
-        const pA = points[i];
-        const pB = points[i + 1];
+      for (let i = 0; i < pointsWithDest.length - 1; i++) {
+        const pA = pointsWithDest[i];
+        const pB = pointsWithDest[i + 1];
         if (pA && pB) {
           const len = Math.hypot(pB.x - pA.x, pB.z - pA.z);
           segmentLengths.push(len);
@@ -66,7 +114,7 @@ export function createRouteInterpolator(layout: TownLayout): RouteInterpolator {
       }
 
       if (totalLength === 0) {
-        const p0 = points[0] ?? { x: 0, y: 0, z: 0 };
+        const p0 = pointsWithDest[0] ?? { x: 0, y: 0, z: 0 };
         return {
           position: new THREE.Vector3(
             p0.x + (jitterOffset?.x ?? 0),
@@ -83,8 +131,8 @@ export function createRouteInterpolator(layout: TownLayout): RouteInterpolator {
       let accumulated = 0;
       for (let i = 0; i < segmentLengths.length; i++) {
         const segLen = segmentLengths[i] ?? 0;
-        const pA = points[i];
-        const pB = points[i + 1];
+        const pA = pointsWithDest[i];
+        const pB = pointsWithDest[i + 1];
 
         if (!pA || !pB) {
           continue;
@@ -110,7 +158,7 @@ export function createRouteInterpolator(layout: TownLayout): RouteInterpolator {
         accumulated += segLen;
       }
 
-      const last = points[points.length - 1] ?? { x: 0, y: 0, z: 0 };
+      const last = pointsWithDest[pointsWithDest.length - 1] ?? { x: 0, y: 0, z: 0 };
       return {
         position: new THREE.Vector3(
           last.x + (jitterOffset?.x ?? 0),
