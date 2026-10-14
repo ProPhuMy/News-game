@@ -19,6 +19,7 @@ export interface JoinScreenProps {
   defaultPaperName?: string;
   pending?: boolean;
   error?: string | null;
+  roomCode?: string;
 }
 
 export const JoinScreen: React.FC<JoinScreenProps> = ({
@@ -29,6 +30,7 @@ export const JoinScreen: React.FC<JoinScreenProps> = ({
   defaultPaperName = '',
   pending = false,
   error,
+  roomCode,
 }) => {
   const [playerName, setPlayerName] = useState(defaultPlayerName);
   const [paperName, setPaperName] = useState(defaultPaperName);
@@ -61,6 +63,11 @@ export const JoinScreen: React.FC<JoinScreenProps> = ({
     <div className="screen-container join-screen" data-testid="join-screen">
       <form onSubmit={handleSubmit} className="join-profile-card">
         <h2>Establish Your Press</h2>
+        {roomCode && (
+          <div className="join-room-badge" data-testid="join-room-badge">
+            Joining room <strong>{roomCode}</strong>
+          </div>
+        )}
 
         {error && (
           <div className="screen-error-banner" role="alert" data-testid="join-error">

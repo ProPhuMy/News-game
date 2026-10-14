@@ -22,6 +22,9 @@ import {
   deriveExposures,
   deriveRecapText,
   finalToScoreRows,
+  deriveTruthRecords,
+  deriveFinalExposures,
+  deriveFinalHeadlines,
   formatErrorMessage,
 } from '../mapper.ts';
 
@@ -87,12 +90,13 @@ export const AppRouter: React.FC<AppRouterProps> = ({ store = defaultStore }) =>
   }, [publicSnapshot?.phase]);
 
   const handleLeaveOrReset = () => {
-    const socketStore = store as Partial<{ disconnect: () => void }>;
+    const socketStore = store as Partial<{ disconnect: () => void; connect: () => void }>;
     if (typeof socketStore.disconnect === 'function') {
       socketStore.disconnect();
     } else {
       store.reset();
     }
+    socketStore.connect?.();
     setJoinTarget(null);
   };
 
@@ -112,6 +116,7 @@ export const AppRouter: React.FC<AppRouterProps> = ({ store = defaultStore }) =>
         <JoinScreen
           pending={isPending}
           error={formattedError}
+          roomCode={joinTarget.mode === 'join' ? joinTarget.code : undefined}
           onBack={() => setJoinTarget(null)}
           onSubmit={(p) => {
             const profilePayload = {
@@ -219,6 +224,7 @@ export const AppRouter: React.FC<AppRouterProps> = ({ store = defaultStore }) =>
         deadlineMs={publicSnapshot.deadlineMs}
         serverTimeOffset={serverOffsetMs}
         papers={papers}
+        error={formattedError}
       >
         {publicSnapshot.phase === 'intro' && (
           <IntroScreen
@@ -271,6 +277,9 @@ export const AppRouter: React.FC<AppRouterProps> = ({ store = defaultStore }) =>
         {(publicSnapshot.phase === 'final' || publicSnapshot.phase === 'ended') && (
           <FinalEditionScreen
             scoreboard={scoreRows}
+            truthRecords={deriveTruthRecords(publicSnapshot.final?.records, publicSnapshot.papers)}
+            finalExposures={deriveFinalExposures(publicSnapshot.final, publicSnapshot.papers)}
+            headlines={deriveFinalHeadlines(publicSnapshot.headlines, publicSnapshot.papers)}
             onPlayAgain={handleLeaveOrReset}
           />
         )}
@@ -291,11 +300,10 @@ export const AppRouter: React.FC<AppRouterProps> = ({ store = defaultStore }) =>
           <ConnectionOverlay
             status={connection === 'connecting' && session ? 'reconnecting' : connection}
             onRetry={() => {
+              const socketStore = store as Partial<{ connect: () => void }>;
+              socketStore.connect?.();
               if (session) {
                 store.actions.reconnect(session.code);
-              } else {
-                const socketStore = store as Partial<{ connect: () => void }>;
-                socketStore.connect?.();
               }
             }}
           />

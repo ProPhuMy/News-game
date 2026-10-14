@@ -42,4 +42,61 @@ describe('RevealScreen', () => {
     expect(screen.getByText('9 citizens rushed the square; 3 cancelled their subscriptions.')).toBeDefined();
     expect(screen.getByText('What a scandal!')).toBeDefined();
   });
+
+  it('formats recap text cleanly with deriveRecapText, falling back when location is missing', async () => {
+    const { deriveRecapText } = await import('../../src/client/ui/mapper');
+    const mockPapers: import('../../src/shared/snapshots').PaperPublic[] = [
+      {
+        seatId: 0,
+        displayName: 'Editor',
+        paperName: 'Daily Gasp',
+        color: 'red',
+        personality: null,
+        controller: 'human',
+        readers: 20,
+        totalReaders: 20,
+        trust: 50,
+        score: 20,
+        lockedVisibleAtMs: null,
+      },
+    ];
+
+    // Missing location -> fallback
+    const fallbackRecap = deriveRecapText(
+      {
+        round: 1,
+        exposures: [],
+        citizens: [],
+        recap: {
+          headlineId: null,
+          location: null,
+          behavior: 'routine',
+          reactors: 0,
+          gainSeatId: null,
+          gained: 0,
+        },
+      },
+      mockPapers
+    );
+    expect(fallbackRecap).toBe('Citizens went about their day.');
+
+    // With location and gaining paper
+    const normalRecap = deriveRecapText(
+      {
+        round: 1,
+        exposures: [],
+        citizens: [],
+        recap: {
+          headlineId: null,
+          location: 'bakery',
+          behavior: 'queue',
+          reactors: 8,
+          gainSeatId: 0,
+          gained: 3,
+        },
+      },
+      mockPapers
+    );
+    expect(normalRecap).toBe('8 citizens lined up outside the Bakery; 3 citizens switched to Daily Gasp.');
+  });
 });

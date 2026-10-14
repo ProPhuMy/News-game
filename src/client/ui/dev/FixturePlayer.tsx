@@ -71,6 +71,20 @@ export const FixturePlayer: React.FC<FixturePlayerProps> = ({ steps, onStepChang
   );
 };
 
+import {
+  paperPublicToView,
+  headlineToFrontPageView,
+  finalToScoreRows,
+  deriveFrontPages,
+  deriveProofCards,
+  deriveEvidenceCards,
+  deriveExposures,
+  deriveRecapText,
+  deriveTruthRecords,
+  deriveFinalExposures,
+  deriveFinalHeadlines,
+} from '../mapper.ts';
+
 export {
   paperPublicToView,
   headlineToFrontPageView,
@@ -80,16 +94,10 @@ export {
   deriveEvidenceCards,
   deriveExposures,
   deriveRecapText,
-} from '../mapper.ts';
-import {
-  paperPublicToView,
-  finalToScoreRows,
-  deriveFrontPages,
-  deriveProofCards,
-  deriveEvidenceCards,
-  deriveExposures,
-  deriveRecapText,
-} from '../mapper.ts';
+  deriveTruthRecords,
+  deriveFinalExposures,
+  deriveFinalHeadlines,
+};
 
 export interface FixturePlaybackViewProps {
   fixture: Fixture;
@@ -211,6 +219,9 @@ export const FixturePlaybackView: React.FC<FixturePlaybackViewProps> = ({
           {(pub.phase === 'final' || pub.phase === 'ended') && (
             <FinalEditionScreen
               scoreboard={finalToScoreRows(pub.final, pub.papers)}
+              truthRecords={deriveTruthRecords(pub.final?.records, pub.papers)}
+              finalExposures={deriveFinalExposures(pub.final, pub.papers)}
+              headlines={deriveFinalHeadlines(pub.headlines, pub.papers)}
               onPlayAgain={() => setFrameIndex(0)}
             />
           )}

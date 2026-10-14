@@ -50,4 +50,21 @@ describe('HUD', () => {
     expect(screen.getByText('12 readers')).toBeDefined();
     expect(screen.getByText('Trust: 54')).toBeDefined();
   });
+
+  it('renders top-level error banner when error prop is provided', () => {
+    render(
+      <HUD
+        round={1}
+        phase="intro"
+        deadlineMs={Date.now() + 30000}
+        serverTimeOffset={0}
+        papers={mockPapers}
+        error="Only the host can start the match."
+      />
+    );
+
+    const banner = screen.getByTestId('hud-error');
+    expect(banner).toBeDefined();
+    expect(screen.getByText('Only the host can start the match.')).toBeDefined();
+  });
 });

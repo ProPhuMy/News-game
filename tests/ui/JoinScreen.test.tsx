@@ -43,4 +43,18 @@ describe('JoinScreen', () => {
     const submitBtn = screen.getByRole('button', { name: 'Claim Printing Press' });
     expect(submitBtn.hasAttribute('disabled')).toBe(true);
   });
+
+  it('renders room code badge when roomCode prop is provided', () => {
+    render(
+      <JoinScreen
+        onSubmit={vi.fn()}
+        roomCode="EXTRA"
+      />
+    );
+
+    const badge = screen.getByTestId('join-room-badge');
+    expect(badge).toBeDefined();
+    expect(screen.getByText('EXTRA')).toBeDefined();
+    expect(screen.getByText(/Joining room/)).toBeDefined();
+  });
 });

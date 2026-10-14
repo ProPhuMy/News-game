@@ -5,6 +5,7 @@ import type {
   HeadlinePublic,
   Exposure,
   FinalResult,
+  TruthRecord,
 } from '../../shared/snapshots.ts';
 import type { PaperView } from './hud/SidePanel.tsx';
 import type { FrontPageView } from './components/FrontPageCard.tsx';
@@ -12,7 +13,7 @@ import type { FinalScoreRow } from './components/ScoreboardTable.tsx';
 import type { ExposureEvent } from './components/ExposureBanner.tsx';
 import type { ProofCard } from './screens/WriteScreen.tsx';
 import type { EvidenceCard } from './components/EvidenceSelector.tsx';
-import type { Behavior } from '../../shared/ids.ts';
+import type { Behavior, Color } from '../../shared/ids.ts';
 import { LOCATION_NAMES } from '../../shared/ids.ts';
 
 export const ERROR_MESSAGES: Record<string, string> = {
@@ -165,7 +166,10 @@ export function deriveRecapText(
     return 'Citizens are reacting to the latest publications.';
   }
   const { recap } = reactionPlan;
-  const locName = recap.location ? LOCATION_NAMES[recap.location] ?? recap.location : 'Town Square';
+  if (!recap.location) {
+    return 'Citizens went about their day.';
+  }
+  const locName = LOCATION_NAMES[recap.location] ?? recap.location;
   const verb =
     recap.behavior && BEHAVIOR_VERBS[recap.behavior]
       ? BEHAVIOR_VERBS[recap.behavior]
@@ -206,3 +210,63 @@ export function finalToScoreRows(
     };
   });
 }
+
+export interface TruthRecordView {
+  paperName: string;
+  color: Color;
+  liesTold: number;
+  liesCaught: number;
+  liesEscaped: number;
+}
+
+export function deriveTruthRecords(
+  records: TruthRecord[] | undefined,
+  papers: PaperPublic[]
+): TruthRecordView[] {
+  if (!records) return [];
+  return records.map((r) => {
+    const paper = papers.find((p) => p.seatId === r.seatId);
+    return {
+      paperName: paper?.paperName ?? `Paper ${r.seatId}`,
+      color: paper?.color ?? 'red',
+      liesTold: r.liesTold,
+      liesCaught: r.liesCaught,
+      liesEscaped: r.liesEscaped,
+    };
+  });
+}
+
+export function deriveFinalExposures(
+  final: FinalResult | null,
+  papers: PaperPublic[]
+): ExposureEvent[] {
+  if (!final) return [];
+  return deriveExposures(final.exposures, papers);
+}
+
+export interface FinalHeadlineSummary {
+  id: string;
+  round: number;
+  paperName: string;
+  text: string;
+  truth: 'true' | 'lie' | 'unknown';
+  exposed: boolean;
+}
+
+export function deriveFinalHeadlines(
+  headlines: HeadlinePublic[],
+  papers: PaperPublic[]
+): FinalHeadlineSummary[] {
+  return headlines.map((h) => {
+    const paper = papers.find((p) => p.seatId === h.seatId);
+    return {
+      id: h.id,
+      round: h.round,
+      paperName: paper?.paperName ?? `Paper ${h.seatId}`,
+      text: h.text,
+      truth: h.truth,
+      exposed: h.exposed,
+    };
+  });
+}
+

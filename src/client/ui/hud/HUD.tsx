@@ -10,6 +10,7 @@ export interface HUDProps {
   deadlineMs: number;
   serverTimeOffset: number;
   papers: PaperView[];
+  error?: string | null;
   children?: React.ReactNode;
 }
 
@@ -19,6 +20,7 @@ export const HUD: React.FC<HUDProps> = ({
   deadlineMs,
   serverTimeOffset,
   papers,
+  error,
   children,
 }) => {
   return (
@@ -31,7 +33,14 @@ export const HUD: React.FC<HUDProps> = ({
       />
       <div className="hud-body">
         <SidePanel papers={papers} />
-        <main className="hud-center-content">{children}</main>
+        <main className="hud-center-content">
+          {error && (
+            <div className="screen-error-banner hud-error-banner" role="alert" data-testid="hud-error">
+              {error}
+            </div>
+          )}
+          {children}
+        </main>
       </div>
     </div>
   );

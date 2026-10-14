@@ -213,7 +213,7 @@ describe('AppRouter Integration with ClientStore', () => {
       });
     });
 
-    expect(screen.getByText("Our lawyers won't print that — try again")).toBeDefined();
+    expect(screen.getAllByText("Our lawyers won't print that — try again").length).toBeGreaterThan(0);
   });
 
   it('displays ServerRestartScreen when match ended abruptly', () => {
@@ -278,6 +278,8 @@ describe('AppRouter Integration with ClientStore', () => {
     render(<AppRouter store={store} />);
 
     expect(screen.getByText('Establish Your Press')).toBeDefined();
+    expect(screen.getByTestId('join-room-badge')).toBeDefined();
+    expect(screen.getByText('EXTRA')).toBeDefined();
 
     // Fill in name and paper, and claim press
     fireEvent.change(screen.getByLabelText('Your Name'), { target: { value: 'Jane Editor' } });
@@ -315,12 +317,13 @@ describe('AppRouter Integration with ClientStore', () => {
     window.history.pushState({}, '', '/');
   });
 
-  it('invokes store.disconnect when host leaves lobby room', () => {
+  it('invokes store.disconnect and reconnects transport when host leaves lobby room', () => {
     const { store } = setupTestStore();
     const disconnect = vi.fn(() => store.reset());
-    const storeWithDisconnect = Object.assign(store, { disconnect });
+    const connect = vi.fn();
+    const storeWithLifecycle = Object.assign(store, { disconnect, connect });
 
-    render(<AppRouter store={storeWithDisconnect} />);
+    render(<AppRouter store={storeWithLifecycle} />);
     store.setConnection('connected');
 
     let actionId = '';
@@ -353,6 +356,7 @@ describe('AppRouter Integration with ClientStore', () => {
     fireEvent.click(leaveBtn);
 
     expect(disconnect).toHaveBeenCalledTimes(1);
+    expect(connect).toHaveBeenCalledTimes(2); // 1 on mount, 1 after leave
     expect(screen.getByText('NEWS TOWN')).toBeDefined();
   });
 
@@ -491,5 +495,62 @@ describe('AppRouter Integration with ClientStore', () => {
     const errorBanner = screen.getByTestId('loading-error');
     expect(errorBanner).toBeDefined();
     expect(screen.getByText('Room not found. Check the room code and try again.')).toBeDefined();
+  });
+
+  it('renders shared error feedback in HUD during intro phase', () => {
+    const { store } = setupTestStore();
+    render(<AppRouter store={store} />);
+    store.setConnection('connected');
+
+    let actionId = '';
+    act(() => {
+      actionId = store.actions.createRoom(profile)!;
+    });
+
+    act(() => {
+      store.receive(SERVER_EVENTS.ack, {
+        actionId,
+        ok: true,
+        session,
+        serverNowMs: 1000,
+      });
+      store.receive(SERVER_EVENTS.room, {
+        code: 'ABCDE',
+        status: 'playing',
+        hostSeatId: 0,
+        you: 0,
+        seats: [
+          { seatId: 0, occupant: 'human', displayName: 'Jane', paperName: 'Daily Post', color: 'red', connected: true },
+          { seatId: 1, occupant: 'ai', displayName: 'Bot 1', paperName: 'Paper 1', color: 'blue', connected: true },
+          { seatId: 2, occupant: 'ai', displayName: 'Bot 2', paperName: 'Paper 2', color: 'green', connected: true },
+          { seatId: 3, occupant: 'ai', displayName: 'Bot 3', paperName: 'Paper 3', color: 'gold', connected: true },
+        ],
+      });
+    });
+
+    const { pub, priv } = createMatchSnapshots();
+    act(() => {
+      store.receive(SERVER_EVENTS.public, { ...pub, version: 1, phase: 'intro' });
+      store.receive(SERVER_EVENTS.private, { ...priv, version: 1, seatId: 0 });
+    });
+
+    expect(screen.getByTestId('intro-screen')).toBeDefined();
+
+    // Trigger an error during intro (e.g. invalid action ack)
+    let introActionId = '';
+    act(() => {
+      introActionId = store.actions.skipIntro()!;
+    });
+    act(() => {
+      store.receive(SERVER_EVENTS.ack, {
+        actionId: introActionId,
+        ok: false,
+        error: 'NOT_ALLOWED',
+        serverNowMs: 1050,
+      });
+    });
+
+    expect(screen.getByTestId('hud-error')).toBeDefined();
+    expect(screen.getByText('Action not allowed at this time.')).toBeDefined();
   });
 });

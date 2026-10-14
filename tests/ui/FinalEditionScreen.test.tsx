@@ -44,4 +44,40 @@ describe('FinalEditionScreen', () => {
     expect(screen.getByText('Score: 72')).toBeDefined();
     expect(screen.getByText('Winner: The Bugle!')).toBeDefined();
   });
+
+  it('renders final exposures, truth records, and headline archive', () => {
+    const mockExposures = [
+      { paperName: 'The Gazette', reason: 'Secret meeting at the Bakery never took place.' },
+    ];
+    const mockRecords = [
+      { paperName: 'The Bugle', color: 'red' as const, liesTold: 1, liesCaught: 0, liesEscaped: 1 },
+      { paperName: 'The Gazette', color: 'blue' as const, liesTold: 3, liesCaught: 2, liesEscaped: 1 },
+    ];
+    const mockHeadlines = [
+      { id: 'h1', round: 1, paperName: 'The Bugle', text: 'All calm at Town Hall', truth: 'true' as const, exposed: false },
+      { id: 'h2', round: 2, paperName: 'The Gazette', text: 'Scandal at Clinic', truth: 'lie' as const, exposed: true },
+    ];
+
+    render(
+      <FinalEditionScreen
+        scoreboard={mockScores}
+        finalExposures={mockExposures}
+        truthRecords={mockRecords}
+        headlines={mockHeadlines}
+        onPlayAgain={vi.fn()}
+      />
+    );
+
+    expect(screen.getByTestId('final-exposures')).toBeDefined();
+    expect(screen.getByText(/Secret meeting at the Bakery never took place/)).toBeDefined();
+
+    expect(screen.getByTestId('truth-records')).toBeDefined();
+    expect(screen.getByText('Lies Told: 1')).toBeDefined();
+    expect(screen.getByText('Caught & Exposed: 2')).toBeDefined();
+
+    expect(screen.getByTestId('headline-truth-archive')).toBeDefined();
+    expect(screen.getByText('"All calm at Town Hall"')).toBeDefined();
+    expect(screen.getByText('✓ TRUE')).toBeDefined();
+    expect(screen.getByText('✗ EXPOSED LIE')).toBeDefined();
+  });
 });
