@@ -3,19 +3,24 @@ import { tick, type MatchState } from '../../src/engine/index.ts';
 import { townChance } from '../../src/engine/resolve.ts';
 import type { TownEvent } from '../../src/engine/state.ts';
 import { SAMPLE_CONTENT } from '../../src/sim/sample-content.ts';
+import { TUNING } from '../../src/shared/tuning.ts';
+
+const x = TUNING.townExposure;
+const chance = (juice: number, survived: number) => x.base + x.perJuice * juice + x.perRoundSurvived * survived;
+const penalty = (juice: number) => TUNING.trust.exposedBase + TUNING.trust.exposedPerJuice * juice;
 import { advanceTo, checkLocation, lockClaim, lockExpose, makeHeadline, quietMatch, rated, run, withHeadline } from './helpers.ts';
 
 const reveal = (s: MatchState) => tick(s, s.deadlineMs).state;
 
 describe('townChance', () => {
-  it('follows 5% + 5% × juice + 10% × rounds survived', () => {
-    expect(townChance(makeHeadline({ seatId: 1, round: 1, claim: 'weird_sighting', rating: rated(5) }), 2)).toBeCloseTo(0.3);
-    expect(townChance(makeHeadline({ seatId: 1, round: 1, rating: rated(5, { onTopic: false }) }), 2)).toBeCloseTo(0.1);
-    expect(townChance(makeHeadline({ seatId: 1, round: 1, claim: 'weird_sighting', rating: rated(5) }), 4)).toBeCloseTo(0.5);
+  it('follows base + perJuice × juice + perRoundSurvived × rounds survived', () => {
+    expect(townChance(makeHeadline({ seatId: 1, round: 1, claim: 'weird_sighting', rating: rated(5) }), 2)).toBeCloseTo(chance(5, 0));
+    expect(townChance(makeHeadline({ seatId: 1, round: 1, rating: rated(5, { onTopic: false }) }), 2)).toBeCloseTo(chance(1, 0));
+    expect(townChance(makeHeadline({ seatId: 1, round: 1, claim: 'weird_sighting', rating: rated(5) }), 4)).toBeCloseTo(chance(5, 2));
   });
-  it('doubles in the Final Edition, capped at 90%', () => {
-    expect(townChance(makeHeadline({ seatId: 1, round: 5, rating: rated(5, { onTopic: false }) }), 6, true)).toBeCloseTo(0.2);
-    expect(townChance(makeHeadline({ seatId: 1, round: 1, claim: 'weird_sighting', rating: rated(5) }), 6, true)).toBeCloseTo(0.9);
+  it('multiplies in the Final Edition, capped', () => {
+    expect(townChance(makeHeadline({ seatId: 1, round: 5, rating: rated(5, { onTopic: false }) }), 6, true)).toBeCloseTo(Math.min(chance(1, 0) * x.finalMultiplier, x.finalCap));
+    expect(townChance(makeHeadline({ seatId: 1, round: 1, claim: 'weird_sighting', rating: rated(5) }), 6, true)).toBeCloseTo(Math.min(chance(5, 4) * x.finalMultiplier, x.finalCap));
   });
 });
 
@@ -27,12 +32,12 @@ function exposeSetup(s0: MatchState, provers: number[]): MatchState {
 }
 
 describe('revealRound', () => {
-  it('applies a player expose: −(10 + 2 × juice) to the liar, +8 to the exposer', () => {
+  it('applies a player expose: −(exposedBase + exposedPerJuice × juice) to the liar, exposeBonus to the exposer', () => {
     let s = exposeSetup(quietMatch(), [0]);
     s = reveal(run(s, 0, lockExpose(s, 'h1-1')));
-    expect(s.seats[1]!.trust).toBe(30);
-    expect(s.seats[0]!.trust).toBe(58);
-    expect(s.exposures).toEqual([expect.objectContaining({ headlineId: 'h1-1', source: 'player', exposers: [0], trustDelta: -20 })]);
+    expect(s.seats[1]!.trust).toBe(50 - penalty(5));
+    expect(s.seats[0]!.trust).toBe(50 + TUNING.trust.exposeBonus);
+    expect(s.exposures).toEqual([expect.objectContaining({ headlineId: 'h1-1', source: 'player', exposers: [0], trustDelta: -penalty(5) })]);
     expect(s.headlines.find((h) => h.id === 'h1-1')!.exposedRound).toBe(2);
   });
 
@@ -40,8 +45,8 @@ describe('revealRound', () => {
     let s = exposeSetup(quietMatch(), [0, 2]);
     s = run(run(s, 0, lockExpose(s, 'h1-1')), 2, lockExpose(s, 'h1-1'));
     s = reveal(s);
-    expect(s.seats[1]!.trust).toBe(30);
-    expect([s.seats[0]!.trust, s.seats[2]!.trust]).toEqual([58, 58]);
+    expect(s.seats[1]!.trust).toBe(50 - penalty(5));
+    expect([s.seats[0]!.trust, s.seats[2]!.trust]).toEqual([50 + TUNING.trust.exposeBonus, 50 + TUNING.trust.exposeBonus]);
     expect(s.exposures.filter((e) => e.headlineId === 'h1-1')).toHaveLength(1);
   });
 
@@ -51,8 +56,8 @@ describe('revealRound', () => {
       const s = withHeadline(advanceTo(quietMatch(seed), 'write', 2), { seatId: 1, round: 1, claim: 'weird_sighting', rating: rated(5) });
       if (reveal(s).exposures.some((e) => e.headlineId === 'h1-1' && e.source === 'town')) exposed++;
     }
-    expect(exposed / 400).toBeGreaterThan(0.22);
-    expect(exposed / 400).toBeLessThan(0.38);
+    expect(exposed / 400).toBeGreaterThan(chance(5, 0) - 0.07);
+    expect(exposed / 400).toBeLessThan(chance(5, 0) + 0.07);
   });
 
   it('never rolls this round\'s new lies and uses the event explanation', () => {
@@ -68,11 +73,11 @@ describe('revealRound', () => {
     expect(done.exposures[0]!.explanation).toBe(SAMPLE_CONTENT.eventTemplates[0]!.explanationInnocent);
   });
 
-  it('gives +6 for evidence at reveal and clamps trust to 0–100', () => {
+  it('gives evidenceBonus at reveal and clamps trust to 0–100', () => {
     let s = structuredClone(advanceTo(quietMatch(), 'investigate', 1));
     s.events[1] = [];
     s = advanceTo(run(s, 0, checkLocation(s, 'clinic')), 'write', 1);
-    expect(reveal(run(s, 0, lockClaim(s, 'clinic', 'all_clear', true))).seats[0]!.trust).toBe(56);
+    expect(reveal(run(s, 0, lockClaim(s, 'clinic', 'all_clear', true))).seats[0]!.trust).toBe(50 + TUNING.trust.evidenceBonus);
 
     let c = structuredClone(exposeSetup(quietMatch(), [0]));
     c.seats[1]!.trust = 5;

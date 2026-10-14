@@ -375,7 +375,7 @@ privateView(state, seatId) → PrivateSnapshot
 
 1. **Engine unit tests:** truth rules, evidence matching, exposure math, trust deltas and clamping, appeal formula, subscription choice, tie-breaking, score, phase timing, and stale/duplicate command handling.
 2. **Determinism:** replaying the same seed and inputs gives identical results, and shuffling command arrival order within a phase doesn't change the outcome.
-3. **Bot simulations:** 500 bot-only matches with zero crashes. Always-honest, always-lying, and mixed strategies must each win at least 15% of the time when matched against each other. Matches must last 5 rounds without stalls. Tuning values are adjusted until this holds.
+3. **Bot simulations:** 500 bot-only matches with zero crashes. Matched against each other, always-honest must win at most 50% of the time, mixed at least 20%, and always-lying at least 10% (revised 2026-10-13; see `docs/contract-requests/2026-10-13-claude-tuning.md`). Matches must last 5 rounds without stalls. Tuning values are adjusted until this holds.
 4. **Content schema tests:** at least 10 templates covering all 5 locations and all 5 non-`all_clear` claim types, with valid tips and evidence texts and no empty or oversized strings.
 5. **AI adapter tests:** timeout leads to fallback; invalid JSON leads to fallback; prompt-injection headlines still return clamped, valid output; the word filter blocks at lock time; `none` mode works.
 6. **Server/socket tests:** a 3-client match runs end to end; no payload ever contains a privacy-invariant field (checked automatically); reconnect with a token restores the seat; a code alone can't take a seat; Caretaker takeover and handback work; room expiry works.

@@ -3,6 +3,7 @@ import { applyCommand, privateView, type MatchState } from '../../src/engine/ind
 import type { TownEvent } from '../../src/engine/state.ts';
 import type { Location } from '../../src/shared/ids.ts';
 import { SAMPLE_CONTENT } from '../../src/sim/sample-content.ts';
+import { TUNING } from '../../src/shared/tuning.ts';
 import { advanceTo, checkLocation, investigateHeadline, quietMatch, run, withHeadline } from './helpers.ts';
 
 const BAKERY: TownEvent = { templateId: 'bakery_truck', location: 'bakery', claim: 'health_scare', real: true };
@@ -56,7 +57,7 @@ describe('investigating a rival headline', () => {
     }
   });
 
-  it('finds proof of a lie about 60% of the time, 85% when the tip points there', () => {
+  it('finds proof of a lie at proofChance, or proofChanceTipMatch when the tip points there', () => {
     const rate = (tipAt: Location) => {
       let found = 0;
       for (let seed = 1; seed <= 400; seed++) {
@@ -65,10 +66,9 @@ describe('investigating a rival headline', () => {
       }
       return found / 400;
     };
-    expect(rate('clinic')).toBeGreaterThan(0.5);
-    expect(rate('clinic')).toBeLessThan(0.7);
-    expect(rate('bank')).toBeGreaterThan(0.77);
-    expect(rate('bank')).toBeLessThan(0.93);
+    const { proofChance, proofChanceTipMatch } = TUNING.investigation;
+    expect(Math.abs(rate('clinic') - proofChance)).toBeLessThan(0.08);
+    expect(Math.abs(rate('bank') - proofChanceTipMatch)).toBeLessThan(0.08);
   });
 
   it('never finds proof against a true headline and adds a proof card only on success', () => {

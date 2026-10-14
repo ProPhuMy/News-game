@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { finishMatch } from '../../src/engine/final.ts';
 import { publicView, tick, type MatchState } from '../../src/engine/index.ts';
 import { scoreOf } from '../../src/engine/score.ts';
+import { TUNING } from '../../src/shared/tuning.ts';
 import { makeHeadline, quietMatch, rated, soloMatch } from './helpers.ts';
 
 function round5(): MatchState {
@@ -26,16 +27,17 @@ describe('finishMatch', () => {
     expect(s.seats[0]!.trust).toBe(54);
   });
 
-  it('rolls every hidden lie at doubled odds', () => {
+  it('rolls every hidden lie at the Final Edition multiplier', () => {
     let exposed = 0;
     for (let seed = 1; seed <= 400; seed++) {
       const s = { ...round5(), seed };
-      s.headlines = [makeHeadline({ seatId: 1, round: 5, rating: rated(5, { onTopic: false }) })]; // (5% + 5%) × 2
+      s.headlines = [makeHeadline({ seatId: 1, round: 5, rating: rated(5, { onTopic: false }) })]; // effective juice 1, survived 0
       finishMatch(s);
       if (s.final!.exposures.length > 0) exposed++;
     }
-    expect(exposed / 400).toBeGreaterThan(0.13);
-    expect(exposed / 400).toBeLessThan(0.27);
+    const x = TUNING.townExposure;
+    const p = Math.min((x.base + x.perJuice) * x.finalMultiplier, x.finalCap);
+    expect(Math.abs(exposed / 400 - p)).toBeLessThan(0.05);
   });
 
   it('records lies told, caught and escaped', () => {
