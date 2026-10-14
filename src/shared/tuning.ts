@@ -11,7 +11,7 @@ export const TUNING = {
     exposedBase: 3, exposedPerJuice: 1,
     exposeBonus: 8, evidenceBonus: 3, unevidencedTruthBonus: 2,
   },
-  townExposure: { base: 0.02, perJuice: 0.025, perRoundSurvived: 0.02, finalMultiplier: 2, finalCap: 0.9 },
+  townExposure: { base: 0.02, perJuice: 0.02, perRoundSurvived: 0.02, finalMultiplier: 2, finalCap: 0.9 },
   investigation: { proofChance: 0.4, proofChanceTipMatch: 0.85 },
   baseHype: { danger: 4, health_scare: 4, scandal: 3, great_deal: 2, weird_sighting: 5, all_clear: 1, expose: 4 },
   allClearJuiceCap: 2,

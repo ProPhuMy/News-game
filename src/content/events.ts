@@ -1,0 +1,223 @@
+import type { EventTemplate } from './types.ts';
+
+export const EVENT_TEMPLATES: EventTemplate[] = [
+  // --- BAKERY (3 templates) ---
+  {
+    id: 'bakery_midnight_delivery',
+    location: 'bakery',
+    realClaim: 'health_scare',
+    pReal: 0.45,
+    tipVariants: [
+      'A delivery van was idling behind the bakery before dawn with its lights off.',
+      'The baker was seen unloading heavy burlap sacks into the bakery kitchen.',
+    ],
+    evidenceReal: 'Burlap sacks stamped with an expired inspection mark were found by the oven.',
+    evidenceInnocent: 'Sacks of specialty organic sourdough flour arrived early for the festival.',
+    explanationReal: 'The bakery secretly used cheap spoiled flour that failed food safety checks.',
+    explanationInnocent: 'The bakery received a pre-dawn shipment of gourmet festival flour.',
+  },
+  {
+    id: 'bakery_oven_rumble',
+    location: 'bakery',
+    realClaim: 'danger',
+    pReal: 0.40,
+    tipVariants: [
+      'Thick billows of smoke poured from the bakery chimney early this morning.',
+      'A rhythmic metallic rumble shook the floorboards of the bread shop at breakfast.',
+    ],
+    evidenceReal: 'A gaping fissure along the brick oven flue was leaking chimney sparks.',
+    evidenceInnocent: 'The master baker was seasoning a new cast-iron bread oven with hickory.',
+    explanationReal: 'A cracked brick oven nearly sparked a blaze in the bakery attic.',
+    explanationInnocent: 'A newly installed hearth was being safely cured for the weekend.',
+  },
+  {
+    id: 'bakery_custard_deluge',
+    location: 'bakery',
+    realClaim: 'great_deal',
+    pReal: 0.50,
+    tipVariants: [
+      'Stacks of golden pastry boxes were piled high behind the bakery counter.',
+      'A handwritten notice was posted in the bakery front window this morning.',
+    ],
+    evidenceReal: 'Overstocked custard tarts marked down to a single penny each on the counter.',
+    evidenceInnocent: 'Window display pies filled with salted decorative lard for a photo shoot.',
+    explanationReal: 'The baker over-ordered custard and cleared them out for practically nothing.',
+    explanationInnocent: 'The pies in the window were non-edible props made for bakery flyers.',
+  },
+
+  // --- BANK (3 templates) ---
+  {
+    id: 'bank_ledger_mismatch',
+    location: 'bank',
+    realClaim: 'scandal',
+    pReal: 0.40,
+    tipVariants: [
+      'Accountants in dark suits stayed inside the bank well after closing.',
+      'The bank president spent the evening examining thick financial ledger books.',
+    ],
+    evidenceReal: 'Town council pension records show an unrecorded transfer to an offshore fund.',
+    evidenceInnocent: 'Routine annual audit reconciling fractional penny discrepancies from interest.',
+    explanationReal: 'A hidden balance transfer revealed improper dipping into civic funds.',
+    explanationInnocent: 'Auditors were just fixing minor decimal rounding errors from last year.',
+  },
+  {
+    id: 'bank_armored_crates',
+    location: 'bank',
+    realClaim: 'great_deal',
+    pReal: 0.50,
+    tipVariants: [
+      'Armed guards escorted heavy brass cases through the bank entrance.',
+      'Heavy wooden crates were wheeled into the bank lobby before opening.',
+    ],
+    evidenceReal: 'Commemorative pure silver coins gifted to every resident opening a saver passbook.',
+    evidenceInnocent: 'Heavy delivery crates contained polished brass door handles and window bars.',
+    explanationReal: 'The bank launched an aggressive saver promotion giving away genuine silver coins.',
+    explanationInnocent: 'The heavy crates only held decorative brass fittings for lobby renovation.',
+  },
+  {
+    id: 'bank_vault_wiring',
+    location: 'bank',
+    realClaim: 'danger',
+    pReal: 0.35,
+    tipVariants: [
+      'The bank emergency alarm sounded a brief test chime after hours.',
+      'Maintenance workers were seen inspecting the bank electrical junction box.',
+    ],
+    evidenceReal: 'A frayed high-voltage conduit behind the vault wall was actively smoldering.',
+    evidenceInnocent: 'Technicians were conducting a scheduled test of the municipal bell relay.',
+    explanationReal: 'Damaged electrical cables inside the bank vault posed an imminent fire hazard.',
+    explanationInnocent: 'The electric company was calibrating the town alarm bells without danger.',
+  },
+
+  // --- FOUNTAIN SQUARE (3 templates) ---
+  {
+    id: 'fountain_glowing_tide',
+    location: 'fountain_square',
+    realClaim: 'weird_sighting',
+    pReal: 0.50,
+    tipVariants: [
+      'Pedestrians noticed the fountain water tinted a distinct bright green.',
+      'An unusual green residue was spotted around the marble fountain basin.',
+    ],
+    evidenceReal: 'A rare bloom of emerald bioluminescent algae coated the fountain basin.',
+    evidenceInnocent: 'A dropped carton of green citrus fizzing cleaning tablets dissolved in the pool.',
+    explanationReal: 'Natural bioluminescent green algae caused the fountain pool to take on an eerie emerald glow.',
+    explanationInnocent: 'The fountain caretaker accidentally dropped green cleaning tablets into the pool.',
+  },
+  {
+    id: 'fountain_statue_lean',
+    location: 'fountain_square',
+    realClaim: 'danger',
+    pReal: 0.45,
+    tipVariants: [
+      'The bronze founder statue on Fountain Square appeared slightly tilted today.',
+      'Wooden wedges and measuring levels were set around the fountain pedestal.',
+    ],
+    evidenceReal: 'A ruptured sub-surface water main eroded the stone pedestal footing.',
+    evidenceInnocent: 'Town masons temporarily unbolted the statue to install a historical plaque.',
+    explanationReal: 'Water erosion undermined the fountain statue, creating a collapse risk.',
+    explanationInnocent: 'Masons were leveling the monument base to mount an anniversary plaque.',
+  },
+  {
+    id: 'fountain_pop_up_market',
+    location: 'fountain_square',
+    realClaim: 'great_deal',
+    pReal: 0.50,
+    tipVariants: [
+      'Colorful wooden merchant canopies were erected on Fountain Square overnight.',
+      'Crates full of wrapped parcels were unloaded onto Fountain Square at dawn.',
+    ],
+    evidenceReal: 'Chalkboard signs offering warm wool blankets for a single penny each.',
+    evidenceInnocent: 'Reserved banner designating the market tables for a private family picnic.',
+    explanationReal: 'A visiting merchant sold off warm blankets on Fountain Square for pennies.',
+    explanationInnocent: 'The stalls were strictly reserved for an anniversary family picnic.',
+  },
+
+  // --- TOWN HALL (3 templates) ---
+  {
+    id: 'townhall_closed_doors',
+    location: 'town_hall',
+    realClaim: 'scandal',
+    pReal: 0.50,
+    tipVariants: [
+      'Curtains were drawn shut in council chambers during an unscheduled meeting.',
+      'Sealed manila envelopes stamped CONFIDENTIAL were brought up Town Hall steps.',
+    ],
+    evidenceReal: 'Minutes show a closed vote reallocating playground funding to mayor office decor.',
+    evidenceInnocent: 'Staff were secretly organizing a surprise retirement party for the librarian.',
+    explanationReal: 'The town council secretly diverted playground funds into luxury renovations.',
+    explanationInnocent: 'Officials were coordinating a surprise celebration for fifty years of service.',
+  },
+  {
+    id: 'townhall_belfry_specter',
+    location: 'town_hall',
+    realClaim: 'weird_sighting',
+    pReal: 0.40,
+    tipVariants: [
+      'A moving winged silhouette was spotted on the clock tower at dusk.',
+      'Faint eerie screeching and rustling echoed from the Town Hall rafters.',
+    ],
+    evidenceReal: 'Luminous feathers and glowing pellets were found beneath the belfry beams.',
+    evidenceInnocent: 'A freshly welded copper bat weather vane was mounted atop the clock tower.',
+    explanationReal: 'A colony of rare glowing owls took up residence inside the belfry.',
+    explanationInnocent: 'The eerie silhouette was just a copper bat weather vane spinning in the wind.',
+  },
+  {
+    id: 'townhall_archive_mold',
+    location: 'town_hall',
+    realClaim: 'health_scare',
+    pReal: 0.45,
+    tipVariants: [
+      'Town Hall clerks were seen carrying stacks of dusty archive boxes outside.',
+      'A pungent earthy odor drifted from the Town Hall basement ventilation grates.',
+    ],
+    evidenceReal: 'Toxic black mold colonies found spreading across old tax assessment rolls.',
+    evidenceInnocent: 'Burlap sacks of damp cedar mulch being spread near the basement ventilation grates.',
+    explanationReal: 'Dangerous airborne mold forced a temporary evacuation of the records room.',
+    explanationInnocent: 'The strong earthy smell was fresh cedar wood mulch spread near the basement grates.',
+  },
+
+  // --- CLINIC (3 templates) ---
+  {
+    id: 'clinic_sour_tonic',
+    location: 'clinic',
+    realClaim: 'health_scare',
+    pReal: 0.50,
+    tipVariants: [
+      'A long queue of patients formed outside the clinic dispensary this morning.',
+      'Unmarked amber glass bottles arrived in crates at the clinic side door.',
+    ],
+    evidenceReal: 'A batch of herbal cough syrup fermented prematurely into bitter sour vinegar.',
+    evidenceInnocent: 'Dr. Finch brewed extra-strength peppermint mouthwash samples for dental week.',
+    explanationReal: 'Fermented syrup caused an epidemic of uncontrollable hiccups across town.',
+    explanationInnocent: 'The pungent bottles contained harmless mint mouthwash samples.',
+  },
+  {
+    id: 'clinic_fluorescent_glow',
+    location: 'clinic',
+    realClaim: 'weird_sighting',
+    pReal: 0.45,
+    tipVariants: [
+      'A pulsating neon green glow flickered through the clinic examination window.',
+      'Clinic staff were overheard whispering about a glowing object in room two.',
+    ],
+    evidenceReal: 'An antique 1900 radium-dial pocket watch made the Geiger counter click frantically.',
+    evidenceInnocent: 'Dr. Finch tested a novelty plastic glow-in-the-dark mustache for a gala.',
+    explanationReal: 'A genuine radioactive antique pocket watch startled the clinic staff.',
+    explanationInnocent: 'The green light was merely a child novelty glowing mustache.',
+  },
+  {
+    id: 'clinic_vip_backdoor',
+    location: 'clinic',
+    realClaim: 'scandal',
+    pReal: 0.45,
+    tipVariants: [
+      'A chauffeur-driven town car dropped an anonymous passenger at the clinic rear exit.',
+      'A clipboard stamped VIP RECOVERY SUITE was seen on the clinic reception desk.',
+    ],
+    evidenceReal: 'Private hospital wing secretly reserved for wealthy donors using public medicine.',
+    evidenceInnocent: 'Privacy curtain hung for the town mayor receiving a routine confidential flu shot.',
+    explanationReal: 'Clinic trustees secretly diverted charity beds into private luxury rooms.',
+    explanationInnocent: 'The clinic simply provided standard privacy for a civic official flu shot.',
+  },
+];
