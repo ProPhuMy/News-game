@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { tick, type MatchState } from '../../src/engine/index.ts';
+import { appeal } from '../../src/engine/citizens.ts';
 import { townChance } from '../../src/engine/resolve.ts';
 import type { TownEvent } from '../../src/engine/state.ts';
 import { SAMPLE_CONTENT } from '../../src/sim/sample-content.ts';
@@ -95,35 +96,54 @@ describe('revealRound', () => {
 });
 
 describe('revealRound, all steps together', () => {
-  /** Round 2 write: seat 0 exposes seat 1's lie; seat 2's old lie may be town-exposed; seat 3 prints a true story with evidence. */
+  /**
+   * Round 2 write: seat 0 exposes seat 1's lie while seat 1 also prints a new headline; seat 2's old lie may be
+   * town-exposed; seat 3 prints a true story with evidence. Even citizens read seat 1 before the reveal.
+   */
   function scenario(seed: number): MatchState {
     let s = withHeadline(advanceTo(quietMatch(seed), 'write', 2), { seatId: 1, round: 1, location: 'bank', claim: 'weird_sighting', rating: rated(5) });
     s = withHeadline(s, { seatId: 2, round: 1, location: 'clinic', claim: 'weird_sighting', rating: rated(5) });
     s.events[2] = [];
     s.seats[0]!.proofs.push({ headlineId: 'h1-1', round: 2 });
-    s.seats[1]!.trust = 2; // the exposure must clamp at 0, not go negative
+    s.seats[2]!.trust = 2; // the town exposure must clamp at 0, not go negative
     s.seats[3]!.trust = 99; // the evidence bonus must clamp at 100
     s.seats[3]!.evidence.push({ round: 2, location: 'bakery', claim: 'all_clear', text: 'x' });
     s.citizens.forEach((c, i) => { c.paper = i % 2 === 0 ? 1 : null; });
     s = run(s, 0, lockExpose(s, 'h1-1'));
+    s = run(s, 1, lockClaim(s, 'town_hall', 'scandal'));
     s = run(s, 3, lockClaim(s, 'bakery', 'all_clear', true));
     return tick(s, s.deadlineMs).state;
   }
 
+  /** Seat-1 readers who would have stayed with the loyalty bonus but not without it (scored on the reveal's trust values). */
+  function keptOnlyByLoyalty(end: MatchState): number[] {
+    const fresh = end.headlines.filter((h) => h.round === 2);
+    const own = fresh.find((h) => h.seatId === 1)!;
+    return end.citizens.filter((c) => c.id % 2 === 0).map((c) => ({ ...c, paper: 1 })).filter((c) => {
+      const rival = Math.max(...fresh.filter((h) => h.seatId !== 1).map((h) => appeal(end, c, h, new Set([1]))));
+      const withLoyalty = appeal(end, c, own, new Set());
+      return withLoyalty > rival && withLoyalty - TUNING.appeal.loyalty < rival;
+    }).map((c) => c.id);
+  }
+
   it('applies player exposes, town rolls, evidence, clamping and loyalty loss in order', () => {
-    const seed = Array.from({ length: 400 }, (_, i) => i + 1).find((n) => scenario(n).exposures.some((e) => e.source === 'town'));
+    const seed = Array.from({ length: 400 }, (_, i) => i + 1).find((n) => {
+      const end = scenario(n);
+      return end.exposures.some((e) => e.source === 'town') && keptOnlyByLoyalty(end).length > 0;
+    });
     expect(seed).toBeDefined();
     const s = scenario(seed!);
     expect(s.exposures.map((e) => [e.headlineId, e.source])).toEqual([['h1-1', 'player'], ['h1-2', 'town']]);
     expect(s.seats.map((seat) => seat.trust)).toEqual([
       50 + TUNING.trust.exposeBonus,
-      0,
       50 - penalty(5),
+      0,
       100,
     ]);
     const plan = s.reactionPlan!;
-    const leftExposed = plan.citizens.filter((c) => c.fromPaper === 1 && c.toPaper !== 1);
-    expect(leftExposed.length).toBeGreaterThan(0);
-    for (const c of leftExposed) expect(c.behavior).toBe('angry_mob');
+    for (const id of keptOnlyByLoyalty(s)) {
+      expect(plan.citizens[id]).toMatchObject({ fromPaper: 1, behavior: 'angry_mob' });
+      expect(plan.citizens[id]!.toPaper).not.toBe(1);
+    }
   });
 });
