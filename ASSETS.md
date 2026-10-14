@@ -2,12 +2,6 @@
 
 All assets listed below are dedicated to the Public Domain under Creative Commons 0 (CC0) 1.0 Universal.
 
-## 3D Models & Town Visuals (Gemini 1)
-
-*Note: Town buildings, environment, and citizens are original procedural Three.js code with no third-party assets.*
-
-## Audio & Sound Effects (Gemini 3)
-
 | Asset | Source URL | Author / Creator | License | Covered Files |
 |---|---|---|---|---|
 | Paper Slap Sound | https://kenney.nl/assets/impact-sounds | Kenney | CC0 1.0 Universal | `public/sounds/paper-slap.mp3` |
@@ -16,3 +10,5 @@ All assets listed below are dedicated to the Public Domain under Creative Common
 | Smoke Poof Sound | https://kenney.nl/assets/rpg-audio | Kenney | CC0 1.0 Universal | `public/sounds/poof.mp3` |
 | Citizen Gasp Sound (Replacement) | https://freesound.org/people/Topschool/sounds/360469/ | Topschool (`gasp.mp3`) | CC0 1.0 Universal | `public/sounds/gasp.mp3` |
 | Crowd Murmur Sound (Replacement) | https://freesound.org/people/mglennsound/sounds/678671/ | mglennsound (`AF Crowd Suprised Murmur 1.wav`) | CC0 1.0 Universal | `public/sounds/crowd-murmur.mp3` |
+
+*Note: Town buildings, environment, and citizens are original procedural Three.js code with no third-party assets.*

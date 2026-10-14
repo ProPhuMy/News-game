@@ -48,4 +48,29 @@ describe('privacy', () => {
     const exposed = tick(run(s, 2, lockExpose(s, 'h1-1')), s.deadlineMs).state;
     expect(privateView(exposed, 0).proofs).toEqual([]);
   });
+
+  it('each of the four private views holds only its own seat\'s secrets', () => {
+    let s = advanceTo(quietMatch(), 'write', 2);
+    for (let seatId = 0; seatId < 4; seatId++) s = withHeadline(s, { seatId, round: 1 });
+    s.seats.forEach((seat, i) => {
+      seat.tip = { round: 2, location: 'bank', claim: 'scandal', text: `SECRET-TIP-${i}` };
+      seat.evidence = [{ round: 2, location: 'bank', claim: 'all_clear', text: `SECRET-EVIDENCE-${i}` }];
+      seat.proofs = [{ headlineId: `h1-${(i + 1) % 4}`, round: 2 }]; // each seat holds proof against a different rival
+    });
+    s = run(s, 1, lockClaim(s, 'bank', 'scandal', false, 'SECRET-HEADLINE-1'));
+    const pub = JSON.stringify(publicView(s));
+    expect(pub).not.toMatch(/SECRET-/);
+    for (let seat = 0; seat < 4; seat++) {
+      const json = JSON.stringify(privateView(s, seat));
+      expect(json).toContain(`SECRET-TIP-${seat}`);
+      expect(json).toContain(`SECRET-EVIDENCE-${seat}`);
+      for (let other = 0; other < 4; other++) {
+        if (other === seat) continue;
+        expect(json).not.toContain(`SECRET-TIP-${other}`);
+        expect(json).not.toContain(`SECRET-EVIDENCE-${other}`);
+      }
+      expect(json.includes('SECRET-HEADLINE-1')).toBe(seat === 1);
+      expect(privateView(s, seat).proofs).toEqual([{ headlineId: `h1-${(seat + 1) % 4}`, round: 2 }]);
+    }
+  });
 });

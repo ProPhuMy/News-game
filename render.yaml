@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: news-town
+    runtime: docker
+    plan: 0.5c-512mb
+    numInstances: 1
+    autoDeployTrigger: off
+    healthCheckPath: /
+    envVars:
+      - key: TRUST_RENDER_PROXY
+        value: 'true'
+      - key: AI_PROVIDER
+        value: none
+      - key: AI_MODEL
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false

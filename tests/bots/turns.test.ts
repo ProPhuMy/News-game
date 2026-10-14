@@ -23,6 +23,19 @@ describe('bot turns', () => {
     expect(locked.map((e) => e.botPersonality)).toEqual(['tabloid', 'gazette', 'wildcard']);
   });
 
+  it('bot lock events carry the personality fallback rating, which reveal applies when no rating arrives', () => {
+    const before = advanceTo(soloMatch(), 'investigate', 1);
+    const { state, events } = tick(before, before.deadlineMs);
+    const locked = events.filter((e): e is Extract<EngineEvent, { type: 'headlineLocked' }> => e.type === 'headlineLocked');
+    const juice = Object.fromEntries(locked.map((e) => [e.botPersonality, e.fallbackRating.juiciness]));
+    expect(juice.tabloid).toBe(TUNING.bots.fallbackJuice.tabloid);
+    expect(juice.gazette).toBe(TUNING.bots.fallbackJuice.gazette);
+    expect(juice.wildcard).toBeGreaterThanOrEqual(TUNING.juiceMin);
+    expect(juice.wildcard).toBeLessThanOrEqual(TUNING.juiceMax);
+    const revealed = tick(state, state.deadlineMs).state;
+    for (const e of locked) expect(revealed.headlines.find((h) => h.id === e.headlineId)!.rating).toEqual(e.fallbackRating);
+  });
+
   it('the Gazette checks its tip location in round 1', () => {
     const s = advanceTo(soloMatch(), 'investigate', 1);
     expect(s.seats[2]!.evidence).toEqual([expect.objectContaining({ round: 1, location: s.seats[2]!.tip!.location })]);
@@ -40,12 +53,16 @@ describe('bot turns', () => {
     expect(applyCommand(s, 0, lockClaim(s, 'bank', 'scandal'), now + 2).result).toEqual({ ok: false, error: 'ALREADY_ACTED' });
   });
 
-  it('the Caretaker always checks a location, so it never prints a blind guess', () => {
+  it('the Caretaker follows Gazette rules (sometimes probes a rival) yet never prints a blind all_clear', () => {
+    let probedRival = false;
     for (let seed = 1; seed <= 40; seed++) {
-      let s = advanceTo(soloMatch(seed), 'investigate', 2);
-      s = applyCommand(s, 0, { type: 'connection', connected: false }, s.deadlineMs - 1).state;
-      expect(s.seats[0]!.investigations.at(-1)).toMatchObject({ round: 2, outcome: 'evidence' });
+      let s = soloMatch(seed);
+      s = applyCommand(s, 0, { type: 'connection', connected: false }, 0).state;
+      while (s.phase !== 'ended') s = tick(s, s.deadlineMs).state;
+      if (s.seats[0]!.investigations.some((i) => i.target.kind === 'headline')) probedRival = true;
+      expect(s.headlines.filter((h) => h.seatId === 0 && h.claim === 'all_clear' && !h.evidence)).toEqual([]);
     }
+    expect(probedRival).toBe(true);
   });
 
   it('plays a bot-only match to the end; only the Gazette may sit a round out', () => {

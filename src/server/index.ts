@@ -1,0 +1,81 @@
+import { createServer } from 'node:http';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import { Server } from 'socket.io';
+import { ContentSchema, type GameContent } from '../shared/content-schema.ts';
+import { createRoomManager } from './rooms.ts';
+import { createMatchRunner } from './matches.ts';
+import { registerSocketHandlers } from './socket.ts';
+import { createStaticHandler } from './static.ts';
+import { createAiAdapter } from '../ai/adapter.ts';
+import type { ProviderOptions } from '../ai/providers.ts';
+
+export async function createGameServer(options: { content: GameContent; distDirectory?: string; dev?: boolean; ai?: ProviderOptions; trustRenderProxy?: boolean }) {
+  const content = ContentSchema.parse(options.content);
+  const ai = createAiAdapter({ ...(options.ai ?? { provider: 'none' }), content });
+  const http = createServer();
+  const vite = options.dev ? await (await import('vite')).createServer({ server: { middlewareMode: true, hmr: { server: http } } }) : null;
+  if (vite) http.on('request', vite.middlewares);
+  else http.on('request', createStaticHandler(options.distDirectory ?? fileURLToPath(new URL('../../dist/client/', import.meta.url))));
+  const io = new Server(http, { maxHttpBufferSize: 16_384 });
+  const rooms = createRoomManager();
+  const runner = createMatchRunner(rooms, content, (socket, event, payload) => io.to(socket).emit(event, payload), ai,
+    (socketId) => { queueMicrotask(() => io.sockets.sockets.get(socketId)?.disconnect(true)); });
+  registerSocketHandlers(io, rooms, runner, options.trustRenderProxy);
+  const timer = setInterval(() => {
+    try { runner.tick(Date.now()); }
+    catch { console.error('News Town scheduler failed.'); }
+  }, 100);
+  return {
+    http, rooms, runner,
+    listen(port: number) {
+      return new Promise<void>((resolve, reject) => {
+        http.once('error', reject);
+        http.listen(port, '0.0.0.0', () => { http.off('error', reject); resolve(); });
+      });
+    },
+    async close() {
+      clearInterval(timer);
+      runner.dispose();
+      await vite?.close();
+      await new Promise<void>((resolve) => io.close(() => resolve()));
+    },
+  };
+}
+
+async function main() {
+  const module: unknown = await import(new URL('../content/index.ts', import.meta.url).href);
+  if (!module || typeof module !== 'object' || !('content' in module)) throw new Error('Validated src/content/index.ts is required');
+  const port = Number(process.env.PORT ?? 3000);
+  if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('PORT must be between 1 and 65535');
+  const provider = process.env.AI_PROVIDER ?? 'none';
+  if (provider !== 'none' && provider !== 'openai' && provider !== 'anthropic') throw new Error('Invalid AI_PROVIDER');
+  const key = provider === 'openai' ? process.env.OPENAI_API_KEY : process.env.ANTHROPIC_API_KEY;
+  if (process.env.TRUST_RENDER_PROXY && !['true', 'false'].includes(process.env.TRUST_RENDER_PROXY)) throw new Error('Invalid TRUST_RENDER_PROXY');
+  const game = await createGameServer({ content: ContentSchema.parse(module.content), dev: process.env.NODE_ENV !== 'production',
+    trustRenderProxy: process.env.TRUST_RENDER_PROXY === 'true',
+    ai: { provider, ...(process.env.AI_MODEL ? { model: process.env.AI_MODEL } : {}), ...(key ? { apiKey: key } : {}) } });
+  try { await game.listen(port); }
+  catch (error) {
+    await game.close();
+    throw error;
+  }
+  const shutdown = () => { void game.close().then(() => { process.exitCode = 0; }); };
+  process.once('SIGTERM', shutdown);
+  process.once('SIGINT', shutdown);
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  void main().catch((error: unknown) => {
+    const safeMessages = [
+      'Validated src/content/index.ts is required', 'PORT must be between 1 and 65535',
+      'Invalid AI_PROVIDER', 'Invalid TRUST_RENDER_PROXY', 'AI_MODEL and provider API key are required',
+      'Content must provide safe headline and bubble fallbacks',
+    ];
+    const detail = error instanceof Error && safeMessages.includes(error.message) ? error.message
+      : error && typeof error === 'object' && 'code' in error &&
+        (error.code === 'EADDRINUSE' || error.code === 'EACCES') ? error.code
+      : 'Check content and server configuration';
+    console.error(`News Town startup failed: ${detail}.`);
+    process.exitCode = 1;
+  });
+}
