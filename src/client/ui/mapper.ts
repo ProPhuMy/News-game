@@ -12,7 +12,33 @@ import type { FinalScoreRow } from './components/ScoreboardTable.tsx';
 import type { ExposureEvent } from './components/ExposureBanner.tsx';
 import type { ProofCard } from './screens/WriteScreen.tsx';
 import type { EvidenceCard } from './components/EvidenceSelector.tsx';
+import type { Behavior } from '../../shared/ids.ts';
 import { LOCATION_NAMES } from '../../shared/ids.ts';
+
+export const ERROR_MESSAGES: Record<string, string> = {
+  ROOM_NOT_FOUND: 'Room not found. Check the room code and try again.',
+  ROOM_FULL: 'This town already has 4 active newspapers.',
+  COLOR_TAKEN: 'That ink color was already chosen by another editor.',
+  MATCH_IN_PROGRESS: 'This match has already begun.',
+  SERVER_FULL: 'Server is currently at capacity. Please try again soon.',
+  RATE_LIMITED: 'Too many requests. Please wait a moment.',
+  NOT_HOST: 'Only the host can start the match.',
+  FILTERED: "Our lawyers won't print that — try again.",
+  STALE_PHASE: 'The phase has already moved on.',
+  ALREADY_ACTED: 'You have already locked in your action for this phase.',
+  BAD_TARGET: 'Invalid target selected.',
+  BAD_TEXT: 'Headline text is too long or empty.',
+  EVIDENCE_MISMATCH: "That evidence does not match your story's location and claim.",
+  NO_PROOF: 'No verified proof exists to expose that headline.',
+  NOT_ALLOWED: 'Action not allowed at this time.',
+  MALFORMED: 'Invalid request.',
+  BAD_TOKEN: 'Session expired. Please join again.',
+};
+
+export function formatErrorMessage(error: string | null): string | null {
+  if (!error) return null;
+  return ERROR_MESSAGES[error] ?? error;
+}
 
 export function paperPublicToView(p: PaperPublic, serverNowMs: number): PaperView {
   const isLocked = p.lockedVisibleAtMs !== null && serverNowMs >= p.lockedVisibleAtMs;
@@ -50,11 +76,27 @@ export function headlineToFrontPageView(
 }
 
 export function deriveFrontPages(pub: PublicSnapshot): FrontPageView[] {
-  const activeHeadlines = pub.headlines.filter(
-    (h) => h.round === pub.round || pub.exposures.some((e) => e.headlineId === h.id)
-  );
-  const headlinesToDisplay = activeHeadlines.length > 0 ? activeHeadlines : pub.headlines;
-  return headlinesToDisplay.map((h) => headlineToFrontPageView(h, pub.papers, pub.exposures));
+  // Use current reveal exposures only
+  const currentExposures =
+    pub.reactionPlan?.exposures ?? pub.exposures.filter((e) => e.round === pub.round);
+
+  return pub.papers.map((paper) => {
+    const headline = pub.headlines.find(
+      (h) => h.seatId === paper.seatId && h.round === pub.round
+    );
+    if (!headline) {
+      return {
+        id: `empty-r${pub.round}-s${paper.seatId}`,
+        seatId: paper.seatId,
+        paperName: paper.paperName,
+        color: paper.color,
+        headlineText: '[No headline published this round]',
+        hasEvidence: false,
+        isExposed: false,
+      };
+    }
+    return headlineToFrontPageView(headline, pub.papers, currentExposures);
+  });
 }
 
 export function deriveProofCards(
@@ -89,8 +131,13 @@ export function deriveEvidenceCards(
     }));
 }
 
-export function deriveExposures(exposures: Exposure[], papers: PaperPublic[]): ExposureEvent[] {
-  return exposures.map((e) => {
+export function deriveExposures(
+  exposures: Exposure[],
+  papers: PaperPublic[],
+  round?: number
+): ExposureEvent[] {
+  const filtered = round !== undefined ? exposures.filter((e) => e.round === round) : exposures;
+  return filtered.map((e) => {
     const paper = papers.find((p) => p.seatId === e.seatId);
     return {
       paperName: paper?.paperName ?? `Paper ${e.seatId}`,
@@ -98,6 +145,17 @@ export function deriveExposures(exposures: Exposure[], papers: PaperPublic[]): E
     };
   });
 }
+
+const BEHAVIOR_VERBS: Record<Behavior, string> = {
+  routine: 'went about their day at',
+  flee: 'fled in panic from',
+  boycott: 'boycotted',
+  protest: 'rallied in protest at',
+  queue: 'lined up outside',
+  curious: 'gathered curiously around',
+  relax: 'relaxed peacefully at',
+  angry_mob: 'marched furiously on',
+};
 
 export function deriveRecapText(
   reactionPlan: PublicSnapshot['reactionPlan'],
@@ -108,16 +166,21 @@ export function deriveRecapText(
   }
   const { recap } = reactionPlan;
   const locName = recap.location ? LOCATION_NAMES[recap.location] ?? recap.location : 'Town Square';
+  const verb =
+    recap.behavior && BEHAVIOR_VERBS[recap.behavior]
+      ? BEHAVIOR_VERBS[recap.behavior]
+      : 'reacted at';
+
   const gainingPaper =
     recap.gainSeatId !== null ? papers.find((p) => p.seatId === recap.gainSeatId)?.paperName : null;
 
   if (gainingPaper && recap.gained > 0) {
-    return `${recap.reactors} citizens rushed the ${locName}; ${recap.gained} citizens switched to ${gainingPaper}.`;
+    return `${recap.reactors} citizens ${verb} the ${locName}; ${recap.gained} citizens switched to ${gainingPaper}.`;
   }
   if (gainingPaper) {
-    return `${recap.reactors} citizens rushed the ${locName} for ${gainingPaper}.`;
+    return `${recap.reactors} citizens ${verb} the ${locName} for ${gainingPaper}.`;
   }
-  return `${recap.reactors} citizens reacted at the ${locName}.`;
+  return `${recap.reactors} citizens ${verb} the ${locName}.`;
 }
 
 export function finalToScoreRows(

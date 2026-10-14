@@ -131,7 +131,7 @@ export const FixturePlaybackView: React.FC<FixturePlaybackViewProps> = ({
   const priv = currentFrame.private;
   const papersView = pub.papers.map((p) => paperPublicToView(p, Date.now()));
   const frontPages = deriveFrontPages(pub);
-  const exposuresEvents = deriveExposures(pub.exposures, pub.papers);
+  const exposuresEvents = deriveExposures(pub.exposures, pub.papers, pub.round);
   const recapText = deriveRecapText(pub.reactionPlan, pub.papers);
   const evidenceCards = deriveEvidenceCards(priv.evidence, pub.round);
   const proofCards = deriveProofCards(priv.proofs, pub);

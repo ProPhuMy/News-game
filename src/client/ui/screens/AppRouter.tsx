@@ -1,4 +1,4 @@
-import React, { useState, useSyncExternalStore } from 'react';
+import React, { useState, useEffect, useSyncExternalStore } from 'react';
 import type { ClientStore } from '../../net/index.ts';
 import { store as defaultStore } from '../../net/index.ts';
 import { HomeScreen } from './HomeScreen.tsx';
@@ -22,6 +22,7 @@ import {
   deriveExposures,
   deriveRecapText,
   finalToScoreRows,
+  formatErrorMessage,
 } from '../mapper.ts';
 
 export interface AppRouterProps {
@@ -31,6 +32,7 @@ export interface AppRouterProps {
 export const AppRouter: React.FC<AppRouterProps> = ({ store = defaultStore }) => {
   const state = useSyncExternalStore(store.subscribe, store.getState);
   const [joinTarget, setJoinTarget] = useState<{ mode: 'solo' | 'create' | 'join'; code?: string } | null>(null);
+  const [nowMs, setNowMs] = useState(() => Date.now());
 
   const [isWebGLAvailable] = useState<boolean>(() => {
     if (typeof window === 'undefined') return true;
@@ -45,14 +47,60 @@ export const AppRouter: React.FC<AppRouterProps> = ({ store = defaultStore }) =>
     }
   });
 
+  // Connect net transport on mount
+  useEffect(() => {
+    const socketStore = store as Partial<{ connect: () => void }>;
+    socketStore.connect?.();
+  }, [store]);
+
+  // Read /r/CODE from URL or ?room=CODE on load; reconnect if token saved, else open Join
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const pathMatch = window.location.pathname.match(/\/r\/([A-Za-z0-9]+)/);
+    const queryMatch = new URLSearchParams(window.location.search).get('room');
+    const rawCode = (pathMatch?.[1] || queryMatch || '').trim().toUpperCase();
+    if (rawCode.length === 5) {
+      let hasSavedToken = false;
+      try {
+        hasSavedToken = !!localStorage.getItem(`news-town:${rawCode}`);
+      } catch {
+        // storage access fallback
+      }
+      if (hasSavedToken) {
+        store.actions.reconnect(rawCode);
+      } else {
+        setJoinTarget({ mode: 'join', code: rawCode });
+      }
+    }
+  }, [store]);
+
   const { room, session, publicSnapshot, privateSnapshot, connection, pending, error, serverOffsetMs } = state;
   const isPending = pending.length > 0;
+  const formattedError = formatErrorMessage(error);
+
+  // Periodically update local clock during write phase so bot lock badges flip reactively
+  useEffect(() => {
+    if (publicSnapshot?.phase === 'write') {
+      const interval = setInterval(() => setNowMs(Date.now()), 500);
+      return () => clearInterval(interval);
+    }
+  }, [publicSnapshot?.phase]);
+
+  const handleLeaveOrReset = () => {
+    const socketStore = store as Partial<{ disconnect: () => void }>;
+    if (typeof socketStore.disconnect === 'function') {
+      socketStore.disconnect();
+    } else {
+      store.reset();
+    }
+    setJoinTarget(null);
+  };
 
   // Handle server match termination / restart
   if (error === 'The presses stopped — this match ended') {
     return (
       <SoundProvider>
-        <ServerRestartScreen onReturnHome={() => store.reset()} />
+        <ServerRestartScreen onReturnHome={handleLeaveOrReset} />
       </SoundProvider>
     );
   }
@@ -63,7 +111,7 @@ export const AppRouter: React.FC<AppRouterProps> = ({ store = defaultStore }) =>
       return (
         <JoinScreen
           pending={isPending}
-          error={error}
+          error={formattedError}
           onBack={() => setJoinTarget(null)}
           onSubmit={(p) => {
             const profilePayload = {
@@ -86,7 +134,7 @@ export const AppRouter: React.FC<AppRouterProps> = ({ store = defaultStore }) =>
     return (
       <HomeScreen
         pending={isPending}
-        error={error}
+        error={formattedError}
         onPlaySolo={() => setJoinTarget({ mode: 'solo' })}
         onCreateRoom={() => setJoinTarget({ mode: 'create' })}
         onJoinCode={(code) => setJoinTarget({ mode: 'join', code })}
@@ -112,9 +160,9 @@ export const AppRouter: React.FC<AppRouterProps> = ({ store = defaultStore }) =>
         isHost={isHost}
         seats={seats}
         pending={isPending}
-        error={error}
+        error={formattedError}
         onStartMatch={() => store.actions.startMatch()}
-        onLeaveRoom={() => store.reset()}
+        onLeaveRoom={handleLeaveOrReset}
       />
     );
   };
@@ -127,22 +175,28 @@ export const AppRouter: React.FC<AppRouterProps> = ({ store = defaultStore }) =>
           <div className="loading-card">
             <h2>Awaiting Town Edition...</h2>
             <p>Syncing match presses with the newsroom...</p>
+            {formattedError && (
+              <div className="screen-error-banner" role="alert" data-testid="loading-error">
+                {formattedError}
+              </div>
+            )}
           </div>
         </div>
       );
     }
 
-    const serverNowMs = Date.now() + serverOffsetMs;
+    const serverNowMs = nowMs + serverOffsetMs;
     const papers = publicSnapshot.papers.map((p) => paperPublicToView(p, serverNowMs));
     const frontPages = deriveFrontPages(publicSnapshot);
     const proofCards = deriveProofCards(privateSnapshot.proofs, publicSnapshot);
     const evidenceCards = deriveEvidenceCards(privateSnapshot.evidence, publicSnapshot.round);
-    const exposures = deriveExposures(publicSnapshot.exposures, publicSnapshot.papers);
+    const exposures = deriveExposures(publicSnapshot.exposures, publicSnapshot.papers, publicSnapshot.round);
     const recap = deriveRecapText(publicSnapshot.reactionPlan, publicSnapshot.papers);
     const scoreRows = finalToScoreRows(publicSnapshot.final, publicSnapshot.papers);
 
+    // Candidates for rival investigation: rival paper, from an earlier round, and not already exposed
     const rivalHeadlines = publicSnapshot.headlines
-      .filter((h) => h.seatId !== session?.seatId)
+      .filter((h) => h.seatId !== session?.seatId && h.round < publicSnapshot.round && !h.exposed)
       .map((h) => {
         const p = publicSnapshot.papers.find((paper) => paper.seatId === h.seatId);
         return {
@@ -181,7 +235,7 @@ export const AppRouter: React.FC<AppRouterProps> = ({ store = defaultStore }) =>
             hasLocked={privateSnapshot.acted}
             rivalHeadlines={rivalHeadlines}
             pending={isPending}
-            serverError={error}
+            serverError={formattedError}
             onInvestigateLocation={(location) =>
               store.actions.investigate({ target: { kind: 'location', location } })
             }
@@ -198,7 +252,8 @@ export const AppRouter: React.FC<AppRouterProps> = ({ store = defaultStore }) =>
             lockedHeadline={privateSnapshot.lockedHeadline}
             evidenceCards={evidenceCards}
             proofCards={proofCards}
-            serverError={error}
+            serverError={formattedError}
+            pending={isPending}
             onLockHeadline={(payload) => store.actions.lockHeadline(payload)}
             onSkipWrite={() => store.actions.skipWrite()}
           />
@@ -216,7 +271,7 @@ export const AppRouter: React.FC<AppRouterProps> = ({ store = defaultStore }) =>
         {(publicSnapshot.phase === 'final' || publicSnapshot.phase === 'ended') && (
           <FinalEditionScreen
             scoreboard={scoreRows}
-            onPlayAgain={() => store.reset()}
+            onPlayAgain={handleLeaveOrReset}
           />
         )}
       </HUD>
@@ -239,7 +294,8 @@ export const AppRouter: React.FC<AppRouterProps> = ({ store = defaultStore }) =>
               if (session) {
                 store.actions.reconnect(session.code);
               } else {
-                store.setConnection('connected');
+                const socketStore = store as Partial<{ connect: () => void }>;
+                socketStore.connect?.();
               }
             }}
           />

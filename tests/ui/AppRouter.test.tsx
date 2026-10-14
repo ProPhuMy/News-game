@@ -1,6 +1,6 @@
 /** @vitest-environment jsdom */
 import React from 'react';
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, afterEach, vi } from 'vitest';
 import { render, screen, fireEvent, cleanup, act } from '@testing-library/react';
 import { AppRouter } from '../../src/client/ui/screens/AppRouter';
 import { createClientStore } from '../../src/client/net/store.ts';
@@ -249,5 +249,247 @@ describe('AppRouter Integration with ClientStore', () => {
     expect(screen.getByTestId('server-restart-screen')).toBeDefined();
     expect(screen.getByText('The presses stopped — this match ended')).toBeDefined();
     expect(screen.getByText('Return to Home')).toBeDefined();
+  });
+
+  it('initiates transport connection on startup and retry', () => {
+    const { store } = setupTestStore();
+    const connect = vi.fn();
+    const storeWithConnect = Object.assign(store, { connect });
+
+    render(<AppRouter store={storeWithConnect} />);
+    expect(connect).toHaveBeenCalledTimes(1);
+
+    // Transition to disconnected
+    act(() => {
+      store.setConnection('disconnected');
+    });
+
+    expect(screen.getByText('Connection Lost')).toBeDefined();
+    const retryBtn = screen.getByText('Reconnect Now');
+    fireEvent.click(retryBtn);
+    expect(connect).toHaveBeenCalledTimes(2);
+  });
+
+  it('routes /r/CODE to JoinScreen when no session token exists in storage', () => {
+    const { store, sent } = setupTestStore();
+    store.setConnection('connected');
+    window.history.pushState({}, '', '/r/EXTRA');
+
+    render(<AppRouter store={store} />);
+
+    expect(screen.getByText('Establish Your Press')).toBeDefined();
+
+    // Fill in name and paper, and claim press
+    fireEvent.change(screen.getByLabelText('Your Name'), { target: { value: 'Jane Editor' } });
+    fireEvent.change(screen.getByLabelText('Newspaper Name'), { target: { value: 'Daily Chronicle' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Claim Printing Press' }));
+
+    expect(sent.length).toBeGreaterThan(0);
+    const lastMsg = sent[sent.length - 1];
+    expect(lastMsg?.type).toBe('joinRoom');
+    if (lastMsg?.type === 'joinRoom') {
+      expect(lastMsg.code).toBe('EXTRA');
+    }
+
+    window.history.pushState({}, '', '/');
+  });
+
+  it('routes /r/CODE to reconnect action when saved session exists in storage', () => {
+    window.localStorage.setItem('news-town:PRESS', session.token);
+
+    const sent: ClientMessage[] = [];
+    const store = createClientStore({
+      send: (msg) => sent.push(msg),
+      storage: {
+        getItem: (k) => window.localStorage.getItem(k),
+        setItem: (k, v) => window.localStorage.setItem(k, v),
+      },
+    });
+
+    window.history.pushState({}, '', '/r/PRESS');
+    render(<AppRouter store={store} />);
+
+    expect(sent.some((m) => m.type === 'reconnect' && m.code === 'PRESS' && m.token === session.token)).toBe(true);
+
+    window.localStorage.removeItem('news-town:PRESS');
+    window.history.pushState({}, '', '/');
+  });
+
+  it('invokes store.disconnect when host leaves lobby room', () => {
+    const { store } = setupTestStore();
+    const disconnect = vi.fn(() => store.reset());
+    const storeWithDisconnect = Object.assign(store, { disconnect });
+
+    render(<AppRouter store={storeWithDisconnect} />);
+    store.setConnection('connected');
+
+    let actionId = '';
+    act(() => {
+      actionId = store.actions.createRoom(profile)!;
+    });
+
+    act(() => {
+      store.receive(SERVER_EVENTS.ack, {
+        actionId,
+        ok: true,
+        session,
+        serverNowMs: 1000,
+      });
+      store.receive(SERVER_EVENTS.room, {
+        code: 'ABCDE',
+        status: 'lobby',
+        hostSeatId: 0,
+        you: 0,
+        seats: [
+          { seatId: 0, occupant: 'human', displayName: 'Jane', paperName: 'Daily Post', color: 'red', connected: true },
+          { seatId: 1, occupant: 'ai', displayName: null, paperName: null, color: null, connected: true },
+          { seatId: 2, occupant: 'ai', displayName: null, paperName: null, color: null, connected: true },
+          { seatId: 3, occupant: 'ai', displayName: null, paperName: null, color: null, connected: true },
+        ],
+      });
+    });
+
+    const leaveBtn = screen.getByText('Leave Room');
+    fireEvent.click(leaveBtn);
+
+    expect(disconnect).toHaveBeenCalledTimes(1);
+    expect(screen.getByText('NEWS TOWN')).toBeDefined();
+  });
+
+  it('filters out already exposed headlines and current-round headlines from rival investigation', () => {
+    const { store } = setupTestStore();
+    render(<AppRouter store={store} />);
+    store.setConnection('connected');
+
+    let initActionId = '';
+    act(() => {
+      initActionId = store.actions.createRoom(profile)!;
+    });
+
+    act(() => {
+      store.receive(SERVER_EVENTS.ack, { actionId: initActionId, ok: true, session, serverNowMs: 1000 });
+      store.receive(SERVER_EVENTS.room, {
+        code: 'ABCDE',
+        status: 'playing',
+        hostSeatId: 0,
+        you: 0,
+        seats: [
+          { seatId: 0, occupant: 'human', displayName: 'Jane', paperName: 'Daily Post', color: 'red', connected: true },
+          { seatId: 1, occupant: 'ai', displayName: 'Bot 1', paperName: 'Paper 1', color: 'blue', connected: true },
+          { seatId: 2, occupant: 'ai', displayName: 'Bot 2', paperName: 'Paper 2', color: 'green', connected: true },
+          { seatId: 3, occupant: 'ai', displayName: 'Bot 3', paperName: 'Paper 3', color: 'gold', connected: true },
+        ],
+      });
+    });
+
+    const { pub, priv } = createMatchSnapshots();
+
+    // Round 3 public snapshot with 3 rival headlines:
+    // 1. h1-1 (round 1, exposed: true) -> should be excluded
+    // 2. h2-1 (round 2, exposed: false) -> should be included!
+    // 3. h3-1 (round 3, exposed: false) -> should be excluded (current round)
+    const customPub = {
+      ...pub,
+      version: 2,
+      round: 3,
+      phase: 'investigate' as const,
+      headlines: [
+        {
+          id: 'h1-1',
+          seatId: 1,
+          round: 1,
+          location: 'bakery' as const,
+          claim: 'danger' as const,
+          exposeOf: null,
+          text: 'Rival Lie from Round 1',
+          pulled: false,
+          evidence: false,
+          exposed: true,
+          truth: 'lie' as const,
+        },
+        {
+          id: 'h2-1',
+          seatId: 1,
+          round: 2,
+          location: 'clinic' as const,
+          claim: 'scandal' as const,
+          exposeOf: null,
+          text: 'Rival Unexposed Lie from Round 2',
+          pulled: false,
+          evidence: false,
+          exposed: false,
+          truth: 'unknown' as const,
+        },
+        {
+          id: 'h3-1',
+          seatId: 1,
+          round: 3,
+          location: 'town_hall' as const,
+          claim: 'all_clear' as const,
+          exposeOf: null,
+          text: 'Rival Current Round Headline',
+          pulled: false,
+          evidence: false,
+          exposed: false,
+          truth: 'unknown' as const,
+        },
+      ],
+    };
+
+    act(() => {
+      store.receive(SERVER_EVENTS.public, customPub);
+      store.receive(SERVER_EVENTS.private, { ...priv, version: 2, seatId: 0 });
+    });
+
+    expect(screen.getByTestId('investigate-panel')).toBeDefined();
+    expect(screen.getByText(/Rival Unexposed Lie from Round 2/)).toBeDefined();
+    expect(screen.queryByText(/Rival Lie from Round 1/)).toBeNull();
+    expect(screen.queryByText(/Rival Current Round Headline/)).toBeNull();
+  });
+
+  it('renders error banner during loading state when error occurs', () => {
+    const { store } = setupTestStore();
+    render(<AppRouter store={store} />);
+    store.setConnection('connected');
+
+    let initActionId = '';
+    act(() => {
+      initActionId = store.actions.createRoom(profile)!;
+    });
+
+    act(() => {
+      store.receive(SERVER_EVENTS.ack, { actionId: initActionId, ok: true, session, serverNowMs: 1000 });
+      store.receive(SERVER_EVENTS.room, {
+        code: 'ABCDE',
+        status: 'playing',
+        hostSeatId: 0,
+        you: 0,
+        seats: [
+          { seatId: 0, occupant: 'human', displayName: 'Jane', paperName: 'Daily Post', color: 'red', connected: true },
+          { seatId: 1, occupant: 'ai', displayName: 'Bot 1', paperName: 'Paper 1', color: 'blue', connected: true },
+          { seatId: 2, occupant: 'ai', displayName: 'Bot 2', paperName: 'Paper 2', color: 'green', connected: true },
+          { seatId: 3, occupant: 'ai', displayName: 'Bot 3', paperName: 'Paper 3', color: 'gold', connected: true },
+        ],
+      });
+    });
+
+    // Cause a store error while waiting for snapshots
+    let startActionId = '';
+    act(() => {
+      startActionId = store.actions.startMatch()!;
+    });
+
+    act(() => {
+      store.receive(SERVER_EVENTS.ack, {
+        actionId: startActionId,
+        ok: false,
+        error: 'ROOM_NOT_FOUND',
+        serverNowMs: 1000,
+      });
+    });
+
+    const errorBanner = screen.getByTestId('loading-error');
+    expect(errorBanner).toBeDefined();
+    expect(screen.getByText('Room not found. Check the room code and try again.')).toBeDefined();
   });
 });

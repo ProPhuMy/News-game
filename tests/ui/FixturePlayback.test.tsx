@@ -46,7 +46,9 @@ describe('Fixture Playback Integration', () => {
 
     // Check that RevealScreen and exposure banner are rendered
     expect(screen.getByTestId('reveal-screen')).toBeDefined();
-    expect(screen.getAllByText('THE TRUTH COMES OUT').length).toBeGreaterThan(0);
+    expect(screen.getByTestId('exposure-banner')).toBeDefined();
+    expect(screen.getByText('🚨 SCANDAL REPORT')).toBeDefined();
+    expect(screen.getByText(/The mixed Post:/)).toBeDefined();
   });
 
   it('renders final edition scoreboard on finale frame', () => {

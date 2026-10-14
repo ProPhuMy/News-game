@@ -28,6 +28,7 @@ export interface WriteScreenProps {
   evidenceCards: EvidenceCard[];
   proofCards: ProofCard[];
   serverError?: string | null;
+  pending?: boolean;
   onLockHeadline: (payload: LockHeadlinePayload) => void;
   onSkipWrite: () => void;
 }
@@ -47,6 +48,7 @@ export const WriteScreen: React.FC<WriteScreenProps> = ({
   evidenceCards,
   proofCards,
   serverError,
+  pending = false,
   onLockHeadline,
   onSkipWrite,
 }) => {
@@ -205,6 +207,7 @@ export const WriteScreen: React.FC<WriteScreenProps> = ({
             id="headline-input"
             maxLength={TUNING.limits.headlineChars}
             rows={3}
+            disabled={pending}
             placeholder={`Write your front page headline (1–${TUNING.limits.headlineChars} characters)...`}
             value={headlineText}
             onChange={(e) => setHeadlineText(e.target.value)}
@@ -230,16 +233,17 @@ export const WriteScreen: React.FC<WriteScreenProps> = ({
           <Button
             variant="primary"
             disabled={
-              isExposeMode
+              pending ||
+              (isExposeMode
                 ? !selectedProofId || !headlineText.trim()
-                : !selectedLocation || !selectedClaim || !headlineText.trim()
+                : !selectedLocation || !selectedClaim || !headlineText.trim())
             }
             onClick={handleLock}
             className="btn-large"
           >
-            LOCK IT IN
+            {pending ? 'LOCKING...' : 'LOCK IT IN'}
           </Button>
-          <Button variant="retro" onClick={onSkipWrite}>
+          <Button variant="retro" onClick={onSkipWrite} disabled={pending}>
             Skip Writing
           </Button>
         </div>
