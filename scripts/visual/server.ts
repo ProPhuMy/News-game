@@ -28,10 +28,17 @@ export async function waitForHttp(url: string, timeoutMs: number): Promise<void>
   throw new Error(`${url} did not answer within ${timeoutMs} ms`);
 }
 
-/** Starts src/server/index.ts in its own process group so stop() also ends Vite's children. */
-export function startGameServer(options: { port: number; prod: boolean }): { stop(): void; logTail(): string } {
+export interface GameServer {
+  stop(): void;
+  logTail(): string;
+  /** Resolves with the exit code (null when killed by a signal) once the server process ends. */
+  exited: Promise<number | null>;
+}
+
+/** Starts the game server (default src/server/index.ts) in its own process group so stop() also ends Vite's children. */
+export function startGameServer(options: { port: number; prod: boolean; entry?: string }): GameServer {
   const log: string[] = [];
-  const child = spawn(process.execPath, ['src/server/index.ts'], {
+  const child = spawn(process.execPath, [options.entry ?? 'src/server/index.ts'], {
     detached: true,
     stdio: ['ignore', 'pipe', 'pipe'],
     env: { ...process.env, PORT: String(options.port), AI_PROVIDER: 'none', NODE_ENV: options.prod ? 'production' : 'development' },
@@ -43,7 +50,9 @@ export function startGameServer(options: { port: number; prod: boolean }): { sto
   child.stdout.on('data', keep);
   child.stderr.on('data', keep);
   let stopped = false;
+  const exited = new Promise<number | null>((resolve) => child.once('exit', (code) => resolve(code)));
   return {
+    exited,
     stop() {
       if (stopped || child.pid === undefined) return;
       stopped = true;
@@ -55,4 +64,19 @@ export function startGameServer(options: { port: number; prod: boolean }): { sto
     },
     logTail: () => log.join('').split('\n').slice(-20).join('\n'),
   };
+}
+
+/** Waits for the server to answer, failing at once (with its log) if the process exits first. */
+export async function waitForServer(server: GameServer, url: string, timeoutMs: number): Promise<void> {
+  const died = server.exited.then((code) => {
+    throw new Error(`server exited with code ${code} before answering ${url}\n--- server log ---\n${server.logTail()}`);
+  });
+  try {
+    await Promise.race([waitForHttp(url, timeoutMs), died]);
+  } catch (error) {
+    if ((error as Error).message.startsWith('server exited')) throw error;
+    throw new Error(`${(error as Error).message}\n--- server log ---\n${server.logTail()}`, { cause: error });
+  } finally {
+    died.catch(() => {});
+  }
 }

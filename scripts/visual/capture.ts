@@ -3,7 +3,8 @@ import { access, mkdir, rm, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { chromium, type Response } from 'playwright-core';
 import { harnessPath, parseCaptureArgs, type CaptureOptions } from './args.ts';
-import { freePort, startGameServer, waitForHttp } from './server.ts';
+import { withBrowserAndServer } from './lifecycle.ts';
+import { freePort, startGameServer, waitForServer } from './server.ts';
 
 const CHROMIUM_ARGS = ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'];
 
@@ -33,23 +34,18 @@ async function capture(options: CaptureOptions): Promise<void> {
     });
   }
   const port = await freePort();
-  const server = startGameServer({ port, prod: options.prod });
-  const stopAll = () => server.stop();
-  process.once('SIGINT', () => { stopAll(); process.exit(130); });
-  process.once('SIGTERM', () => { stopAll(); process.exit(143); });
-
-  const browser = await chromium.launch({
-    args: CHROMIUM_ARGS,
-    env: BROWSER_ENV,
-    ...(process.env.NEWS_TOWN_CHROMIUM ? { executablePath: process.env.NEWS_TOWN_CHROMIUM } : {}),
-  });
-  try {
+  await withBrowserAndServer({
+    launch: () => chromium.launch({
+      args: CHROMIUM_ARGS,
+      env: BROWSER_ENV,
+      ...(process.env.NEWS_TOWN_CHROMIUM ? { executablePath: process.env.NEWS_TOWN_CHROMIUM } : {}),
+    }),
+    start: () => startGameServer({ port, prod: options.prod }),
+  }, async (browser, server) => {
+    process.once('SIGINT', () => { server.stop(); process.exit(130); });
+    process.once('SIGTERM', () => { server.stop(); process.exit(143); });
     const base = `http://127.0.0.1:${port}`;
-    try {
-      await waitForHttp(`${base}/`, options.timeoutMs);
-    } catch (error) {
-      throw new Error(`${(error as Error).message}\n--- server log ---\n${server.logTail()}`, { cause: error });
-    }
+    await waitForServer(server, `${base}/`, options.timeoutMs);
     const page = await browser.newPage({
       viewport: { width: options.width, height: options.height },
       deviceScaleFactor: 1,
@@ -64,7 +60,7 @@ async function capture(options: CaptureOptions): Promise<void> {
     const url = `${base}${options.target === 'town' ? harnessPath(options) : '/'}`;
     await page.goto(url, { waitUntil: 'load', timeout: options.timeoutMs });
 
-    let state: unknown = null;
+    let state: unknown;
     if (options.target === 'town') {
       await page.waitForFunction(() => {
         const visual = (globalThis as { __NEWS_TOWN_VISUAL__?: { status: string } }).__NEWS_TOWN_VISUAL__;
@@ -86,13 +82,10 @@ async function capture(options: CaptureOptions): Promise<void> {
       target: options.target, url, options, browser: browser.version(), state, stylesheets, consoleErrors,
     }, null, 2)}\n`);
     console.log(`captured ${options.out} (${options.width}x${options.height}); sidecar ${options.out}.json`);
-  } catch (error) {
+  }).catch(async (error: unknown) => {
     await rm(options.out, { force: true });
     throw error;
-  } finally {
-    await browser.close();
-    stopAll();
-  }
+  });
 }
 
 capture(parseCaptureArgs(process.argv.slice(2))).catch((error: unknown) => {
