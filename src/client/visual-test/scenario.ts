@@ -28,7 +28,7 @@ function isPhase(value: string): value is Phase {
   return (PHASES as readonly string[]).includes(value);
 }
 
-function readInt(params: URLSearchParams, key: string, fallback: number, min: number, max: number): number {
+export function readInt(params: URLSearchParams, key: string, fallback: number, min: number, max: number): number {
   const raw = params.get(key);
   if (raw === null) return fallback;
   if (!/^\d+$/.test(raw)) throw new Error(`${key} must be a whole number, got "${raw}"`);

@@ -57,11 +57,11 @@ async function capture(options: CaptureOptions): Promise<void> {
     page.on('console', (message) => { if (message.type() === 'error') consoleErrors.push(message.text()); });
     page.on('pageerror', (error) => consoleErrors.push(`pageerror: ${error.message}`));
 
-    const url = `${base}${options.target === 'town' ? harnessPath(options) : '/'}`;
+    const url = `${base}${options.target === 'app' ? '/' : harnessPath(options)}`;
     await page.goto(url, { waitUntil: 'load', timeout: options.timeoutMs });
 
     let state: unknown;
-    if (options.target === 'town') {
+    if (options.target !== 'app') {
       await page.waitForFunction(() => {
         const visual = (globalThis as { __NEWS_TOWN_VISUAL__?: { status: string } }).__NEWS_TOWN_VISUAL__;
         return visual !== undefined && visual.status !== 'loading';

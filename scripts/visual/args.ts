@@ -1,4 +1,4 @@
-export type CaptureTarget = 'town' | 'app';
+export type CaptureTarget = 'town' | 'app' | 'character';
 
 export interface CaptureOptions {
   target: CaptureTarget;
@@ -13,16 +13,26 @@ export interface CaptureOptions {
   out: string;
   prod: boolean;
   timeoutMs: number;
+  /** --target character only: model path under public/models/. */
+  model: string;
+  /** --target character only: clip name, or null for the bind pose. */
+  clip: string | null;
+  /** --target character only: exact clip time in ms. */
+  timeMs: number;
+  /** --target character only: number of characters the scene must draw. */
+  count: number;
 }
 
 const DEFAULTS: Omit<CaptureOptions, 'out'> = {
   target: 'town', fixture: 'solo-honest', round: 1, phase: 'reveal', reactionMs: 6000,
   reducedMotion: false, seed: 1, width: 1280, height: 720, prod: false, timeoutMs: 60000,
+  model: 'characters/kenney-mini/character-male-a.glb', clip: null, timeMs: 0, count: 1,
 };
 
 const NUMBER_FLAGS = {
   '--round': 'round', '--reaction-ms': 'reactionMs', '--seed': 'seed',
   '--width': 'width', '--height': 'height', '--timeout-ms': 'timeoutMs',
+  '--time-ms': 'timeMs', '--count': 'count',
 } as const;
 
 function wholeNumber(flag: string, raw: string | undefined): number {
@@ -43,12 +53,18 @@ export function parseCaptureArgs(argv: readonly string[]): CaptureOptions {
       continue;
     }
     if (flag === '--target') {
-      if (value !== 'town' && value !== 'app') throw new Error(`--target must be town or app, got "${value ?? ''}"`);
+      if (value !== 'town' && value !== 'app' && value !== 'character') {
+        throw new Error(`--target must be town, app or character, got "${value ?? ''}"`);
+      }
       options.target = value;
     } else if (flag === '--fixture') {
       options.fixture = value ?? '';
     } else if (flag === '--phase') {
       options.phase = value ?? '';
+    } else if (flag === '--model') {
+      options.model = value ?? '';
+    } else if (flag === '--clip') {
+      options.clip = value ?? '';
     } else if (flag === '--out') {
       options.out = value;
     } else {
@@ -63,6 +79,15 @@ export function parseCaptureArgs(argv: readonly string[]): CaptureOptions {
 }
 
 export function harnessPath(options: CaptureOptions): string {
+  if (options.target === 'character') {
+    // The harness re-validates model, clip, time and count and reports readable errors.
+    const query = new URLSearchParams({ scene: 'inspect-character', model: options.model });
+    if (options.clip !== null) query.set('clip', options.clip);
+    query.set('timeMs', String(options.timeMs));
+    query.set('count', String(options.count));
+    query.set('seed', String(options.seed));
+    return `/visual-test/index.html?${query.toString()}`;
+  }
   const query = new URLSearchParams({
     fixture: options.fixture,
     round: String(options.round),

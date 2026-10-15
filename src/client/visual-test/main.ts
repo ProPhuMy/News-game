@@ -5,28 +5,22 @@ import { createClientStore } from '../net/store.ts';
 import { createTownView, mountTown, type TownView } from '../town/index.ts';
 import { createVirtualClock } from './clock.ts';
 import { measureCanvas, readyVerdict } from './pixels.ts';
-import { parseFixture, parseScenario, selectFrameIndex, type VisualScenario } from './scenario.ts';
+import { parseFixture, parseScenario, selectFrameIndex } from './scenario.ts';
 import { settleScene, type SceneReadiness } from './settle.ts';
-
-type VisualState =
-  | { status: 'loading' }
-  | { status: 'ready'; scenario: VisualScenario; width: number; height: number; distinctColors: number }
-  | { status: 'error'; error: string };
-
-declare global {
-  interface Window {
-    __NEWS_TOWN_VISUAL__?: VisualState;
-  }
-}
+import { runInspection } from './inspect.ts';
+import { sceneKind } from './inspection-scenario.ts';
+import { publish } from './state.ts';
 
 const fixtureLoaders = import.meta.glob<unknown>('../../sim/fixtures/*.json', { import: 'default' });
 
-function publish(state: VisualState): void {
-  window.__NEWS_TOWN_VISUAL__ = state;
-}
-
 async function run(): Promise<void> {
   publish({ status: 'loading' });
+  if (sceneKind(window.location.search) === 'inspect-character') {
+    const container = document.getElementById('town');
+    if (!container) throw new Error('missing #town container');
+    publish(await runInspection(window.location.search, container));
+    return;
+  }
   const scenario = parseScenario(window.location.search);
   const loader = fixtureLoaders[`../../sim/fixtures/${scenario.fixture}.json`];
   if (!loader) throw new Error(`unknown fixture "${scenario.fixture}"; known: ${Object.keys(fixtureLoaders).join(', ')}`);
@@ -87,7 +81,7 @@ async function run(): Promise<void> {
 
   const stats = measureCanvas(renderer.domElement);
   const verdict = readyVerdict({ webgl: view.isWebGLSupported(), distinctColors: stats.distinctColors });
-  publish(verdict.status === 'ready' ? { status: 'ready', scenario, ...stats } : verdict);
+  publish(verdict.status === 'ready' ? { status: 'ready', scene: 'town', scenario, ...stats } : verdict);
 }
 
 run().catch((error: unknown) => {
