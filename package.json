@@ -13,7 +13,8 @@
     "typecheck": "tsc",
     "lint": "eslint .",
     "sim": "node src/sim/cli.ts",
-    "fixtures": "node src/sim/record-fixtures.ts"
+    "fixtures": "node src/sim/record-fixtures.ts",
+    "capture": "node scripts/visual/capture.ts"
   },
   "dependencies": {
     "react": "^19.3.0",
