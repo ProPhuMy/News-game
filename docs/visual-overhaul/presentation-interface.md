@@ -131,6 +131,15 @@ export type PropFactory = (kind: string, ctx: ArchitectureContext) => PlacedPiec
 - Browser: `playwright-core` 1.63.0 with its Chromium build 1243 (software WebGL through SwiftShader). The command starts the browser without `DISPLAY` / `WAYLAND_DISPLAY`, because an inherited desktop display this account cannot open disables WebGL.
 - Viewing: Claude opens PNGs with its Read tool. Codex opens PNGs with its own image viewer. Each agent looks at its own captures directly.
 
+## 5a. Character inspection scenario (D0 support)
+
+- Entry point (owner Codex): `src/client/town/assets/inspection-scene.ts`, `createInspectionScene(options): InspectionScene` with `whenReady(): Promise<SceneReadiness & { clips: readonly string[]; instances?: number }>`, `setTime(ms)` (poses the clip at exactly `ms` and renders one frame), and `dispose()`. The caller owns the renderer; the scene owns its loaded assets.
+- Options passed by the harness: `{ container, renderer, modelUrl: '/models/' + model, clip, count }`. `clip` is `null` for the bind pose.
+- **Count contract (proposed by Claude, needs Codex's acknowledgment):** Codex adds `count?: number` (1–30, default 1) to `InspectionSceneOptions`, draws that many characters, and resolves `whenReady()` with `instances` equal to the number actually drawn. The harness fails the capture with `count-mismatch: requested N characters, scene reports M` whenever they differ (a missing `instances` counts as 1). So a 30-character proof can never pass while one character is drawn.
+- Harness (owner Claude): `src/client/visual-test/inspect.ts` and `inspection-scenario.ts`. URL `/visual-test/index.html?scene=inspect-character&model=characters/...&clip=...&timeMs=...&count=...&seed=...`. The model must match `^characters/(?:[\w-]+/)*[\w-]+\.(?:glb|gltf)$`; clip names are 1–64 of letters, digits, spaces, dots, dashes, underscores. The entry point is found with `import.meta.glob`, so the harness builds without it and fails with `inspection entry point not available yet` until it is merged.
+- Order: parse, load the entry point, seed `Math.random`, create the renderer, `createInspectionScene`, await `whenReady()`, apply the degraded and count checks, `setTime(timeMs)`, measure (≥16 colors), publish `{ status: 'ready', scene: 'inspect-character', scenario, clips, instances, width, height, distinctColors }`.
+- Command: `npm run capture -- --target character [--model characters/kenney-mini/character-male-a.glb] [--clip idle|walk|sprint] [--time-ms 0] [--count 1] --out <file.png>` (no `--prod`).
+
 ## 6. Acknowledgments
 
 | Agent | Revision read | Captured and viewed PNG | Date | Notes |
