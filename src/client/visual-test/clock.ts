@@ -6,7 +6,7 @@ export interface VirtualClock {
   now(): number;
   /** Replaces Date.now, performance.now, requestAnimationFrame, cancelAnimationFrame and Math.random. Returns a restore function. */
   install(): () => void;
-  /** Moves time forward in fixed frames, running each queued animation frame once per frame. */
+  /** Moves time forward in fixed frames, running each queued animation frame once per frame (at least one frame). */
   advance(ms: number, frameMs?: number): void;
 }
 
@@ -68,12 +68,13 @@ export function createVirtualClock(startMs: number, seed: number): VirtualClock 
 
     advance(ms: number, frameMs = 1000 / 60) {
       const end = nowMs + ms;
-      while (nowMs < end) {
+      // do-while: advancing by 0 still runs one frame, so a capture at the exact frame time is drawn.
+      do {
         nowMs = Math.min(end, nowMs + frameMs);
         const due = queue;
         queue = new Map();
         for (const callback of due.values()) callback(nowMs - startMs);
-      }
+      } while (nowMs < end);
     },
   };
 }

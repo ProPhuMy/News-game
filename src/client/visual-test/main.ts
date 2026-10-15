@@ -6,6 +6,7 @@ import { createTownView, mountTown, type TownView } from '../town/index.ts';
 import { createVirtualClock } from './clock.ts';
 import { measureCanvas, readyVerdict } from './pixels.ts';
 import { parseFixture, parseScenario, selectFrameIndex, type VisualScenario } from './scenario.ts';
+import { settleScene, type SceneReadiness } from './settle.ts';
 
 type VisualState =
   | { status: 'loading' }
@@ -72,13 +73,16 @@ async function run(): Promise<void> {
   const view = holder.view;
   if (!view) throw new Error('mountTown did not create a view');
 
-  // Run the requested reaction time; always at least a few frames so the scene renders.
-  clock.advance(Math.max(scenario.reactionMs, 100));
-  // Renderer-ready hook agreed in the presentation interface note; absent until Codex adds async assets.
-  const maybeReady = view as TownView & { whenReady?: () => Promise<void> };
-  if (maybeReady.whenReady) {
-    await maybeReady.whenReady();
-    clock.advance(100);
+  // Readiness hook from the presentation interface note §5; absent until Codex adds async assets.
+  // Assets load first, then time advances to the exact requested timestamp.
+  const readiness = await settleScene(
+    view as TownView & { whenReady?: () => Promise<SceneReadiness> },
+    (ms) => clock.advance(ms),
+    scenario.reactionMs,
+  );
+  if (readiness.degraded.length > 0) {
+    publish({ status: 'error', error: `degraded-assets: ${readiness.degraded.join('; ')}` });
+    return;
   }
 
   const stats = measureCanvas(renderer.domElement);

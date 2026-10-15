@@ -49,6 +49,16 @@ describe('createVirtualClock', () => {
     expect(Date.now()).toBe(1_050);
   });
 
+  it('runs queued frames once without moving time when advancing by zero', () => {
+    const clock = createVirtualClock(2_000, 1);
+    restore = clock.install();
+    const times: number[] = [];
+    requestAnimationFrame((t) => { times.push(t); });
+    clock.advance(0);
+    expect(times).toEqual([0]);
+    expect(Date.now()).toBe(2_000);
+  });
+
   it('drops cancelled frames', () => {
     const clock = createVirtualClock(0, 1);
     restore = clock.install();
