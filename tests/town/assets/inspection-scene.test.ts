@@ -25,7 +25,7 @@ describe('character inspection scene', () => {
   it('waits for assets, then poses exact clip time reproducibly without a frame loop', async () => {
     const { options, render, head } = setup();
     const view = createInspectionScene(options);
-    expect(await view.whenReady()).toEqual({ degraded: [], clips: ['walk'] });
+    expect(await view.whenReady()).toEqual({ degraded: [], clips: ['walk'], instances: 1 });
     view.setTime(250); const position = head.position.x;
     expect(position).toBeCloseTo(0.5);
     view.setTime(750); expect(head.position.x).toBeCloseTo(1.5);
@@ -51,5 +51,46 @@ describe('character inspection scene', () => {
     expect(disposeGeometry).toHaveBeenCalledTimes(1); expect(disposeMaterial).toHaveBeenCalledTimes(1);
     expect(() => createInspectionScene({ ...options, modelUrl: 'https://external.test/file.glb' })).toThrow();
     expect(() => createInspectionScene({ ...options, modelUrl: '/models/characters/../secret.glb' })).toThrow();
+  });
+});
+
+
+describe('inspection count and framing', () => {
+  it('draws thirty independently posed instances and reports the actual count', async () => {
+    const { options, render } = setup();
+    const view = createInspectionScene({ ...options, count: 30 });
+    expect((await view.whenReady()).instances).toBe(30);
+    view.setTime(250);
+    const scene = render.mock.calls[0]![0] as THREE.Scene;
+    const heads: THREE.Object3D[] = [];
+    scene.traverse(object => { if (object.name === 'head') heads.push(object); });
+    expect(heads).toHaveLength(30);
+    expect(new Set(heads).size).toBe(30);
+    expect(heads.every(head => Math.abs(head.position.x - 0.5) < 0.001)).toBe(true);
+    view.dispose();
+  });
+
+  it('fits animated geometry and the attached hat inside the camera at narrow and wide sizes', async () => {
+    for (const [width, height] of [[1280, 720], [390, 844]]) {
+      const { options, render } = setup();
+      const view = createInspectionScene({ ...options, container: { clientWidth: width, clientHeight: height } as HTMLElement });
+      await view.whenReady(); view.setTime(750);
+      const [scene, camera] = render.mock.calls[0]! as [THREE.Scene, THREE.Camera];
+      const bounds = new THREE.Box3().setFromObject(scene, true);
+      for (const x of [bounds.min.x, bounds.max.x]) for (const y of [bounds.min.y, bounds.max.y]) for (const z of [bounds.min.z, bounds.max.z]) {
+        const ndc = new THREE.Vector3(x, y, z).project(camera);
+        expect(Math.abs(ndc.x)).toBeLessThan(0.95);
+        expect(Math.abs(ndc.y)).toBeLessThan(0.95);
+        expect(ndc.z).toBeGreaterThan(-1); expect(ndc.z).toBeLessThan(1);
+      }
+      view.dispose();
+    }
+  });
+
+  it('rejects counts outside integer 1–30', () => {
+    const { options } = setup();
+    for (const count of [0, -1, 31, 1.5, NaN, Infinity]) {
+      expect(() => createInspectionScene({ ...options, count })).toThrow('count');
+    }
   });
 });

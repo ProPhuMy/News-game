@@ -80,3 +80,28 @@ Final partial-delivery suite after adding the agreed entry point: **407 tests / 
 The first dynamic-import entry probe was interrupted by a Vite navigation (`Execution context was destroyed`); a fresh run after dependency optimization passed. This is recorded separately from model import failure. No direct-view character PNG is claimed by these pixel counts.
 
 The supplier's original License.txt keeps its CRLF/blank-line whitespace, so `git diff --check` reports that vendor file; authored source/doc whitespace is checked separately. No license content has been rewritten merely to silence whitespace diagnostics.
+
+## Count contract and capture handoff (supersedes pending scenario notes above)
+
+Acknowledged Claude's `b6faba1` presentation-interface §5a contract: `count?: number`, integer 1–30, default 1; readiness now reports required `instances: number`. Thirty SkeletonUtils-cloned characters receive independent mixers; shared geometry/materials/textures and skeletons are released once by this inspection view. Camera framing is calculated after posing, from all current mesh bounds including the attached hats, using a padded bounding sphere and the smaller horizontal/vertical FOV.
+
+The count/framing tests first failed on missing instance reporting, absent count validation, and projected bounds outside the viewport; after the fix, all 6 inspection tests pass. Owned branch verification: 410 tests passed; typecheck, lint and build passed (existing bundle warning).
+
+Because the user's merge order controls main, captures used a disposable composition: Claude harness `b6faba1` plus Codex `ad27dd3` and the count/framing patch committed with this report. No Claude-owned source was edited or committed on Codex's branch. Both deliveries must be present in the final checkout; either user's merge order is safe for building, but candidate capture fails until the entry and assets are available. This is integration evidence, not a merge into main.
+
+Used the shared command `npm run capture -- --target character ...`; directly opened these PNGs:
+
+| Local PNG | Inputs | Direct visual observation |
+| --- | --- | --- |
+| `/tmp/news-town-d0/walk-framed.png` | male-a, walk, 300 ms, count 1, 1280×720 | Full character and complete red cap inside frame, clear face/atlas detail. |
+| `/tmp/news-town-d0/crowd30.png` | male-a, walk, 300 ms, count 30, 1280×720 | Thirty distinct figures arranged on the ground, all inside the image; readiness reports 30. |
+| `/tmp/news-town-d0/idle.png` | male-a, idle, 500 ms | Complete cap and idle figure; no blank canvas. |
+| `/tmp/news-town-d0/sprint.png` | male-a, sprint, 250 ms | Imported sprint pose and complete cap. |
+| `/tmp/news-town-d0/walk-narrow.png` | male-a, walk, 300 ms, 390×844 | Complete figure/cap visible with generous framing; no edge clipping. |
+| `/tmp/news-town-d0/female-walk.png` | female-a, walk, 300 ms | This variant includes crutches; generic test cap sits high above its hair. D1 must choose variants deliberately and fit final hats per head/hairstyle. Not an approved final hat design. |
+
+`crowd30-repeat.png` used the identical crowd inputs; `cmp` succeeded and both PNGs have SHA-256 `90a7f1db09dad233d4cf3d5ba998cff6e90028b7190a2db22986182f523aec92`. All seven captures report ready and zero console errors. `D0-capture-evidence.json` preserves complete scenario/instance/error/hash records. Assets face the +Z inspection camera and are Y-up; final art framing and scale remain D1 choices.
+
+These are import-validation images with basic lights and a generic red test cap, not the D1 toon/outline/shadow/palette sample or a laptop FPS result. Counterpart review of this updated entry/capture evidence and final D0 exit disposition remain pending. No D0.5 staging work started.
+
+Combined harness/renderer verification (`b6faba1` plus owned count/framing patch): **425 tests / 79 files passed**, typecheck, lint and build passed. Own branch suite remains 410/410. No harness/CLI/config file was copied into the Codex commit; only disposable integration checkout used the combination.
