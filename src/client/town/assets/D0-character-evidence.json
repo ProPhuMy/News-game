@@ -1,0 +1,3198 @@
+{
+  "result": {
+    "characters": [
+      {
+        "url": "/models/characters/kenney-mini/character-female-a.glb",
+        "triangles": 876,
+        "materials": 1,
+        "bounds": {
+          "width": 1.0987870321264648,
+          "height": 0.7755282862186432,
+          "depth": 0.49953030049800873
+        },
+        "bones": [
+          "arm-left",
+          "arm-right",
+          "head",
+          "leg-left",
+          "leg-right",
+          "root",
+          "torso"
+        ],
+        "clips": [
+          {
+            "name": "static",
+            "duration": 0.10000000149011612,
+            "tracks": 21,
+            "unboundTracks": []
+          },
+          {
+            "name": "idle",
+            "duration": 1.3333333730697632,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "walk",
+            "duration": 0.6666666865348816,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "sprint",
+            "duration": 0.5,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "jump",
+            "duration": 0.5,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "fall",
+            "duration": 0.3333333432674408,
+            "tracks": 5,
+            "unboundTracks": []
+          },
+          {
+            "name": "crouch",
+            "duration": 0.1666666716337204,
+            "tracks": 8,
+            "unboundTracks": []
+          },
+          {
+            "name": "sit",
+            "duration": 0.1666666716337204,
+            "tracks": 5,
+            "unboundTracks": []
+          },
+          {
+            "name": "drive",
+            "duration": 0.1666666716337204,
+            "tracks": 5,
+            "unboundTracks": []
+          },
+          {
+            "name": "die",
+            "duration": 0.3333333432674408,
+            "tracks": 8,
+            "unboundTracks": []
+          },
+          {
+            "name": "pick-up",
+            "duration": 0.3333333432674408,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "emote-yes",
+            "duration": 0.6666666865348816,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "emote-no",
+            "duration": 0.6666666865348816,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-right",
+            "duration": 0.1666666716337204,
+            "tracks": 2,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-left",
+            "duration": 0.1666666716337204,
+            "tracks": 2,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-both",
+            "duration": 0.1666666716337204,
+            "tracks": 2,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-right-shoot",
+            "duration": 0.20000000298023224,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-left-shoot",
+            "duration": 0.20000000298023224,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-both-shoot",
+            "duration": 0.20000000298023224,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "attack-melee-right",
+            "duration": 0.4166666567325592,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "attack-melee-left",
+            "duration": 0.4166666567325592,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "attack-kick-right",
+            "duration": 0.5333333611488342,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "attack-kick-left",
+            "duration": 0.5333333611488342,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "interact-right",
+            "duration": 0.6666666865348816,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "interact-left",
+            "duration": 0.6666666865348816,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-sit",
+            "duration": 0.1666666716337204,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-look-left",
+            "duration": 0.3333333432674408,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-look-right",
+            "duration": 0.3333333432674408,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-move-forward",
+            "duration": 0.5,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-move-back",
+            "duration": 0.5,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-move-left",
+            "duration": 0.5,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-move-right",
+            "duration": 0.5,
+            "tracks": 9,
+            "unboundTracks": []
+          }
+        ],
+        "skins": [
+          {
+            "name": "body-mesh",
+            "bones": [
+              "root",
+              "leg-left",
+              "leg-right",
+              "torso",
+              "arm-left",
+              "arm-right",
+              "head"
+            ]
+          },
+          {
+            "name": "head-mesh",
+            "bones": [
+              "root",
+              "leg-left",
+              "leg-right",
+              "torso",
+              "arm-left",
+              "arm-right",
+              "head"
+            ]
+          }
+        ],
+        "headType": "Bone",
+        "testedClips": {
+          "idle": {
+            "duration": 1.3333333730697632,
+            "headMoves": true
+          },
+          "walk": {
+            "duration": 0.6666666865348816,
+            "headMoves": true
+          },
+          "sprint": {
+            "duration": 0.5,
+            "headMoves": true
+          },
+          "emote-yes": {
+            "duration": 0.6666666865348816,
+            "headMoves": true
+          },
+          "holding-both": {
+            "duration": 0.1666666716337204,
+            "headMoves": false
+          }
+        },
+        "independent": true,
+        "thirtyCloneSkeletons": 60,
+        "hatParent": "head"
+      },
+      {
+        "url": "/models/characters/kenney-mini/character-female-b.glb",
+        "triangles": 742,
+        "materials": 1,
+        "bounds": {
+          "width": 0.7671682462683105,
+          "height": 0.7233531816005707,
+          "depth": 0.41852225363254547
+        },
+        "bones": [
+          "arm-left",
+          "arm-right",
+          "head",
+          "leg-left",
+          "leg-right",
+          "root",
+          "torso"
+        ],
+        "clips": [
+          {
+            "name": "static",
+            "duration": 0.10000000149011612,
+            "tracks": 21,
+            "unboundTracks": []
+          },
+          {
+            "name": "idle",
+            "duration": 1.3333333730697632,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "walk",
+            "duration": 0.6666666865348816,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "sprint",
+            "duration": 0.5,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "jump",
+            "duration": 0.5,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "fall",
+            "duration": 0.3333333432674408,
+            "tracks": 5,
+            "unboundTracks": []
+          },
+          {
+            "name": "crouch",
+            "duration": 0.1666666716337204,
+            "tracks": 8,
+            "unboundTracks": []
+          },
+          {
+            "name": "sit",
+            "duration": 0.1666666716337204,
+            "tracks": 5,
+            "unboundTracks": []
+          },
+          {
+            "name": "drive",
+            "duration": 0.1666666716337204,
+            "tracks": 5,
+            "unboundTracks": []
+          },
+          {
+            "name": "die",
+            "duration": 0.3333333432674408,
+            "tracks": 8,
+            "unboundTracks": []
+          },
+          {
+            "name": "pick-up",
+            "duration": 0.3333333432674408,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "emote-yes",
+            "duration": 0.6666666865348816,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "emote-no",
+            "duration": 0.6666666865348816,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-right",
+            "duration": 0.1666666716337204,
+            "tracks": 2,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-left",
+            "duration": 0.1666666716337204,
+            "tracks": 2,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-both",
+            "duration": 0.1666666716337204,
+            "tracks": 2,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-right-shoot",
+            "duration": 0.20000000298023224,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-left-shoot",
+            "duration": 0.20000000298023224,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-both-shoot",
+            "duration": 0.20000000298023224,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "attack-melee-right",
+            "duration": 0.4166666567325592,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "attack-melee-left",
+            "duration": 0.4166666567325592,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "attack-kick-right",
+            "duration": 0.5333333611488342,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "attack-kick-left",
+            "duration": 0.5333333611488342,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "interact-right",
+            "duration": 0.6666666865348816,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "interact-left",
+            "duration": 0.6666666865348816,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-sit",
+            "duration": 0.1666666716337204,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-look-left",
+            "duration": 0.3333333432674408,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-look-right",
+            "duration": 0.3333333432674408,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-move-forward",
+            "duration": 0.5,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-move-back",
+            "duration": 0.5,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-move-left",
+            "duration": 0.5,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-move-right",
+            "duration": 0.5,
+            "tracks": 9,
+            "unboundTracks": []
+          }
+        ],
+        "skins": [
+          {
+            "name": "body-mesh",
+            "bones": [
+              "root",
+              "leg-left",
+              "leg-right",
+              "torso",
+              "arm-left",
+              "arm-right",
+              "head"
+            ]
+          },
+          {
+            "name": "head-mesh",
+            "bones": [
+              "root",
+              "leg-left",
+              "leg-right",
+              "torso",
+              "arm-left",
+              "arm-right",
+              "head"
+            ]
+          }
+        ],
+        "headType": "Bone",
+        "testedClips": {
+          "idle": {
+            "duration": 1.3333333730697632,
+            "headMoves": true
+          },
+          "walk": {
+            "duration": 0.6666666865348816,
+            "headMoves": true
+          },
+          "sprint": {
+            "duration": 0.5,
+            "headMoves": true
+          },
+          "emote-yes": {
+            "duration": 0.6666666865348816,
+            "headMoves": true
+          },
+          "holding-both": {
+            "duration": 0.1666666716337204,
+            "headMoves": false
+          }
+        },
+        "independent": true,
+        "thirtyCloneSkeletons": 60,
+        "hatParent": "head"
+      },
+      {
+        "url": "/models/characters/kenney-mini/character-female-c.glb",
+        "triangles": 732,
+        "materials": 1,
+        "bounds": {
+          "width": 0.7671682462683105,
+          "height": 0.7755283905267716,
+          "depth": 0.49953030049800873
+        },
+        "bones": [
+          "arm-left",
+          "arm-right",
+          "head",
+          "leg-left",
+          "leg-right",
+          "root",
+          "torso"
+        ],
+        "clips": [
+          {
+            "name": "static",
+            "duration": 0.10000000149011612,
+            "tracks": 21,
+            "unboundTracks": []
+          },
+          {
+            "name": "idle",
+            "duration": 1.3333333730697632,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "walk",
+            "duration": 0.6666666865348816,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "sprint",
+            "duration": 0.5,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "jump",
+            "duration": 0.5,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "fall",
+            "duration": 0.3333333432674408,
+            "tracks": 5,
+            "unboundTracks": []
+          },
+          {
+            "name": "crouch",
+            "duration": 0.1666666716337204,
+            "tracks": 8,
+            "unboundTracks": []
+          },
+          {
+            "name": "sit",
+            "duration": 0.1666666716337204,
+            "tracks": 5,
+            "unboundTracks": []
+          },
+          {
+            "name": "drive",
+            "duration": 0.1666666716337204,
+            "tracks": 5,
+            "unboundTracks": []
+          },
+          {
+            "name": "die",
+            "duration": 0.3333333432674408,
+            "tracks": 8,
+            "unboundTracks": []
+          },
+          {
+            "name": "pick-up",
+            "duration": 0.3333333432674408,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "emote-yes",
+            "duration": 0.6666666865348816,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "emote-no",
+            "duration": 0.6666666865348816,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-right",
+            "duration": 0.1666666716337204,
+            "tracks": 2,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-left",
+            "duration": 0.1666666716337204,
+            "tracks": 2,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-both",
+            "duration": 0.1666666716337204,
+            "tracks": 2,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-right-shoot",
+            "duration": 0.20000000298023224,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-left-shoot",
+            "duration": 0.20000000298023224,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-both-shoot",
+            "duration": 0.20000000298023224,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "attack-melee-right",
+            "duration": 0.4166666567325592,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "attack-melee-left",
+            "duration": 0.4166666567325592,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "attack-kick-right",
+            "duration": 0.5333333611488342,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "attack-kick-left",
+            "duration": 0.5333333611488342,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "interact-right",
+            "duration": 0.6666666865348816,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "interact-left",
+            "duration": 0.6666666865348816,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-sit",
+            "duration": 0.1666666716337204,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-look-left",
+            "duration": 0.3333333432674408,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-look-right",
+            "duration": 0.3333333432674408,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-move-forward",
+            "duration": 0.5,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-move-back",
+            "duration": 0.5,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-move-left",
+            "duration": 0.5,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-move-right",
+            "duration": 0.5,
+            "tracks": 9,
+            "unboundTracks": []
+          }
+        ],
+        "skins": [
+          {
+            "name": "body-mesh",
+            "bones": [
+              "root",
+              "leg-left",
+              "leg-right",
+              "torso",
+              "arm-left",
+              "arm-right",
+              "head"
+            ]
+          },
+          {
+            "name": "head-mesh",
+            "bones": [
+              "root",
+              "leg-left",
+              "leg-right",
+              "torso",
+              "arm-left",
+              "arm-right",
+              "head"
+            ]
+          }
+        ],
+        "headType": "Bone",
+        "testedClips": {
+          "idle": {
+            "duration": 1.3333333730697632,
+            "headMoves": true
+          },
+          "walk": {
+            "duration": 0.6666666865348816,
+            "headMoves": true
+          },
+          "sprint": {
+            "duration": 0.5,
+            "headMoves": true
+          },
+          "emote-yes": {
+            "duration": 0.6666666865348816,
+            "headMoves": true
+          },
+          "holding-both": {
+            "duration": 0.1666666716337204,
+            "headMoves": false
+          }
+        },
+        "independent": true,
+        "thirtyCloneSkeletons": 60,
+        "hatParent": "head"
+      },
+      {
+        "url": "/models/characters/kenney-mini/character-female-d.glb",
+        "triangles": 797,
+        "materials": 1,
+        "bounds": {
+          "width": 0.7671682462683105,
+          "height": 0.7755282862186432,
+          "depth": 0.4995303303003311
+        },
+        "bones": [
+          "arm-left",
+          "arm-right",
+          "head",
+          "leg-left",
+          "leg-right",
+          "root",
+          "torso"
+        ],
+        "clips": [
+          {
+            "name": "static",
+            "duration": 0.10000000149011612,
+            "tracks": 21,
+            "unboundTracks": []
+          },
+          {
+            "name": "idle",
+            "duration": 1.3333333730697632,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "walk",
+            "duration": 0.6666666865348816,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "sprint",
+            "duration": 0.5,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "jump",
+            "duration": 0.5,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "fall",
+            "duration": 0.3333333432674408,
+            "tracks": 5,
+            "unboundTracks": []
+          },
+          {
+            "name": "crouch",
+            "duration": 0.1666666716337204,
+            "tracks": 8,
+            "unboundTracks": []
+          },
+          {
+            "name": "sit",
+            "duration": 0.1666666716337204,
+            "tracks": 5,
+            "unboundTracks": []
+          },
+          {
+            "name": "drive",
+            "duration": 0.1666666716337204,
+            "tracks": 5,
+            "unboundTracks": []
+          },
+          {
+            "name": "die",
+            "duration": 0.3333333432674408,
+            "tracks": 8,
+            "unboundTracks": []
+          },
+          {
+            "name": "pick-up",
+            "duration": 0.3333333432674408,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "emote-yes",
+            "duration": 0.6666666865348816,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "emote-no",
+            "duration": 0.6666666865348816,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-right",
+            "duration": 0.1666666716337204,
+            "tracks": 2,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-left",
+            "duration": 0.1666666716337204,
+            "tracks": 2,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-both",
+            "duration": 0.1666666716337204,
+            "tracks": 2,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-right-shoot",
+            "duration": 0.20000000298023224,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-left-shoot",
+            "duration": 0.20000000298023224,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-both-shoot",
+            "duration": 0.20000000298023224,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "attack-melee-right",
+            "duration": 0.4166666567325592,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "attack-melee-left",
+            "duration": 0.4166666567325592,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "attack-kick-right",
+            "duration": 0.5333333611488342,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "attack-kick-left",
+            "duration": 0.5333333611488342,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "interact-right",
+            "duration": 0.6666666865348816,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "interact-left",
+            "duration": 0.6666666865348816,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-sit",
+            "duration": 0.1666666716337204,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-look-left",
+            "duration": 0.3333333432674408,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-look-right",
+            "duration": 0.3333333432674408,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-move-forward",
+            "duration": 0.5,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-move-back",
+            "duration": 0.5,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-move-left",
+            "duration": 0.5,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-move-right",
+            "duration": 0.5,
+            "tracks": 9,
+            "unboundTracks": []
+          }
+        ],
+        "skins": [
+          {
+            "name": "body-mesh",
+            "bones": [
+              "root",
+              "leg-left",
+              "leg-right",
+              "torso",
+              "arm-left",
+              "arm-right",
+              "head"
+            ]
+          },
+          {
+            "name": "head-mesh",
+            "bones": [
+              "root",
+              "leg-left",
+              "leg-right",
+              "torso",
+              "arm-left",
+              "arm-right",
+              "head"
+            ]
+          }
+        ],
+        "headType": "Bone",
+        "testedClips": {
+          "idle": {
+            "duration": 1.3333333730697632,
+            "headMoves": true
+          },
+          "walk": {
+            "duration": 0.6666666865348816,
+            "headMoves": true
+          },
+          "sprint": {
+            "duration": 0.5,
+            "headMoves": true
+          },
+          "emote-yes": {
+            "duration": 0.6666666865348816,
+            "headMoves": true
+          },
+          "holding-both": {
+            "duration": 0.1666666716337204,
+            "headMoves": false
+          }
+        },
+        "independent": true,
+        "thirtyCloneSkeletons": 60,
+        "hatParent": "head"
+      },
+      {
+        "url": "/models/characters/kenney-mini/character-female-e.glb",
+        "triangles": 756,
+        "materials": 1,
+        "bounds": {
+          "width": 0.7671682462683105,
+          "height": 0.7164752824306488,
+          "depth": 0.5270615965127945
+        },
+        "bones": [
+          "arm-left",
+          "arm-right",
+          "head",
+          "leg-left",
+          "leg-right",
+          "root",
+          "torso"
+        ],
+        "clips": [
+          {
+            "name": "static",
+            "duration": 0.10000000149011612,
+            "tracks": 21,
+            "unboundTracks": []
+          },
+          {
+            "name": "idle",
+            "duration": 1.3333333730697632,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "walk",
+            "duration": 0.6666666865348816,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "sprint",
+            "duration": 0.5,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "jump",
+            "duration": 0.5,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "fall",
+            "duration": 0.3333333432674408,
+            "tracks": 5,
+            "unboundTracks": []
+          },
+          {
+            "name": "crouch",
+            "duration": 0.1666666716337204,
+            "tracks": 8,
+            "unboundTracks": []
+          },
+          {
+            "name": "sit",
+            "duration": 0.1666666716337204,
+            "tracks": 5,
+            "unboundTracks": []
+          },
+          {
+            "name": "drive",
+            "duration": 0.1666666716337204,
+            "tracks": 5,
+            "unboundTracks": []
+          },
+          {
+            "name": "die",
+            "duration": 0.3333333432674408,
+            "tracks": 8,
+            "unboundTracks": []
+          },
+          {
+            "name": "pick-up",
+            "duration": 0.3333333432674408,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "emote-yes",
+            "duration": 0.6666666865348816,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "emote-no",
+            "duration": 0.6666666865348816,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-right",
+            "duration": 0.1666666716337204,
+            "tracks": 2,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-left",
+            "duration": 0.1666666716337204,
+            "tracks": 2,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-both",
+            "duration": 0.1666666716337204,
+            "tracks": 2,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-right-shoot",
+            "duration": 0.20000000298023224,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-left-shoot",
+            "duration": 0.20000000298023224,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-both-shoot",
+            "duration": 0.20000000298023224,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "attack-melee-right",
+            "duration": 0.4166666567325592,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "attack-melee-left",
+            "duration": 0.4166666567325592,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "attack-kick-right",
+            "duration": 0.5333333611488342,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "attack-kick-left",
+            "duration": 0.5333333611488342,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "interact-right",
+            "duration": 0.6666666865348816,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "interact-left",
+            "duration": 0.6666666865348816,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-sit",
+            "duration": 0.1666666716337204,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-look-left",
+            "duration": 0.3333333432674408,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-look-right",
+            "duration": 0.3333333432674408,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-move-forward",
+            "duration": 0.5,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-move-back",
+            "duration": 0.5,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-move-left",
+            "duration": 0.5,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-move-right",
+            "duration": 0.5,
+            "tracks": 9,
+            "unboundTracks": []
+          }
+        ],
+        "skins": [
+          {
+            "name": "body-mesh",
+            "bones": [
+              "root",
+              "leg-left",
+              "leg-right",
+              "torso",
+              "arm-left",
+              "arm-right",
+              "head"
+            ]
+          },
+          {
+            "name": "head-mesh",
+            "bones": [
+              "root",
+              "leg-left",
+              "leg-right",
+              "torso",
+              "arm-left",
+              "arm-right",
+              "head"
+            ]
+          }
+        ],
+        "headType": "Bone",
+        "testedClips": {
+          "idle": {
+            "duration": 1.3333333730697632,
+            "headMoves": true
+          },
+          "walk": {
+            "duration": 0.6666666865348816,
+            "headMoves": true
+          },
+          "sprint": {
+            "duration": 0.5,
+            "headMoves": true
+          },
+          "emote-yes": {
+            "duration": 0.6666666865348816,
+            "headMoves": true
+          },
+          "holding-both": {
+            "duration": 0.1666666716337204,
+            "headMoves": false
+          }
+        },
+        "independent": true,
+        "thirtyCloneSkeletons": 60,
+        "hatParent": "head"
+      },
+      {
+        "url": "/models/characters/kenney-mini/character-female-f.glb",
+        "triangles": 788,
+        "materials": 1,
+        "bounds": {
+          "width": 0.7671682462683105,
+          "height": 0.6713250024318695,
+          "depth": 0.44111212899778596
+        },
+        "bones": [
+          "arm-left",
+          "arm-right",
+          "head",
+          "leg-left",
+          "leg-right",
+          "root",
+          "torso"
+        ],
+        "clips": [
+          {
+            "name": "static",
+            "duration": 0.10000000149011612,
+            "tracks": 21,
+            "unboundTracks": []
+          },
+          {
+            "name": "idle",
+            "duration": 1.3333333730697632,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "walk",
+            "duration": 0.6666666865348816,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "sprint",
+            "duration": 0.5,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "jump",
+            "duration": 0.5,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "fall",
+            "duration": 0.3333333432674408,
+            "tracks": 5,
+            "unboundTracks": []
+          },
+          {
+            "name": "crouch",
+            "duration": 0.1666666716337204,
+            "tracks": 8,
+            "unboundTracks": []
+          },
+          {
+            "name": "sit",
+            "duration": 0.1666666716337204,
+            "tracks": 5,
+            "unboundTracks": []
+          },
+          {
+            "name": "drive",
+            "duration": 0.1666666716337204,
+            "tracks": 5,
+            "unboundTracks": []
+          },
+          {
+            "name": "die",
+            "duration": 0.3333333432674408,
+            "tracks": 8,
+            "unboundTracks": []
+          },
+          {
+            "name": "pick-up",
+            "duration": 0.3333333432674408,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "emote-yes",
+            "duration": 0.6666666865348816,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "emote-no",
+            "duration": 0.6666666865348816,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-right",
+            "duration": 0.1666666716337204,
+            "tracks": 2,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-left",
+            "duration": 0.1666666716337204,
+            "tracks": 2,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-both",
+            "duration": 0.1666666716337204,
+            "tracks": 2,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-right-shoot",
+            "duration": 0.20000000298023224,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-left-shoot",
+            "duration": 0.20000000298023224,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-both-shoot",
+            "duration": 0.20000000298023224,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "attack-melee-right",
+            "duration": 0.4166666567325592,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "attack-melee-left",
+            "duration": 0.4166666567325592,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "attack-kick-right",
+            "duration": 0.5333333611488342,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "attack-kick-left",
+            "duration": 0.5333333611488342,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "interact-right",
+            "duration": 0.6666666865348816,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "interact-left",
+            "duration": 0.6666666865348816,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-sit",
+            "duration": 0.1666666716337204,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-look-left",
+            "duration": 0.3333333432674408,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-look-right",
+            "duration": 0.3333333432674408,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-move-forward",
+            "duration": 0.5,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-move-back",
+            "duration": 0.5,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-move-left",
+            "duration": 0.5,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-move-right",
+            "duration": 0.5,
+            "tracks": 9,
+            "unboundTracks": []
+          }
+        ],
+        "skins": [
+          {
+            "name": "body-mesh",
+            "bones": [
+              "root",
+              "leg-left",
+              "leg-right",
+              "torso",
+              "arm-left",
+              "arm-right",
+              "head"
+            ]
+          },
+          {
+            "name": "head-mesh",
+            "bones": [
+              "root",
+              "leg-left",
+              "leg-right",
+              "torso",
+              "arm-left",
+              "arm-right",
+              "head"
+            ]
+          }
+        ],
+        "headType": "Bone",
+        "testedClips": {
+          "idle": {
+            "duration": 1.3333333730697632,
+            "headMoves": true
+          },
+          "walk": {
+            "duration": 0.6666666865348816,
+            "headMoves": true
+          },
+          "sprint": {
+            "duration": 0.5,
+            "headMoves": true
+          },
+          "emote-yes": {
+            "duration": 0.6666666865348816,
+            "headMoves": true
+          },
+          "holding-both": {
+            "duration": 0.1666666716337204,
+            "headMoves": false
+          }
+        },
+        "independent": true,
+        "thirtyCloneSkeletons": 60,
+        "hatParent": "head"
+      },
+      {
+        "url": "/models/characters/kenney-mini/character-male-a.glb",
+        "triangles": 723,
+        "materials": 1,
+        "bounds": {
+          "width": 0.7671682462683105,
+          "height": 0.67132488322258,
+          "depth": 0.33999985456466675
+        },
+        "bones": [
+          "arm-left",
+          "arm-right",
+          "head",
+          "leg-left",
+          "leg-right",
+          "root",
+          "torso"
+        ],
+        "clips": [
+          {
+            "name": "static",
+            "duration": 0.10000000149011612,
+            "tracks": 21,
+            "unboundTracks": []
+          },
+          {
+            "name": "idle",
+            "duration": 1.3333333730697632,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "walk",
+            "duration": 0.6666666865348816,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "sprint",
+            "duration": 0.5,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "jump",
+            "duration": 0.5,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "fall",
+            "duration": 0.3333333432674408,
+            "tracks": 5,
+            "unboundTracks": []
+          },
+          {
+            "name": "crouch",
+            "duration": 0.1666666716337204,
+            "tracks": 8,
+            "unboundTracks": []
+          },
+          {
+            "name": "sit",
+            "duration": 0.1666666716337204,
+            "tracks": 5,
+            "unboundTracks": []
+          },
+          {
+            "name": "drive",
+            "duration": 0.1666666716337204,
+            "tracks": 5,
+            "unboundTracks": []
+          },
+          {
+            "name": "die",
+            "duration": 0.3333333432674408,
+            "tracks": 8,
+            "unboundTracks": []
+          },
+          {
+            "name": "pick-up",
+            "duration": 0.3333333432674408,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "emote-yes",
+            "duration": 0.6666666865348816,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "emote-no",
+            "duration": 0.6666666865348816,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-right",
+            "duration": 0.1666666716337204,
+            "tracks": 2,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-left",
+            "duration": 0.1666666716337204,
+            "tracks": 2,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-both",
+            "duration": 0.1666666716337204,
+            "tracks": 2,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-right-shoot",
+            "duration": 0.20000000298023224,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-left-shoot",
+            "duration": 0.20000000298023224,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-both-shoot",
+            "duration": 0.20000000298023224,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "attack-melee-right",
+            "duration": 0.4166666567325592,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "attack-melee-left",
+            "duration": 0.4166666567325592,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "attack-kick-right",
+            "duration": 0.5333333611488342,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "attack-kick-left",
+            "duration": 0.5333333611488342,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "interact-right",
+            "duration": 0.6666666865348816,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "interact-left",
+            "duration": 0.6666666865348816,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-sit",
+            "duration": 0.1666666716337204,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-look-left",
+            "duration": 0.3333333432674408,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-look-right",
+            "duration": 0.3333333432674408,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-move-forward",
+            "duration": 0.5,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-move-back",
+            "duration": 0.5,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-move-left",
+            "duration": 0.5,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-move-right",
+            "duration": 0.5,
+            "tracks": 9,
+            "unboundTracks": []
+          }
+        ],
+        "skins": [
+          {
+            "name": "body-mesh",
+            "bones": [
+              "root",
+              "leg-left",
+              "leg-right",
+              "torso",
+              "arm-left",
+              "arm-right",
+              "head"
+            ]
+          },
+          {
+            "name": "head-mesh",
+            "bones": [
+              "root",
+              "leg-left",
+              "leg-right",
+              "torso",
+              "arm-left",
+              "arm-right",
+              "head"
+            ]
+          }
+        ],
+        "headType": "Bone",
+        "testedClips": {
+          "idle": {
+            "duration": 1.3333333730697632,
+            "headMoves": true
+          },
+          "walk": {
+            "duration": 0.6666666865348816,
+            "headMoves": true
+          },
+          "sprint": {
+            "duration": 0.5,
+            "headMoves": true
+          },
+          "emote-yes": {
+            "duration": 0.6666666865348816,
+            "headMoves": true
+          },
+          "holding-both": {
+            "duration": 0.1666666716337204,
+            "headMoves": false
+          }
+        },
+        "independent": true,
+        "thirtyCloneSkeletons": 60,
+        "hatParent": "head"
+      },
+      {
+        "url": "/models/characters/kenney-mini/character-male-b.glb",
+        "triangles": 690,
+        "materials": 1,
+        "bounds": {
+          "width": 0.7671682462683105,
+          "height": 0.6613248927593232,
+          "depth": 0.3894721101770233
+        },
+        "bones": [
+          "arm-left",
+          "arm-right",
+          "head",
+          "leg-left",
+          "leg-right",
+          "root",
+          "torso"
+        ],
+        "clips": [
+          {
+            "name": "static",
+            "duration": 0.10000000149011612,
+            "tracks": 21,
+            "unboundTracks": []
+          },
+          {
+            "name": "idle",
+            "duration": 1.3333333730697632,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "walk",
+            "duration": 0.6666666865348816,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "sprint",
+            "duration": 0.5,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "jump",
+            "duration": 0.5,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "fall",
+            "duration": 0.3333333432674408,
+            "tracks": 5,
+            "unboundTracks": []
+          },
+          {
+            "name": "crouch",
+            "duration": 0.1666666716337204,
+            "tracks": 8,
+            "unboundTracks": []
+          },
+          {
+            "name": "sit",
+            "duration": 0.1666666716337204,
+            "tracks": 5,
+            "unboundTracks": []
+          },
+          {
+            "name": "drive",
+            "duration": 0.1666666716337204,
+            "tracks": 5,
+            "unboundTracks": []
+          },
+          {
+            "name": "die",
+            "duration": 0.3333333432674408,
+            "tracks": 8,
+            "unboundTracks": []
+          },
+          {
+            "name": "pick-up",
+            "duration": 0.3333333432674408,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "emote-yes",
+            "duration": 0.6666666865348816,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "emote-no",
+            "duration": 0.6666666865348816,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-right",
+            "duration": 0.1666666716337204,
+            "tracks": 2,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-left",
+            "duration": 0.1666666716337204,
+            "tracks": 2,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-both",
+            "duration": 0.1666666716337204,
+            "tracks": 2,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-right-shoot",
+            "duration": 0.20000000298023224,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-left-shoot",
+            "duration": 0.20000000298023224,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-both-shoot",
+            "duration": 0.20000000298023224,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "attack-melee-right",
+            "duration": 0.4166666567325592,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "attack-melee-left",
+            "duration": 0.4166666567325592,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "attack-kick-right",
+            "duration": 0.5333333611488342,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "attack-kick-left",
+            "duration": 0.5333333611488342,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "interact-right",
+            "duration": 0.6666666865348816,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "interact-left",
+            "duration": 0.6666666865348816,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-sit",
+            "duration": 0.1666666716337204,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-look-left",
+            "duration": 0.3333333432674408,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-look-right",
+            "duration": 0.3333333432674408,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-move-forward",
+            "duration": 0.5,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-move-back",
+            "duration": 0.5,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-move-left",
+            "duration": 0.5,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-move-right",
+            "duration": 0.5,
+            "tracks": 9,
+            "unboundTracks": []
+          }
+        ],
+        "skins": [
+          {
+            "name": "body-mesh",
+            "bones": [
+              "root",
+              "leg-left",
+              "leg-right",
+              "torso",
+              "arm-left",
+              "arm-right",
+              "head"
+            ]
+          },
+          {
+            "name": "head-mesh",
+            "bones": [
+              "root",
+              "leg-left",
+              "leg-right",
+              "torso",
+              "arm-left",
+              "arm-right",
+              "head"
+            ]
+          }
+        ],
+        "headType": "Bone",
+        "testedClips": {
+          "idle": {
+            "duration": 1.3333333730697632,
+            "headMoves": true
+          },
+          "walk": {
+            "duration": 0.6666666865348816,
+            "headMoves": true
+          },
+          "sprint": {
+            "duration": 0.5,
+            "headMoves": true
+          },
+          "emote-yes": {
+            "duration": 0.6666666865348816,
+            "headMoves": true
+          },
+          "holding-both": {
+            "duration": 0.1666666716337204,
+            "headMoves": false
+          }
+        },
+        "independent": true,
+        "thirtyCloneSkeletons": 60,
+        "hatParent": "head"
+      },
+      {
+        "url": "/models/characters/kenney-mini/character-male-c.glb",
+        "triangles": 793,
+        "materials": 1,
+        "bounds": {
+          "width": 0.7671682462683105,
+          "height": 0.7927911622524262,
+          "depth": 0.46065743267536163
+        },
+        "bones": [
+          "arm-left",
+          "arm-right",
+          "head",
+          "leg-left",
+          "leg-right",
+          "root",
+          "torso"
+        ],
+        "clips": [
+          {
+            "name": "static",
+            "duration": 0.10000000149011612,
+            "tracks": 21,
+            "unboundTracks": []
+          },
+          {
+            "name": "idle",
+            "duration": 1.3333333730697632,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "walk",
+            "duration": 0.6666666865348816,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "sprint",
+            "duration": 0.5,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "jump",
+            "duration": 0.5,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "fall",
+            "duration": 0.3333333432674408,
+            "tracks": 5,
+            "unboundTracks": []
+          },
+          {
+            "name": "crouch",
+            "duration": 0.1666666716337204,
+            "tracks": 8,
+            "unboundTracks": []
+          },
+          {
+            "name": "sit",
+            "duration": 0.1666666716337204,
+            "tracks": 5,
+            "unboundTracks": []
+          },
+          {
+            "name": "drive",
+            "duration": 0.1666666716337204,
+            "tracks": 5,
+            "unboundTracks": []
+          },
+          {
+            "name": "die",
+            "duration": 0.3333333432674408,
+            "tracks": 8,
+            "unboundTracks": []
+          },
+          {
+            "name": "pick-up",
+            "duration": 0.3333333432674408,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "emote-yes",
+            "duration": 0.6666666865348816,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "emote-no",
+            "duration": 0.6666666865348816,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-right",
+            "duration": 0.1666666716337204,
+            "tracks": 2,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-left",
+            "duration": 0.1666666716337204,
+            "tracks": 2,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-both",
+            "duration": 0.1666666716337204,
+            "tracks": 2,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-right-shoot",
+            "duration": 0.20000000298023224,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-left-shoot",
+            "duration": 0.20000000298023224,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-both-shoot",
+            "duration": 0.20000000298023224,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "attack-melee-right",
+            "duration": 0.4166666567325592,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "attack-melee-left",
+            "duration": 0.4166666567325592,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "attack-kick-right",
+            "duration": 0.5333333611488342,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "attack-kick-left",
+            "duration": 0.5333333611488342,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "interact-right",
+            "duration": 0.6666666865348816,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "interact-left",
+            "duration": 0.6666666865348816,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-sit",
+            "duration": 0.1666666716337204,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-look-left",
+            "duration": 0.3333333432674408,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-look-right",
+            "duration": 0.3333333432674408,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-move-forward",
+            "duration": 0.5,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-move-back",
+            "duration": 0.5,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-move-left",
+            "duration": 0.5,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-move-right",
+            "duration": 0.5,
+            "tracks": 9,
+            "unboundTracks": []
+          }
+        ],
+        "skins": [
+          {
+            "name": "body-mesh",
+            "bones": [
+              "root",
+              "leg-left",
+              "leg-right",
+              "torso",
+              "arm-left",
+              "arm-right",
+              "head"
+            ]
+          },
+          {
+            "name": "head-mesh",
+            "bones": [
+              "root",
+              "leg-left",
+              "leg-right",
+              "torso",
+              "arm-left",
+              "arm-right",
+              "head"
+            ]
+          }
+        ],
+        "headType": "Bone",
+        "testedClips": {
+          "idle": {
+            "duration": 1.3333333730697632,
+            "headMoves": true
+          },
+          "walk": {
+            "duration": 0.6666666865348816,
+            "headMoves": true
+          },
+          "sprint": {
+            "duration": 0.5,
+            "headMoves": true
+          },
+          "emote-yes": {
+            "duration": 0.6666666865348816,
+            "headMoves": true
+          },
+          "holding-both": {
+            "duration": 0.1666666716337204,
+            "headMoves": false
+          }
+        },
+        "independent": true,
+        "thirtyCloneSkeletons": 60,
+        "hatParent": "head"
+      },
+      {
+        "url": "/models/characters/kenney-mini/character-male-d.glb",
+        "triangles": 711,
+        "materials": 1,
+        "bounds": {
+          "width": 0.7671682462683105,
+          "height": 0.7217614395618439,
+          "depth": 0.3400000184774399
+        },
+        "bones": [
+          "arm-left",
+          "arm-right",
+          "head",
+          "leg-left",
+          "leg-right",
+          "root",
+          "torso"
+        ],
+        "clips": [
+          {
+            "name": "static",
+            "duration": 0.10000000149011612,
+            "tracks": 21,
+            "unboundTracks": []
+          },
+          {
+            "name": "idle",
+            "duration": 1.3333333730697632,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "walk",
+            "duration": 0.6666666865348816,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "sprint",
+            "duration": 0.5,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "jump",
+            "duration": 0.5,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "fall",
+            "duration": 0.3333333432674408,
+            "tracks": 5,
+            "unboundTracks": []
+          },
+          {
+            "name": "crouch",
+            "duration": 0.1666666716337204,
+            "tracks": 8,
+            "unboundTracks": []
+          },
+          {
+            "name": "sit",
+            "duration": 0.1666666716337204,
+            "tracks": 5,
+            "unboundTracks": []
+          },
+          {
+            "name": "drive",
+            "duration": 0.1666666716337204,
+            "tracks": 5,
+            "unboundTracks": []
+          },
+          {
+            "name": "die",
+            "duration": 0.3333333432674408,
+            "tracks": 8,
+            "unboundTracks": []
+          },
+          {
+            "name": "pick-up",
+            "duration": 0.3333333432674408,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "emote-yes",
+            "duration": 0.6666666865348816,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "emote-no",
+            "duration": 0.6666666865348816,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-right",
+            "duration": 0.1666666716337204,
+            "tracks": 2,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-left",
+            "duration": 0.1666666716337204,
+            "tracks": 2,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-both",
+            "duration": 0.1666666716337204,
+            "tracks": 2,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-right-shoot",
+            "duration": 0.20000000298023224,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-left-shoot",
+            "duration": 0.20000000298023224,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-both-shoot",
+            "duration": 0.20000000298023224,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "attack-melee-right",
+            "duration": 0.4166666567325592,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "attack-melee-left",
+            "duration": 0.4166666567325592,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "attack-kick-right",
+            "duration": 0.5333333611488342,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "attack-kick-left",
+            "duration": 0.5333333611488342,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "interact-right",
+            "duration": 0.6666666865348816,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "interact-left",
+            "duration": 0.6666666865348816,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-sit",
+            "duration": 0.1666666716337204,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-look-left",
+            "duration": 0.3333333432674408,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-look-right",
+            "duration": 0.3333333432674408,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-move-forward",
+            "duration": 0.5,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-move-back",
+            "duration": 0.5,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-move-left",
+            "duration": 0.5,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-move-right",
+            "duration": 0.5,
+            "tracks": 9,
+            "unboundTracks": []
+          }
+        ],
+        "skins": [
+          {
+            "name": "body-mesh",
+            "bones": [
+              "root",
+              "leg-left",
+              "leg-right",
+              "torso",
+              "arm-left",
+              "arm-right",
+              "head"
+            ]
+          },
+          {
+            "name": "head-mesh",
+            "bones": [
+              "root",
+              "leg-left",
+              "leg-right",
+              "torso",
+              "arm-left",
+              "arm-right",
+              "head"
+            ]
+          }
+        ],
+        "headType": "Bone",
+        "testedClips": {
+          "idle": {
+            "duration": 1.3333333730697632,
+            "headMoves": true
+          },
+          "walk": {
+            "duration": 0.6666666865348816,
+            "headMoves": true
+          },
+          "sprint": {
+            "duration": 0.5,
+            "headMoves": true
+          },
+          "emote-yes": {
+            "duration": 0.6666666865348816,
+            "headMoves": true
+          },
+          "holding-both": {
+            "duration": 0.1666666716337204,
+            "headMoves": false
+          }
+        },
+        "independent": true,
+        "thirtyCloneSkeletons": 60,
+        "hatParent": "head"
+      },
+      {
+        "url": "/models/characters/kenney-mini/character-male-e.glb",
+        "triangles": 710,
+        "materials": 1,
+        "bounds": {
+          "width": 0.7671682462683105,
+          "height": 0.675966475725174,
+          "depth": 0.3419664651155472
+        },
+        "bones": [
+          "arm-left",
+          "arm-right",
+          "head",
+          "leg-left",
+          "leg-right",
+          "root",
+          "torso"
+        ],
+        "clips": [
+          {
+            "name": "static",
+            "duration": 0.10000000149011612,
+            "tracks": 21,
+            "unboundTracks": []
+          },
+          {
+            "name": "idle",
+            "duration": 1.3333333730697632,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "walk",
+            "duration": 0.6666666865348816,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "sprint",
+            "duration": 0.5,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "jump",
+            "duration": 0.5,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "fall",
+            "duration": 0.3333333432674408,
+            "tracks": 5,
+            "unboundTracks": []
+          },
+          {
+            "name": "crouch",
+            "duration": 0.1666666716337204,
+            "tracks": 8,
+            "unboundTracks": []
+          },
+          {
+            "name": "sit",
+            "duration": 0.1666666716337204,
+            "tracks": 5,
+            "unboundTracks": []
+          },
+          {
+            "name": "drive",
+            "duration": 0.1666666716337204,
+            "tracks": 5,
+            "unboundTracks": []
+          },
+          {
+            "name": "die",
+            "duration": 0.3333333432674408,
+            "tracks": 8,
+            "unboundTracks": []
+          },
+          {
+            "name": "pick-up",
+            "duration": 0.3333333432674408,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "emote-yes",
+            "duration": 0.6666666865348816,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "emote-no",
+            "duration": 0.6666666865348816,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-right",
+            "duration": 0.1666666716337204,
+            "tracks": 2,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-left",
+            "duration": 0.1666666716337204,
+            "tracks": 2,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-both",
+            "duration": 0.1666666716337204,
+            "tracks": 2,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-right-shoot",
+            "duration": 0.20000000298023224,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-left-shoot",
+            "duration": 0.20000000298023224,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-both-shoot",
+            "duration": 0.20000000298023224,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "attack-melee-right",
+            "duration": 0.4166666567325592,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "attack-melee-left",
+            "duration": 0.4166666567325592,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "attack-kick-right",
+            "duration": 0.5333333611488342,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "attack-kick-left",
+            "duration": 0.5333333611488342,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "interact-right",
+            "duration": 0.6666666865348816,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "interact-left",
+            "duration": 0.6666666865348816,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-sit",
+            "duration": 0.1666666716337204,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-look-left",
+            "duration": 0.3333333432674408,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-look-right",
+            "duration": 0.3333333432674408,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-move-forward",
+            "duration": 0.5,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-move-back",
+            "duration": 0.5,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-move-left",
+            "duration": 0.5,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-move-right",
+            "duration": 0.5,
+            "tracks": 9,
+            "unboundTracks": []
+          }
+        ],
+        "skins": [
+          {
+            "name": "body-mesh",
+            "bones": [
+              "root",
+              "leg-left",
+              "leg-right",
+              "torso",
+              "arm-left",
+              "arm-right",
+              "head"
+            ]
+          },
+          {
+            "name": "head-mesh",
+            "bones": [
+              "root",
+              "leg-left",
+              "leg-right",
+              "torso",
+              "arm-left",
+              "arm-right",
+              "head"
+            ]
+          }
+        ],
+        "headType": "Bone",
+        "testedClips": {
+          "idle": {
+            "duration": 1.3333333730697632,
+            "headMoves": true
+          },
+          "walk": {
+            "duration": 0.6666666865348816,
+            "headMoves": true
+          },
+          "sprint": {
+            "duration": 0.5,
+            "headMoves": true
+          },
+          "emote-yes": {
+            "duration": 0.6666666865348816,
+            "headMoves": true
+          },
+          "holding-both": {
+            "duration": 0.1666666716337204,
+            "headMoves": false
+          }
+        },
+        "independent": true,
+        "thirtyCloneSkeletons": 60,
+        "hatParent": "head"
+      },
+      {
+        "url": "/models/characters/kenney-mini/character-male-f.glb",
+        "triangles": 701,
+        "materials": 1,
+        "bounds": {
+          "width": 0.7671682462683105,
+          "height": 0.67132488322258,
+          "depth": 0.33999985456466675
+        },
+        "bones": [
+          "arm-left",
+          "arm-right",
+          "head",
+          "leg-left",
+          "leg-right",
+          "root",
+          "torso"
+        ],
+        "clips": [
+          {
+            "name": "static",
+            "duration": 0.10000000149011612,
+            "tracks": 21,
+            "unboundTracks": []
+          },
+          {
+            "name": "idle",
+            "duration": 1.3333333730697632,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "walk",
+            "duration": 0.6666666865348816,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "sprint",
+            "duration": 0.5,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "jump",
+            "duration": 0.5,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "fall",
+            "duration": 0.3333333432674408,
+            "tracks": 5,
+            "unboundTracks": []
+          },
+          {
+            "name": "crouch",
+            "duration": 0.1666666716337204,
+            "tracks": 8,
+            "unboundTracks": []
+          },
+          {
+            "name": "sit",
+            "duration": 0.1666666716337204,
+            "tracks": 5,
+            "unboundTracks": []
+          },
+          {
+            "name": "drive",
+            "duration": 0.1666666716337204,
+            "tracks": 5,
+            "unboundTracks": []
+          },
+          {
+            "name": "die",
+            "duration": 0.3333333432674408,
+            "tracks": 8,
+            "unboundTracks": []
+          },
+          {
+            "name": "pick-up",
+            "duration": 0.3333333432674408,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "emote-yes",
+            "duration": 0.6666666865348816,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "emote-no",
+            "duration": 0.6666666865348816,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-right",
+            "duration": 0.1666666716337204,
+            "tracks": 2,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-left",
+            "duration": 0.1666666716337204,
+            "tracks": 2,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-both",
+            "duration": 0.1666666716337204,
+            "tracks": 2,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-right-shoot",
+            "duration": 0.20000000298023224,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-left-shoot",
+            "duration": 0.20000000298023224,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "holding-both-shoot",
+            "duration": 0.20000000298023224,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "attack-melee-right",
+            "duration": 0.4166666567325592,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "attack-melee-left",
+            "duration": 0.4166666567325592,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "attack-kick-right",
+            "duration": 0.5333333611488342,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "attack-kick-left",
+            "duration": 0.5333333611488342,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "interact-right",
+            "duration": 0.6666666865348816,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "interact-left",
+            "duration": 0.6666666865348816,
+            "tracks": 4,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-sit",
+            "duration": 0.1666666716337204,
+            "tracks": 7,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-look-left",
+            "duration": 0.3333333432674408,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-look-right",
+            "duration": 0.3333333432674408,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-move-forward",
+            "duration": 0.5,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-move-back",
+            "duration": 0.5,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-move-left",
+            "duration": 0.5,
+            "tracks": 9,
+            "unboundTracks": []
+          },
+          {
+            "name": "wheelchair-move-right",
+            "duration": 0.5,
+            "tracks": 9,
+            "unboundTracks": []
+          }
+        ],
+        "skins": [
+          {
+            "name": "body-mesh",
+            "bones": [
+              "root",
+              "leg-left",
+              "leg-right",
+              "torso",
+              "arm-left",
+              "arm-right",
+              "head"
+            ]
+          },
+          {
+            "name": "head-mesh",
+            "bones": [
+              "root",
+              "leg-left",
+              "leg-right",
+              "torso",
+              "arm-left",
+              "arm-right",
+              "head"
+            ]
+          }
+        ],
+        "headType": "Bone",
+        "testedClips": {
+          "idle": {
+            "duration": 1.3333333730697632,
+            "headMoves": true
+          },
+          "walk": {
+            "duration": 0.6666666865348816,
+            "headMoves": true
+          },
+          "sprint": {
+            "duration": 0.5,
+            "headMoves": true
+          },
+          "emote-yes": {
+            "duration": 0.6666666865348816,
+            "headMoves": true
+          },
+          "holding-both": {
+            "duration": 0.1666666716337204,
+            "headMoves": false
+          }
+        },
+        "independent": true,
+        "thirtyCloneSkeletons": 60,
+        "hatParent": "head"
+      }
+    ],
+    "baseline": {
+      "triangles": 448,
+      "materials": 3,
+      "bounds": {
+        "width": 0.7200000286102295,
+        "height": 1.644855698768656,
+        "depth": 0.7400000107288349
+      },
+      "bones": [],
+      "clips": []
+    }
+  },
+  "errors": []
+}
