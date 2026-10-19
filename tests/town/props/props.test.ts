@@ -78,3 +78,22 @@ describe('props', () => {
     expect(gltf.group.parent).toBeNull();
   });
 });
+
+describe('cart and flower box', () => {
+  it('build through createProp with their names, palette colors, and survive double dispose', () => {
+    for (const [kind, name] of [['cart', 'prop-cart'], ['flower-box', 'prop-flower-box']] as const) {
+      const ctx = fakeContext('c');
+      const piece = createProp(kind, ctx);
+      expect(piece.object.name).toBe(name);
+      expect(meshes(piece.object).length).toBeGreaterThan(3);
+      for (const call of ctx.surfaces) expect(townHexes(ctx)).toContain(call.hex);
+      piece.dispose();
+      expect(() => piece.dispose()).not.toThrow();
+    }
+  });
+
+  it('footprints match the brief', () => {
+    expect(createProp('cart', fakeContext()).footprint).toEqual({ width: 2.6, depth: 1.4 });
+    expect(createProp('flower-box', fakeContext()).footprint).toEqual({ width: 1.6, depth: 0.5 });
+  });
+});
