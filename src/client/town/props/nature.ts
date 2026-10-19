@@ -15,16 +15,16 @@ export const NATURE_MATERIAL_ROLES: Readonly<Record<string, keyof PresentationPa
   colorRed: 'brick',
 };
 
-// Heights are world units (citizen 3.29). Footprints follow from each file's raw bounds at that height.
-const MODELS: Readonly<Record<NatureKind, { file: string; height: number; footprint: { width: number; depth: number } }>> = {
-  'tree-oak': { file: 'tree_oak.glb', height: 6.5, footprint: { width: 3.4, depth: 3.9 } },
+// Heights are world units (citizen 3.29). Footprints are each file's measured bounds at that height, rounded up to 0.05.
+export const NATURE_MODELS: Readonly<Record<NatureKind, { file: string; height: number; footprint: { width: number; depth: number } }>> = {
+  'tree-oak': { file: 'tree_oak.glb', height: 6.5, footprint: { width: 3.4, depth: 3.95 } },
   'tree-round': { file: 'tree_default.glb', height: 6.5, footprint: { width: 2.9, depth: 2.5 } },
-  bush: { file: 'plant_bush.glb', height: 1.2, footprint: { width: 2.0, depth: 2.0 } },
-  flowers: { file: 'flower_redA.glb', height: 0.9, footprint: { width: 0.5, depth: 0.56 } },
+  bush: { file: 'plant_bush.glb', height: 1.2, footprint: { width: 1.95, depth: 1.95 } },
+  flowers: { file: 'flower_redA.glb', height: 0.9, footprint: { width: 0.5, depth: 0.6 } },
 };
 
 export function natureUrl(kind: NatureKind): string {
-  return `/models/props/kenney-nature/${MODELS[kind].file}`;
+  return `/models/props/kenney-nature/${NATURE_MODELS[kind].file}`;
 }
 
 function standIn(ctx: ArchitectureContext, parts: PieceParts, height: number): THREE.Group {
@@ -46,7 +46,7 @@ function fit(model: THREE.Object3D, height: number): void {
 }
 
 export function createNatureProp(kind: NatureKind, ctx: ArchitectureContext): PlacedPiece {
-  const { height, footprint } = MODELS[kind];
+  const { height, footprint } = NATURE_MODELS[kind];
   const url = natureUrl(kind);
   const parts = createPieceParts(ctx);
   const root = new THREE.Group();

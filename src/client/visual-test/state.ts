@@ -30,8 +30,8 @@ export type VisualState =
       status: 'ready';
       scene: 'architecture';
       scenario: ArchitectureScenario;
-      /** 'sample' is Codex's D1 rendering sample; 'preview' is the C2 stand-in and is never D1 evidence. */
-      renderer: 'sample' | 'preview';
+      /** 'sample' is Codex's D1 rendering sample; 'town-architecture' is our assembled town. */
+      renderer: 'sample' | 'town-architecture';
       width: number;
       height: number;
       distinctColors: number;

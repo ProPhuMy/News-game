@@ -74,15 +74,14 @@ describe('createTownBuildings with an ArchitectureContext', () => {
     await expect(buildings.ready).resolves.toEqual({ degraded: [] });
   });
 
-  it('with context, the bakery is the sample piece at its node', async () => {
+  it('with context, the bakery is the sample piece in its lot, anchored at its node', async () => {
     const layout = createTownLayout();
     const buildings = createTownBuildings(layout, fakeContext());
-    await expect(buildings.ready).resolves.toEqual({ degraded: [] });
+    await buildings.ready;
     const bakery = buildings.group.getObjectByName('bakery');
     expect(bakery?.getObjectByName('bakery-door')).toBeDefined();
     const node = layout.getNodeWorldPos(layout.getLocationNode('bakery'));
-    expect(bakery!.position.x).toBeCloseTo(node.x, 5);
-    expect(bakery!.position.z).toBeCloseTo(node.z, 5);
+    expect(Math.hypot(bakery!.position.x - node.x, bakery!.position.z - node.z)).toBeGreaterThanOrEqual(5);
     const anchor = buildings.getLocationAnchor('bakery');
     expect(anchor.x).toBeCloseTo(node.x, 5);
     expect(anchor.z).toBeCloseTo(node.z, 5);

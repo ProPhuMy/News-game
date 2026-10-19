@@ -11,6 +11,8 @@ export interface FakeContext extends ArchitectureContext {
   outlined: THREE.Object3D[];
   /** Every material passed to preserve(). */
   preserved: THREE.Material[];
+  /** Every material preserve() returned. */
+  preservedResults: Set<THREE.Material>;
 }
 
 export function fakeContext(
@@ -21,16 +23,24 @@ export function fakeContext(
   const kitMaterials = new Set<THREE.Material>();
   const outlined: THREE.Object3D[] = [];
   const preserved: THREE.Material[] = [];
+  const preservedResults = new Set<THREE.Material>();
+  const cache = new Map<string, THREE.Material>();
   return {
     palette: getPalette(paletteId),
     surfaces,
     kitMaterials,
     outlined,
     preserved,
+    preservedResults,
     materials: {
       surface(hex, options) {
         surfaces.push({ hex, ...options });
+        // Like the real kit, one material per (hex, emissive).
+        const key = `${hex}:${options?.emissive ?? ''}`;
+        const cached = cache.get(key);
+        if (cached) return cached;
         const material = new THREE.MeshBasicMaterial({ color: hex });
+        cache.set(key, material);
         kitMaterials.add(material);
         return material;
       },
@@ -39,7 +49,9 @@ export function fakeContext(
       },
       preserve(source) {
         preserved.push(source);
-        return new THREE.MeshBasicMaterial();
+        const material = new THREE.MeshBasicMaterial();
+        preservedResults.add(material);
+        return material;
       },
     },
     assets: { loadGltf },

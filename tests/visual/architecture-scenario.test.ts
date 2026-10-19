@@ -14,9 +14,16 @@ describe('parseArchitectureScenario', () => {
 
   it('rejects unknown values by name', () => {
     expect(() => parseArchitectureScenario('?variant=kit')).toThrow(/variant must be one of code, hybrid-original, hybrid-palette, got "kit"/);
-    expect(() => parseArchitectureScenario('?view=top')).toThrow(/view must be one of street, awning, got "top"/);
+    expect(() => parseArchitectureScenario('?view=top')).toThrow(/view must be one of street, awning, town, bakery, bank, town_hall, clinic, fountain_square, office, got "top"/);
     expect(() => parseArchitectureScenario('?palette=z')).toThrow(/palette must be one of a, b, c, got "z"/);
     expect(() => parseArchitectureScenario('?reducedMotion=yes')).toThrow(/reducedMotion must be true or false, got "yes"/);
+  });
+
+  it('accepts every town view and rejects unknown ones', () => {
+    for (const view of ['town', 'bakery', 'bank', 'town_hall', 'clinic', 'fountain_square', 'office']) {
+      expect(parseArchitectureScenario(`?view=${view}`).view).toBe(view);
+    }
+    expect(() => parseArchitectureScenario('?view=nowhere')).toThrow(/view must be one of/);
   });
 
   it('is its own scene kind', () => {
