@@ -123,6 +123,8 @@ export async function createSampleCharacter(
       if (disposed) throw new Error('character disposed');
       if (!Number.isFinite(seconds) || seconds < 0) throw new Error('character time must be nonnegative');
       const time = reducedMotion ? 0 : seconds;
+      // Root placement/scale may change between poses; skin bindings need its current world matrix.
+      object.updateWorldMatrix(true, false);
       poseClip(pose === 'walk' ? 'walk' : pose === 'run' ? 'sprint' : 'idle', time);
       if (pose === 'read') {
         left.rotation.x -= 1.15; right.rotation.x -= 1.15;

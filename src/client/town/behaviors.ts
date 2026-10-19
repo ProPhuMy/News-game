@@ -5,8 +5,14 @@ export function applyCitizenBehaviorPose(
   citizen: CitizenInstance,
   behavior: Behavior,
   elapsedSeconds: number,
+  reducedMotion = false,
 ): void {
   const mesh = citizen.mesh;
+  if (reducedMotion) {
+    mesh.position.y = 0;
+    mesh.rotation.x = 0; mesh.rotation.z = 0;
+    return;
+  }
   const t = elapsedSeconds;
   const idOffset = (citizen.id * 0.3) % (Math.PI * 2);
 

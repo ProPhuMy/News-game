@@ -28,6 +28,8 @@ const SWEEP_KEYPOINTS: readonly Vector3Coord[] = [
 
 export interface TownCamera {
   camera: THREE.PerspectiveCamera;
+  frame(bounds: THREE.Box3): void;
+  resize(width: number, height: number): void;
   getTarget(): Vector3Coord;
   getDistance(): number;
   setTarget(x: number, z: number): void;
@@ -44,13 +46,14 @@ export function createTownCamera(options: TownCameraOptions = {}): TownCamera {
   const pitchRad = ((options.pitchDegrees ?? DEFAULT_PITCH_DEG) * Math.PI) / 180;
   let isReducedMotion = options.reducedMotion ?? false;
   const minDistance = options.minDistance ?? MIN_DISTANCE;
-  const maxDistance = options.maxDistance ?? MAX_DISTANCE;
+  let maxDistance = options.maxDistance ?? MAX_DISTANCE;
 
   let distance = options.initialDistance ?? DEFAULT_DISTANCE;
   const target = new THREE.Vector3(0, 0, 0);
 
   const camera = new THREE.PerspectiveCamera(fov, 16 / 9, 0.1, 1000);
 
+  const frameBounds = new THREE.Box3();
   let sweepActive = false;
   let sweepElapsed = 0;
   let sweepTotalDuration = 20;
@@ -63,6 +66,27 @@ export function createTownCamera(options: TownCameraOptions = {}): TownCamera {
     camera.lookAt(target.x, target.y, target.z);
   }
 
+  function fit(): void {
+    if (frameBounds.isEmpty()) return;
+    const vertical = Math.tan(THREE.MathUtils.degToRad(fov / 2)) * 0.92;
+    const horizontal = vertical * camera.aspect;
+    let required = minDistance;
+    for (const x of [frameBounds.min.x, frameBounds.max.x]) {
+      for (const y of [frameBounds.min.y, frameBounds.max.y]) {
+        for (const z of [frameBounds.min.z, frameBounds.max.z]) {
+          const dx = x - target.x; const dy = y - target.y; const dz = z - target.z;
+          const towardCamera = dy * Math.sin(pitchRad) + dz * Math.cos(pitchRad);
+          const up = dy * Math.cos(pitchRad) - dz * Math.sin(pitchRad);
+          required = Math.max(required, towardCamera + Math.abs(dx) / horizontal,
+            towardCamera + Math.abs(up) / vertical);
+        }
+      }
+    }
+    distance = required;
+    maxDistance = Math.max(options.maxDistance ?? MAX_DISTANCE, required * 1.2);
+    updateCameraTransform();
+  }
+
   function clampTarget(): void {
     target.x = Math.max(-PAN_LIMIT_X, Math.min(PAN_LIMIT_X, target.x));
     target.z = Math.max(-PAN_LIMIT_Z, Math.min(PAN_LIMIT_Z, target.z));
@@ -72,6 +96,15 @@ export function createTownCamera(options: TownCameraOptions = {}): TownCamera {
 
   return {
     camera,
+    frame(bounds) {
+      frameBounds.copy(bounds);
+      fit();
+    },
+    resize(width, height) {
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      fit();
+    },
 
     getTarget(): Vector3Coord {
       return { x: target.x, y: target.y, z: target.z };

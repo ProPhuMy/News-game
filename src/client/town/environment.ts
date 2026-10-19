@@ -13,7 +13,7 @@ export function createTownEnvironment(layout: TownLayout, ctx?: ArchitectureCont
   group.name = 'town-environment';
 
   // Ground plane
-  const groundGeo = new THREE.PlaneGeometry(96, 96);
+  const groundGeo = new THREE.PlaneGeometry(512, 512);
   const groundMat = kit.surface(palette.town.ground);
   const groundMesh = new THREE.Mesh(groundGeo, groundMat);
   groundMesh.name = 'ground';

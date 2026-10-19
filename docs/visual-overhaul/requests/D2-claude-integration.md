@@ -37,3 +37,26 @@ Please implement both offered capture features on the Claude integration branch:
 Additional observed capture limitation: the integrated 6000 ms town capture reached screenshot but failed with `page.screenshot: Timeout 30000ms exceeded`. The same scene at 0 ms captured successfully and was viewed. Software rendering of 360 shadowed frames is slow; please let the screenshot stage use the explicit `--timeout-ms` budget too, rather than Playwright's default 30000 ms. This is not hardware FPS evidence and no effect removal is requested.
 
 `TownViewOptions.palette` now exists. `whenReady` includes architecture, thirty rigs and four paperboys, retaining degraded entries. Owned building callers in fixtures/playback tests now pass `fakeContext()`. `createTownEnvironment` retains its Group return and optional context for existing building tests, with an additive `dispose()`; no migration needed there.
+
+## User-requested scale comparison support (additional D2 preview)
+
+The user requests visible-body-only remeasurement and all thirty citizens at the busiest gathering spot, comparing current height 3.29 with smaller candidates, before changing the approved scale. Production remains 3.29. Codex is supplying `src/client/town/crowd-sample.ts`:
+
+```ts
+createCrowdComparison(options: {
+  container: HTMLElement;
+  renderer: THREE.WebGLRenderer;
+  palette: PresentationPalette;
+  height: number;
+}): {
+  whenReady(): Promise<SceneReadiness & { instances: number; metrics: CrowdMetrics }>;
+  setTime(ms: number): void;
+  dispose(): void;
+}
+```
+
+Please add a shared capture target/scene for this entry point and a numeric height argument (suggest `--target crowd --citizen-height 3.29`). Keep the returned metrics and `instances: 30` in the sidecar; check count rather than silently capturing fewer actors. Comparison commands will use palette B, 1280×720, identical camera and `reaction-ms 0`, heights 3.29, 2.4, 1.8 and 1.5. It is an isolated static stress preview at `OFFICE_NODES[1]` (the busiest recorded group is 26 in solo-honest round 3); no route, fixture or outcome changes are implied. The same proposed spacing layout is used in every preview and is not applied to production pending user review.
+
+Additional camera API: `TownCamera.frame(bounds: THREE.Box3)` and `resize(width, height)` now fit actual lot bounds. Production calls frame with actual target/office geometry and logical-node bounds, excluding outer dressing. Please update your architecture town preview to use the same framing approach if it should continue matching production. The old default `createTownCamera({}).camera` alone still has the baseline sample distance.
+
+Bubble expiry now uses frame delta via `BubbleManager.update(deltaSeconds?)` (zero means projection-only update); the real town calls it every frame. Please update interface §5's known-expiry-gap wording after consuming the corresponding commit.

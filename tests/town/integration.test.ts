@@ -283,8 +283,8 @@ describe('Town View Integration', () => {
     // Start plan with 2.0s duration
     const planPromise = view.playReactionPlan(plan, 2.0);
 
-    // Initial hat color at plan start should be fromPaper (grey palette.unsubscribed.hex) immediately without lerp
-    expect(view.getCitizenHatColor(0)).toBe(palette.unsubscribed.hex);
+    // Reduced motion presents the reported destination and paper immediately.
+    expect(view.getCitizenHatColor(0)).toBe(palette.paper.red.hex);
 
     let now = performance.now();
     const step = (seconds: number) => {
@@ -295,9 +295,9 @@ describe('Town View Integration', () => {
       }
     };
 
-    // Advance 1.0s (progress = 0.5 < transitEnd 0.7): citizen still in transit, wearing fromPaper
+    // Feedback remains stable as time advances.
     step(1.0);
-    expect(view.getCitizenHatColor(0)).toBe(palette.unsubscribed.hex);
+    expect(view.getCitizenHatColor(0)).toBe(palette.paper.red.hex);
 
     // Arrival applies the authoritative paper immediately, with no intermediate color.
     step(0.45);

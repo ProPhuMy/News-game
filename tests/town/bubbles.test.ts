@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import * as THREE from 'three';
 import { createBubbleManager } from '../../src/client/town/bubbles.ts';
 
@@ -90,4 +90,21 @@ describe('Speech Bubble Manager', () => {
 
     bubbleMgr.dispose();
   });
+});
+
+it('expires on the frame clock and places text above the approved body and cap', () => {
+  const container = document.createElement('div');
+  const camera = new THREE.PerspectiveCamera();
+  const manager = createBubbleManager(container, camera);
+  const heights: number[] = [];
+  const project = vi.spyOn(THREE.Vector3.prototype, 'project').mockImplementation(function (this: THREE.Vector3) { heights.push(this.y); return this; });
+  manager.showBubble(0, '<img src=x>', () => new THREE.Vector3(), 4000);
+  manager.update(3.999);
+  expect(manager.getVisibleBubbleCount()).toBe(1);
+  expect(heights[0]).toBe(4);
+  project.mockRestore();
+  expect(container.querySelector('img')).toBeNull();
+  manager.update(0.001);
+  expect(manager.getVisibleBubbleCount()).toBe(0);
+  manager.dispose();
 });

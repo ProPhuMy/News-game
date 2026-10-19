@@ -176,7 +176,7 @@ export function createPlaybackCoordinator(
       });
 
       // Short duration / reconnect resilience: immediately snap to destination with toPaper
-      if (totalDuration <= 0.3) {
+      if (totalDuration <= 0.3 || deps.reducedMotion) {
         plan.citizens.forEach((entry) => {
           const ctx = citizenContexts.get(entry.citizenId);
           if (ctx) {
@@ -189,8 +189,13 @@ export function createPlaybackCoordinator(
             deps.citizens.getCitizen(entry.citizenId),
             entry.behavior,
             0,
+            deps.reducedMotion,
           );
+          deps.citizens.setCitizenPose(entry.citizenId, 'idle', 0);
+          if (entry.bubble) deps.bubbles.showBubble(entry.citizenId, entry.bubble,
+            out => deps.citizens.getCitizenPosition(entry.citizenId, out));
         });
+        resetPlanState();
         return Promise.resolve();
       }
 
@@ -213,7 +218,7 @@ export function createPlaybackCoordinator(
       activePlan.citizens.forEach((entry: ReactionEntry) => {
         const ctx = citizenContexts.get(entry.citizenId);
 
-        if (totalDuration <= 0.3 || progress >= transitEnd) {
+        if (deps.reducedMotion || totalDuration <= 0.3 || progress >= transitEnd) {
           // Destination reached / snapped: place at end of route with slot offset
           if (ctx) {
             deps.citizens.setCitizenPosition(entry.citizenId, ctx.destPos);
@@ -230,7 +235,10 @@ export function createPlaybackCoordinator(
             deps.citizens.getCitizen(entry.citizenId),
             entry.behavior,
             elapsed,
+            deps.reducedMotion,
           );
+
+          deps.citizens.setCitizenPose(entry.citizenId, 'idle', elapsed);
 
           if (entry.bubble && !shownBubbles.has(entry.citizenId)) {
             shownBubbles.add(entry.citizenId);
@@ -246,7 +254,9 @@ export function createPlaybackCoordinator(
             deps.citizens.getCitizen(entry.citizenId),
             'routine',
             elapsed,
+            deps.reducedMotion,
           );
+          deps.citizens.setCitizenPose(entry.citizenId, 'idle', elapsed);
         } else {
           // Walking along route with trajectory blending toward destination slot
           const transitT = (progress - transitStart) / (transitEnd - transitStart);
@@ -265,13 +275,17 @@ export function createPlaybackCoordinator(
             deps.citizens.getCitizen(entry.citizenId),
             entry.behavior === 'flee' ? 'flee' : 'routine',
             elapsed,
+            deps.reducedMotion,
           );
+        }
+        if (progress >= transitStart && progress < transitEnd && !deps.reducedMotion) {
+          deps.citizens.setCitizenPose(entry.citizenId, entry.behavior === 'flee' ? 'run' : 'walk', elapsed);
         }
       });
 
       deps.bubbles.update();
 
-      if (progress >= 1.0) {
+      if (deps.reducedMotion || progress >= 1.0) {
         resetPlanState();
       }
     },

@@ -236,3 +236,52 @@ describe('Playback Coordinator', () => {
 
 
 const palette = getPalette(APPROVED_PALETTE);
+
+describe('playback boundaries', () => {
+  function setup(reducedMotion = false) {
+    const layout = createTownLayout(); const scene = new THREE.Scene();
+    const buildings = createTownBuildings(layout, fakeContext());
+    const poof = createPoofEffect(scene);
+    const citizens = createCitizenManager(layout, scene, poof, { reducedMotion });
+    const bubbles = { showBubble: vi.fn(), update: vi.fn(), clear: vi.fn() };
+    const coordinator = createPlaybackCoordinator({ layout, buildings, citizens,
+      interpolator: createRouteInterpolator(layout), bubbles, poof, reducedMotion });
+    const plan: ReactionPlan = { round: 1, exposures: [], recap: { headlineId: null, location: null, behavior: 'routine', reactors: 0, gainSeatId: null, gained: 0 }, citizens: [{
+      citizenId: 0, behavior: 'angry_mob', route: ['r0c0', 'r0c1'], fromPaper: null, toPaper: 0, bubble: 'Confirmed!',
+    }] };
+    return { coordinator, citizens, layout, plan, buildings, poof, bubbles };
+  }
+  it('settles short reconnect playback without leaving isPlaying true', async () => {
+    const { coordinator, citizens, layout, plan, buildings, poof } = setup();
+    await coordinator.startPlan(plan, 0);
+    expect(coordinator.isPlaying()).toBe(false);
+    expect(citizens.getCitizenPosition(0).x).toBe(layout.getNodeWorldPos('r0c1').x);
+    expect(citizens.getCitizenHatColor(0)).toBe(palette.paper.red.hex);
+    citizens.dispose(); buildings.dispose(); poof.dispose();
+  });
+  it('keeps reduced-motion feedback stable at the prescribed destination', async () => {
+    const { coordinator, citizens, layout, plan, buildings, poof, bubbles } = setup(true);
+    const done = coordinator.startPlan(plan, 20);
+    coordinator.update(0.1);
+    const pos = citizens.getCitizenPosition(0);
+    expect(pos.toArray()).toEqual(Object.values(layout.getNodeWorldPos('r0c1')));
+    coordinator.update(5);
+    expect(citizens.getCitizenPosition(0).toArray()).toEqual(pos.toArray());
+    expect(citizens.getCitizen(0).mesh.rotation.x).toBe(0);
+    expect(citizens.getCitizenHatColor(0)).toBe(palette.paper.red.hex);
+    expect(bubbles.showBubble).toHaveBeenCalledWith(0, 'Confirmed!', expect.any(Function));
+    coordinator.stop(); await done;
+    citizens.dispose(); buildings.dispose(); poof.dispose();
+  });
+  it('uses real walk/run poses only during prescribed transit', async () => {
+    const { coordinator, citizens, plan, buildings, poof } = setup();
+    const setPose = vi.spyOn(citizens, 'setCitizenPose');
+    const done = coordinator.startPlan(plan, 20);
+    coordinator.update(6);
+    expect(setPose).toHaveBeenLastCalledWith(0, 'walk', 6);
+    coordinator.update(9);
+    expect(setPose).toHaveBeenLastCalledWith(0, 'idle', 15);
+    coordinator.stop(); await done;
+    citizens.dispose(); buildings.dispose(); poof.dispose();
+  });
+});

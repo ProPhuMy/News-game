@@ -1,3 +1,7 @@
+import * as THREE from 'three';
+import { createTownBuildings } from '../../src/client/town/buildings.ts';
+import { createTownLayout } from '../../src/client/town/layout.ts';
+import { fakeContext } from './architecture/fake-context.ts';
 import { describe, expect, it } from 'vitest';
 import { createTownCamera } from '../../src/client/town/camera.ts';
 
@@ -83,3 +87,23 @@ describe('TownCamera', () => {
   });
 });
 
+
+for (const [width, height] of [[1280, 720], [390, 844]]) {
+  it(`frames all actual building lots at ${width}x${height}`, () => {
+    const buildings = createTownBuildings(createTownLayout(), fakeContext('b'));
+    const bounds = new THREE.Box3();
+    // C3 places the five targets and four offices before dressing.
+    for (const root of buildings.group.children.slice(0, 9)) bounds.expandByObject(root, true);
+    const cam = createTownCamera(); cam.frame(bounds); cam.resize(width!, height!);
+    cam.camera.updateMatrixWorld(true);
+    for (const x of [bounds.min.x, bounds.max.x]) for (const y of [bounds.min.y, bounds.max.y]) {
+      for (const z of [bounds.min.z, bounds.max.z]) {
+        const p = new THREE.Vector3(x, y, z).project(cam.camera);
+        expect(Math.abs(p.x)).toBeLessThanOrEqual(0.94);
+        expect(Math.abs(p.y)).toBeLessThanOrEqual(0.94);
+        expect(p.z).toBeGreaterThan(-1); expect(p.z).toBeLessThan(1);
+      }
+    }
+    buildings.dispose();
+  });
+}

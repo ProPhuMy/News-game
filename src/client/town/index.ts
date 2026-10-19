@@ -1,10 +1,9 @@
 import * as THREE from 'three';
-import { APPROVED_PALETTE, getPalette, type PresentationPalette } from '../visuals/palette.ts';
-import type { SceneReadiness } from '../visuals/town-types.ts';
+import { APPROVED_PALETTE, getPalette } from '../visuals/palette.ts';
 import { createAssetSource } from './assets/source.ts';
 import { createMaterialKit } from './materials.ts';
 import { createPaperboys } from './paperboys.ts';
-import type { Location, Phase, SeatId } from '../../shared/ids.ts';
+import { LOCATIONS, type Location, type Phase, type SeatId } from '../../shared/ids.ts';
 import type { PublicSnapshot, ReactionPlan } from '../../shared/snapshots.ts';
 import { createBubbleManager } from './bubbles.ts';
 import { createTownBuildings } from './buildings.ts';
@@ -18,60 +17,8 @@ import { createPlaybackCoordinator } from './playback.ts';
 import { createTownScene } from './scene.ts';
 import { attachContextLossHandler, createFallbackView, isWebGL2Supported, type FallbackView } from './webgl.ts';
 import { attachTownControls } from './controls.ts';
-import type { TownLayout } from './types.ts';
-
-export interface TownViewOptions {
-  container?: HTMLElement;
-  palette?: PresentationPalette;
-  reducedMotion?: boolean;
-  forceWebGL?: boolean;
-  customRenderer?: THREE.WebGLRenderer;
-}
-
-export interface TownView {
-  whenReady(): Promise<SceneReadiness>;
-  isWebGLSupported(): boolean;
-  playReactionPlan(plan: ReactionPlan, durationSeconds?: number): Promise<void>;
-  setPhase(phase: Phase): void;
-  setTargetLocation(location: Location | null): void;
-  setReducedMotion(enabled: boolean): void;
-  resize(): void;
-  dispose(): void;
-  syncFromSnapshot(snapshot: PublicSnapshot): void;
-  getCitizenPosition(id: number, out?: THREE.Vector3): THREE.Vector3;
-  getCitizenRotation(id: number): number;
-  setCitizenPosition(id: number, pos: THREE.Vector3): void;
-  setCitizenRotation(id: number, angleY: number): void;
-  getCitizenHatColor(id: number): number;
-  getNodeWorldPosition(nodeId: string): THREE.Vector3;
-  getOfficeBannerColor(seatId: SeatId): number;
-}
-
-function createFallbackTownView(container: HTMLElement, layout?: TownLayout): TownView {
-  const fallback = createFallbackView(container);
-  const actualLayout = layout ?? createTownLayout();
-  return {
-    whenReady: async () => ({ degraded: [] }),
-    isWebGLSupported: () => false,
-    playReactionPlan: async () => {},
-    setPhase: () => {},
-    setTargetLocation: () => {},
-    setReducedMotion: () => {},
-    resize: () => {},
-    dispose: () => fallback.dispose(),
-    syncFromSnapshot: () => {},
-    getCitizenPosition: (_id: number, out?: THREE.Vector3) => (out ? out.set(0, 0, 0) : new THREE.Vector3()),
-    getCitizenRotation: () => 0,
-    setCitizenPosition: () => {},
-    setCitizenRotation: () => {},
-    getCitizenHatColor: () => getPalette(APPROVED_PALETTE).unsubscribed.hex,
-    getNodeWorldPosition: (nodeId: string) => {
-      const p = actualLayout.getNodeWorldPos(nodeId);
-      return new THREE.Vector3(p.x, p.y, p.z);
-    },
-    getOfficeBannerColor: () => 0,
-  };
-}
+import { createFallbackTownView, type TownView, type TownViewOptions } from './view.ts';
+export type { TownView, TownViewOptions } from './view.ts';
 
 export function createTownView(
   containerOrOptions: HTMLElement | (TownViewOptions & { container: HTMLElement }),
@@ -190,6 +137,14 @@ export function createTownView(
     activeScene.scene.add(townEnvironment);
     activeScene.scene.add(townPaperboys.group);
     activeScene.scene.add(townBuildings.group);
+    const frameBounds = new THREE.Box3();
+    const targetNames = new Set<string>(LOCATIONS.map(location => location.replaceAll('_', '-')));
+    for (const child of townBuildings.group.children) {
+      if (targetNames.has(child.name) || child.name === 'office') frameBounds.expandByObject(child, true);
+    }
+    for (const node of layout.getStreetNodes()) frameBounds.expandByPoint(new THREE.Vector3(node.x, 4, node.z));
+    frameBounds.expandByScalar(1);
+    camera.frame(frameBounds);
 
     const activeCoordinator = createPlaybackCoordinator({
       layout,
@@ -255,6 +210,12 @@ export function createTownView(
         activePoof.update(deltaSeconds);
         activeCitizens.update(deltaSeconds);
         activeCoordinator.update(deltaSeconds);
+        activeBubbles.update(deltaSeconds);
+        const fog = activeScene.scene.fog;
+        if (fog instanceof THREE.Fog) {
+          fog.near = camera.getDistance() + 30;
+          fog.far = camera.getDistance() + 100;
+        }
         activeScene.render(camera.camera);
       } catch {
         // Catch unexpected errors in an update so loop does not permanently stop
@@ -268,8 +229,7 @@ export function createTownView(
     const handleResize = (): void => {
       const w = container.clientWidth || 800;
       const h = container.clientHeight || 600;
-      camera.camera.aspect = w / h;
-      camera.camera.updateProjectionMatrix();
+      camera.resize(w, h);
       activeScene.resize(w, h);
       activeBubbles.update();
     };
@@ -323,6 +283,7 @@ export function createTownView(
         currentReducedMotion = enabled;
         camera.setReducedMotion(enabled);
         activeCitizens.setReducedMotion(enabled);
+        if (enabled) activeCoordinator.update(0);
       },
 
       syncFromSnapshot(snapshot: PublicSnapshot): void {

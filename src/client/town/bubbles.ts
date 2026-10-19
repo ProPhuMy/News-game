@@ -1,11 +1,12 @@
 import * as THREE from 'three';
+import { HEADROOM } from './architecture/lots.ts';
 
 export interface ActiveBubble {
   id: number;
   citizenId: number;
   element: HTMLElement;
   getAnchorPos: (out?: THREE.Vector3) => THREE.Vector3;
-  timerId: ReturnType<typeof setTimeout> | null;
+  remainingMs: number;
 }
 
 export interface BubbleManager {
@@ -15,7 +16,7 @@ export interface BubbleManager {
     getAnchorPos: (out?: THREE.Vector3) => THREE.Vector3,
     durationMs?: number,
   ): void;
-  update(): void;
+  update(deltaSeconds?: number): void;
   getVisibleBubbleCount(): number;
   clear(): void;
   dispose(): void;
@@ -41,10 +42,6 @@ export function createBubbleManager(
   let nextBubbleId = 1;
 
   function removeBubble(bubble: ActiveBubble): void {
-    if (bubble.timerId !== null) {
-      clearTimeout(bubble.timerId);
-      bubble.timerId = null;
-    }
     if (bubble.element.parentElement === overlay) {
       overlay.removeChild(bubble.element);
     }
@@ -93,7 +90,7 @@ export function createBubbleManager(
         'color: #1a1a1a; font-family: sans-serif; font-size: 12px; font-weight: 500; ' +
         'border-radius: 8px; border: 1px solid #c8c8c8; box-shadow: 0 2px 6px rgba(0,0,0,0.18); ' +
         'white-space: nowrap; max-width: 220px; text-overflow: ellipsis; overflow: hidden; ' +
-        'pointer-events: none; transition: opacity 0.2s ease;';
+        'pointer-events: none;';
 
       overlay.appendChild(bubbleEl);
 
@@ -102,18 +99,18 @@ export function createBubbleManager(
         citizenId,
         element: bubbleEl,
         getAnchorPos,
-        timerId: null,
+        remainingMs: durationMs,
       };
-
-      bubble.timerId = setTimeout(() => {
-        removeBubble(bubble);
-      }, durationMs);
 
       activeBubbles.push(bubble);
       enforceMaxBubbles();
     },
 
-    update(): void {
+    update(deltaSeconds = 0): void {
+      for (const bubble of [...activeBubbles]) {
+        bubble.remainingMs -= deltaSeconds * 1000;
+        if (bubble.remainingMs <= 1e-8) removeBubble(bubble);
+      }
       const width = container.clientWidth || 800;
       const height = container.clientHeight || 600;
 
@@ -127,7 +124,7 @@ export function createBubbleManager(
         if (returned && returned !== scratchPos) {
           scratchPos.copy(returned);
         }
-        scratchPos.y += 1.6; // Position above head
+        scratchPos.y += HEADROOM + 0.2; // Above the approved body and cap, below location labels.
 
         scratchPos.project(camera);
 
