@@ -1,6 +1,7 @@
+/** @vitest-environment jsdom */
 import { describe, expect, it } from 'vitest';
 import type { TownView } from '../../src/client/town/index.ts';
-import { recordingFactory, townMountOptions, type FactoryRecord } from '../../src/client/visual-test/town-mount.ts';
+import { recordingFactory, townMountOptions, verifyFallback, type FactoryRecord } from '../../src/client/visual-test/town-mount.ts';
 import { parsePalette, parseTownScenario } from '../../src/client/visual-test/scenario.ts';
 import { getPalette } from '../../src/client/visuals/palette.ts';
 
@@ -40,5 +41,25 @@ describe('palette forwarding', () => {
   it('parseTownScenario carries ?palette= into the scenario', () => {
     expect(parseTownScenario('?palette=c').palette).toBe('c');
     expect(parseTownScenario('').palette).toBe('b');
+  });
+});
+
+describe('verifyFallback', () => {
+  it('errors when the view reports WebGL support', () => {
+    const container = document.createElement('div');
+    expect(verifyFallback({ isWebGLSupported: () => true } as TownView, container)).toMatch(/^no-webgl: /);
+  });
+
+  it('errors when the fallback element is missing', () => {
+    expect(verifyFallback({ isWebGLSupported: () => false } as TownView, document.createElement('div'))).toMatch(/^no-webgl: .*fallback/);
+  });
+
+  it('accepts a fallback view with its status element', () => {
+    const container = document.createElement('div');
+    const fallback = document.createElement('div');
+    fallback.className = 'town-fallback-container';
+    fallback.setAttribute('role', 'status');
+    container.appendChild(fallback);
+    expect(verifyFallback({ isWebGLSupported: () => false } as TownView, container)).toBeNull();
   });
 });

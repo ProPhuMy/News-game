@@ -17,7 +17,7 @@ describe('sceneKind', () => {
   });
 
   it('rejects unknown scenes', () => {
-    expect(() => sceneKind('?scene=lobby')).toThrow(/scene must be town, inspect-character or architecture, got "lobby"/);
+    expect(() => sceneKind('?scene=lobby')).toThrow(/scene must be town, inspect-character, architecture or crowd, got "lobby"/);
   });
 });
 

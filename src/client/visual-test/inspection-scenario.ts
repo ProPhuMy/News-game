@@ -1,6 +1,6 @@
 import { readInt } from './scenario.ts';
 
-export type SceneKind = 'town' | 'inspect-character' | 'architecture';
+export type SceneKind = 'town' | 'inspect-character' | 'architecture' | 'crowd';
 
 export interface InspectionScenario {
   /** Path under public/models/, e.g. "characters/kenney-mini/character-male-a.glb". */
@@ -28,8 +28,8 @@ const CLIP_NAME = /^[\w .-]{1,64}$/;
 
 export function sceneKind(search: string): SceneKind {
   const scene = new URLSearchParams(search).get('scene') ?? 'town';
-  if (scene !== 'town' && scene !== 'inspect-character' && scene !== 'architecture') {
-    throw new Error(`scene must be town, inspect-character or architecture, got "${scene}"`);
+  if (scene !== 'town' && scene !== 'inspect-character' && scene !== 'architecture' && scene !== 'crowd') {
+    throw new Error(`scene must be town, inspect-character, architecture or crowd, got "${scene}"`);
   }
   return scene;
 }

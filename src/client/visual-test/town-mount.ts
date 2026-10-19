@@ -5,9 +5,10 @@ import { getPalette, type PaletteId } from '../visuals/palette.ts';
 import type { VirtualClock } from './clock.ts';
 import { measureCanvas, readyVerdict } from './pixels.ts';
 import { settleScene, type SceneReadiness } from './settle.ts';
+import type { TownFrame } from './state.ts';
 
 export type TownCapture =
-  | { status: 'ready'; palette: PaletteId; width: number; height: number; distinctColors: number }
+  | ({ status: 'ready' } & TownFrame)
   | { status: 'error'; error: string };
 
 export interface FactoryRecord { view: TownView | null; palette: PaletteId | null }
@@ -27,10 +28,19 @@ export function recordingFactory(
 /** The options handed to mountTown: the scenario's palette must reach the real town. */
 export function townMountOptions(
   scenario: { reducedMotion: boolean; palette: PaletteId },
-  renderer: THREE.WebGLRenderer,
+  renderer: THREE.WebGLRenderer | null,
   viewFactory: NonNullable<MountTownOptions['viewFactory']>,
 ): MountTownOptions {
-  return { customRenderer: renderer, reducedMotion: scenario.reducedMotion, palette: getPalette(scenario.palette), viewFactory };
+  return { ...(renderer ? { customRenderer: renderer } : {}), reducedMotion: scenario.reducedMotion, palette: getPalette(scenario.palette), viewFactory };
+}
+
+/** For --no-webgl: null when the town really fell back, else why the capture would not show the fallback. */
+export function verifyFallback(view: TownView, container: HTMLElement): string | null {
+  if (view.isWebGLSupported()) return 'no-webgl: the town reports WebGL support; the browser was not started without WebGL';
+  if (!container.querySelector('.town-fallback-container[role="status"]')) {
+    return 'no-webgl: the town has no WebGL but the fallback element (.town-fallback-container[role="status"]) is missing';
+  }
+  return null;
 }
 
 /**
@@ -41,8 +51,9 @@ export async function mountAndSettleTown(
   container: HTMLElement,
   store: ClientStore,
   clock: VirtualClock,
-  scenario: { reducedMotion: boolean; reactionMs: number; palette: PaletteId },
+  scenario: { reducedMotion: boolean; reactionMs: number; palette: PaletteId; noWebgl?: boolean },
 ): Promise<TownCapture> {
+  if (scenario.noWebgl) return mountFallbackTown(container, store, clock, scenario);
   let renderer: THREE.WebGLRenderer;
   try {
     // Same settings as src/client/town/scene.ts, plus preserveDrawingBuffer so the frame can be measured.
@@ -71,5 +82,25 @@ export async function mountAndSettleTown(
 
   const stats = measureCanvas(renderer.domElement);
   const verdict = readyVerdict({ webgl: view.isWebGLSupported(), distinctColors: stats.distinctColors });
-  return verdict.status === 'ready' ? { status: 'ready', palette: holder.palette, ...stats } : verdict;
+  return verdict.status === 'ready' ? { status: 'ready', renderer: 'webgl', webgl: true, palette: holder.palette, ...stats } : verdict;
+}
+
+/** Same mount minus the renderer: the town must pick its own no-WebGL fallback. */
+async function mountFallbackTown(
+  container: HTMLElement,
+  store: ClientStore,
+  clock: VirtualClock,
+  scenario: { reducedMotion: boolean; reactionMs: number; palette: PaletteId },
+): Promise<TownCapture> {
+  const holder: FactoryRecord = { view: null, palette: null };
+  mountTown(container, store, townMountOptions(scenario, null, recordingFactory(holder)));
+  const view = holder.view;
+  if (!view) throw new Error('mountTown did not create a view');
+  const failure = verifyFallback(view, container);
+  if (failure) return { status: 'error', error: failure };
+  await settleScene(view as TownView & { whenReady?: () => Promise<SceneReadiness> }, (ms) => clock.advance(ms), scenario.reactionMs);
+  return {
+    status: 'ready', renderer: 'fallback', webgl: false, palette: holder.palette ?? scenario.palette,
+    width: container.clientWidth, height: container.clientHeight,
+  };
 }

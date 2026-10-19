@@ -66,9 +66,16 @@ export function parsePalette(search: string): PaletteId {
   return raw;
 }
 
+/** The ?noWebgl= flag: mount the town without a renderer and expect the real fallback view. */
+export function parseNoWebgl(search: string): boolean {
+  const raw = new URLSearchParams(search).get('noWebgl');
+  if (raw !== null && raw !== 'true' && raw !== 'false') throw new Error(`noWebgl must be true or false, got "${raw}"`);
+  return raw === 'true';
+}
+
 /** What the town harness page mounts: the parsed scenario plus its palette. */
-export function parseTownScenario(search: string): VisualScenario & { palette: PaletteId } {
-  return { ...parseScenario(search), palette: parsePalette(search) };
+export function parseTownScenario(search: string): VisualScenario & { palette: PaletteId; noWebgl: boolean } {
+  return { ...parseScenario(search), palette: parsePalette(search), noWebgl: parseNoWebgl(search) };
 }
 
 export function parseFixture(raw: unknown): Fixture {

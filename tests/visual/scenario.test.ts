@@ -50,3 +50,14 @@ describe('selectFrameIndex', () => {
     expect(() => selectFrameIndex(fixture, 9, 'reveal')).toThrow(/no frame for round 9 reveal; available: 0:intro, 1:investigate/);
   });
 });
+
+describe('noWebgl scenario flag', () => {
+  it('town and app scenarios carry noWebgl', async () => {
+    const { parseTownScenario } = await import('../../src/client/visual-test/scenario.ts');
+    const { parseAppScenario } = await import('../../src/client/visual-test/app-scenario.ts');
+    expect(parseTownScenario('?noWebgl=true').noWebgl).toBe(true);
+    expect(parseTownScenario('').noWebgl).toBe(false);
+    expect(parseAppScenario('?noWebgl=true').noWebgl).toBe(true);
+    expect(() => parseTownScenario('?noWebgl=1')).toThrow(/noWebgl must be true or false/);
+  });
+});

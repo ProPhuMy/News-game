@@ -2,13 +2,11 @@
 import { access, mkdir, rm, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { chromium, type Response } from 'playwright-core';
-import { harnessPath, LIVE_SCREENS, parseCaptureArgs, type CaptureOptions } from './args.ts';
+import { chromiumArgs, harnessPath, LIVE_SCREENS, parseCaptureArgs, type CaptureOptions } from './args.ts';
 import { focusAndScroll, measureLayout, openLiveScreen, type LayoutReport } from './app-screens.ts';
 import { waitForHarnessState } from './harness-state.ts';
 import { withBrowserAndServer } from './lifecycle.ts';
 import { freePort, startGameServer, waitForServer } from './server.ts';
-
-const CHROMIUM_ARGS = ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'];
 
 // An inherited X or Wayland display that this user cannot open makes ANGLE fail, leaving no WebGL.
 // Headless capture never needs one, so the browser always starts without them.
@@ -39,7 +37,7 @@ async function capture(options: CaptureOptions): Promise<void> {
   const port = await freePort();
   await withBrowserAndServer({
     launch: () => chromium.launch({
-      args: CHROMIUM_ARGS,
+      args: chromiumArgs(options.noWebgl),
       env: BROWSER_ENV,
       ...(process.env.NEWS_TOWN_CHROMIUM ? { executablePath: process.env.NEWS_TOWN_CHROMIUM } : {}),
     }),
@@ -85,7 +83,7 @@ async function capture(options: CaptureOptions): Promise<void> {
     }
 
     await mkdir(dirname(options.out), { recursive: true });
-    await page.screenshot({ path: options.out });
+    await page.screenshot({ path: options.out, timeout: options.timeoutMs });
     const stylesheets = (await Promise.all(pendingStyles)).filter((entry): entry is StylesheetRecord => entry !== null);
     await writeFile(`${options.out}.json`, `${JSON.stringify({
       target: options.target, url, options, browser: browser.version(), state, layout, stylesheets, consoleErrors,
