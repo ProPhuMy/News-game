@@ -64,8 +64,16 @@ describe('Gazette', () => {
     expect(decideWrite('gazette', pub, priv, YES())).toEqual({ kind: 'lock', story: { kind: 'claim', location: 'bakery', claim: 'weird_sighting', attachEvidence: false } });
     priv.evidence = [{ round: 2, location: 'bakery', claim: 'all_clear', text: 'x' }];
     expect(decideWrite('gazette', pub, priv, NO())).toEqual({ kind: 'lock', story: { kind: 'claim', location: 'bakery', claim: 'all_clear', attachEvidence: true } });
+  });
+
+  it('without evidence prints its tip story (no card); lies 10% of the time; skips only with no tip', () => {
+    const { pub, priv } = views(2);
     priv.evidence = [];
-    expect(decideWrite('gazette', pub, priv, NO())).toEqual({ kind: 'skip' });
+    priv.tip = { round: 2, location: 'bakery', claim: 'health_scare', text: 'x' };
+    expect(decideWrite('gazette', pub, priv, NO())).toEqual({ kind: 'lock', story: { kind: 'claim', location: 'bakery', claim: 'health_scare', attachEvidence: false } });
+    expect(decideWrite('gazette', pub, priv, YES())).toEqual({ kind: 'lock', story: { kind: 'claim', location: 'bakery', claim: hottestClaim('health_scare'), attachEvidence: false } });
+    priv.tip = null;
+    expect(decideWrite('gazette', pub, priv, YES())).toEqual({ kind: 'skip' });
   });
 });
 
