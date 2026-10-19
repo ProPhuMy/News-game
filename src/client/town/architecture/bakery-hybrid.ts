@@ -11,10 +11,11 @@ export const KENNEY_AWNING_URL = '/models/buildings/kenney-commercial/detail-awn
 
 export type AwningMaterialMode = 'original' | 'palette';
 
-// The kit awning is tall and steep (raw 0.80 wide, 0.40 high, 0.15 deep, back face at z = 0.1). Spanning the
-// whole storefront would cover the door and the gable sign, so it shades the display window at a uniform scale.
-const KIT_SCALE = 4.25;
-const KIT_POSITION = { x: 1.2, y: 3.5, z: 2.4 - 0.1 * KIT_SCALE } as const;
+// The kit awning is a canopy on two posts that stand on the ground (raw 0.80 wide, 0.40 high, 0.15 deep, back
+// edge at z = 0.1). It is placed as the kit intends, standing in front of the storefront at a uniform scale that
+// spans the same width as the code awning. Its height then follows from the kit's proportions (C2 finding).
+const KIT_SCALE = 7;
+const KIT_POSITION = { x: 0, y: 0, z: 2.4 - 0.1 * KIT_SCALE } as const;
 
 export function createBakeryHybrid(ctx: ArchitectureContext, mode: AwningMaterialMode): PlacedPiece {
   const base = createBakery(ctx, { awning: false });
