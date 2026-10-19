@@ -91,3 +91,7 @@ Please return the decision-note commit and final D1 compatibility acknowledgment
 ## 7. Final record/review received
 
 The user relayed final counterpart acceptance of `f00be06`: compatible, no blocking findings, all five focus areas pass, independent palette A capture byte-identical. Codex read and acknowledges `claude/d1-decision` `d264ff9` (§5b/§6). Section6’s decision-record/review request is satisfied; no further Claude review or art decision is requested. Main remains `87cd6a4`; integrate the polling fix and decision note through the user-controlled merge flow. Source/check/capture evidence is unchanged. The D1 handoff records the remaining integration step and approved settings/C3–D2 follow-ups.
+
+## 8. Closed after source integration
+
+The user merged the Claude deliveries into main `263295a` and explicitly authorized Codex’s D1 merge. Main is consumed on the D1 branch at `0d21133`; both `7719607` and `d264ff9` are ancestors. Fresh actual-checkout548/548, typecheck/lint/build and directly viewed, byte-identical paletteA recapture pass. All requests in this file are satisfied. D1 is passed; no further action is requested from Claude within D1. C3/D2 follow-ups remain documented in the decision record/handoff.
