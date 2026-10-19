@@ -1,6 +1,6 @@
 # Presentation interface (owner: Claude)
 
-Status: acknowledged by Claude and Codex (C0). Reopen explicitly if compatibility changes. Source: overhaul design §11 "Handoff decisions". Base commit: `main` `3c02902` (bootstrap merged); branch `claude/c0-foundation`.
+Status: acknowledged by Claude and Codex (C0). **Reopened in C3 (§3, §4, §5): Codex acknowledgment pending.** Reopen explicitly if compatibility changes. Source: overhaul design §11 "Handoff decisions". Base commit: `main` `3c02902` (bootstrap merged); branch `claude/c0-foundation`.
 This is a presentation interface, not a gameplay contract. `src/shared/` is unchanged.
 
 ## 1. Palette (shared by CSS and 3D)
@@ -117,12 +117,16 @@ export type PropFactory = (kind: string, ctx: ArchitectureContext) => PlacedPiec
 
 - Integration entry point stays `createTownBuildings` in `src/client/town/buildings.ts` (Claude). In C2 it becomes `createTownBuildings(layout: TownLayout, ctx?: ArchitectureContext): TownBuildings` and `TownBuildings` gains `ready: Promise<SceneReadiness>` (all pieces, `degraded` lists merged) and `dispose(): void` (disposes every piece). Its existing members stay unchanged: `group`, `getLocationAnchor`, `getOfficeAnchor`, `setOfficeHighlight`, `syncOffices`, `getOfficeBannerColor`.
 - **C2 (implemented, shapes unchanged):** the types above are in `src/client/visuals/town-types.ts`, `createTownBuildings(layout, ctx?)` has `ready` and `dispose`, the sample factories are `createBakery`, `createBakeryHybrid` (comparison only) and `createProp`. D1 adopted `MaterialKit.preserve` and `town.wood` (§1, §2); open-geometry outlines remain inside Codex's `outline`.
+- **C3 (implemented, shapes unchanged):** with a context, `createTownBuildings` delegates to `createArchitectureTown` (`src/client/town/architecture/town.ts`). It places every target building (`createLocationBuilding`: bakery, bank, town hall, clinic, fountain square), the four offices (`createOffice`, banners in `palette.paper[COLORS[seat]]`) and every prop in `TOWN_DRESSING` (`src/client/town/props/dressing.ts`; new code-built kinds `cart` and `flower-box`). `syncOffices` and `setOfficeHighlight` swap kit materials (`surface(hex)` / `surface(hex, { emissive: hex })`) and never mutate one. `ready` merges every piece's `degraded`. `dispose` frees every piece once; office calls after dispose do nothing. Sign boards (`BANK`, `TOWN HALL`, `CLINIC`) are pixel-font `DataTexture`s passed through `MaterialKit.preserve`; the piece owns and frees the source material and texture. The kit should live exactly as long as the buildings.
 - World units: the shared grid spacing is `GRID.spacing = 12` between street nodes (`src/shared/town-map.ts`). Current citizen height is measured by Codex in D0 and recorded here.
 
 ## 4. Anchors (one representation)
 
 - Logical destinations are shared map node ids, read only through `TownLayout`: `getLocationNode(location)`, `getOfficeNode(seatId)`, `getNodeWorldPos(nodeId)`.
-- A building's root is placed at its location node's world position, as today. Decoration never moves a node, a route, or a logical destination.
+- **C3 (reopened, user decision 2026-10-19):** with an `ArchitectureContext`, a building's body no longer sits on its node. It sits in the city block lot just north (−Z) of the node, front facing +Z, door nearest the node (`lotCenter` in `src/client/town/architecture/lots.ts`). The crowd stands on the street in front. The fountain square's root stays on its node (flat plaza; the basin sits in the north-east block at offset (6, −6), radius ≤ 3.3). Without a context the primitive path is unchanged (bodies on nodes) until D2 switches over. Decoration never moves a node, a route, or a logical destination.
+- **Clearance (user decision, enforced by tests):** nothing below `HEADROOM = 3.8` stands within `GATHER_CLEARANCE = 5` of a target or office node, within `NODE_CLEARANCE = 3.5` of any other node, or within `ROAD_CLEAR = 2.0` of a street centerline. Lamps also stay out of each door's approach (door x ±2.5, façade to +5). D2's gathering rings should fit inside these radii; widening them past 5 needs this note reopened.
+- **Label anchors (C3):** with a context, `getLocationAnchor` and `getOfficeAnchor` return the node x/z at `LABEL_ANCHOR_HEIGHT = 5.8` for every target and office. The primitive path keeps its old heights (town hall 10.0, offices 6.8).
+- **Paperboys (user decision):** Codex places them in D2 at `PAPERBOY_SPOTS` (`src/client/town/props/dressing.ts`: four `{ x, z, rotationY }`, checked clear). Each figure must fit a 1 × 1 ground footprint; the spots have only about 0.04 of slack.
 - Label anchors come from `TownBuildings.getLocationAnchor(location)` / `getOfficeAnchor(seatId)` (world `Vector3` above the node).
 - Open for D1: today buildings are centered on their node, so routes end at the building center. Where the entrance sits relative to the node is decided in the D1 sample without moving the node.
 
@@ -144,8 +148,10 @@ export type PropFactory = (kind: string, ctx: ArchitectureContext) => PlacedPiec
   - Recoverable fallbacks are listed in `degraded`. A nonempty list fails the capture with `degraded-assets: ...`, so a screenshot can never certify missing models silently.
 - Capture order (implemented in `src/client/visual-test/settle.ts`): apply the fixture frame, mount, await `whenReady()` if present, then advance the virtual clock by exactly `reactionMs` (a value of 0 still draws one frame), then measure and publish `window.__NEWS_TOWN_VISUAL__`.
 - Browser: `playwright-core` 1.63.0 with its Chromium build 1243 (software WebGL through SwiftShader). The command starts the browser without `DISPLAY` / `WAYLAND_DISPLAY`, because an inherited desktop display this account cannot open disables WebGL.
-- Architecture sample (C2, additive): `npm run capture -- --target architecture [--variant code|hybrid-original|hybrid-palette] [--view street|awning] [--palette a|b|c] --out <file.png>`. It renders the sample bakery and props with a harness-only preview `MaterialKit`/`AssetSource` (`src/client/visual-test/preview-kit.ts`), awaits every piece's `ready`, and fails on any `degraded` entry.
-  - **D1 wiring:** adds `--reaction-ms` and `--reduced-motion` to the architecture target. When Codex's `src/client/town/sample.ts` exists (found with `import.meta.glob`), the harness calls `createRenderingSample({ container, renderer, palette, variant, view, reducedMotion })`, awaits `whenReady()` (a rejection fails the capture with its message; nonempty `degraded` fails with `degraded-assets: ...`), calls `setTime(reactionMs)` once (0 included), then measures and publishes. Renderer contract: the harness creates the renderer (`preserveDrawingBuffer: true`), sizes it and attaches its canvas to the container before calling `createRenderingSample`. The sample may set the renderer's shadow, tone-mapping and color-space settings and may call `setSize`; it must not dispose the renderer or remove its canvas. `setTime(ms)` poses everything at exactly `ms` and renders one frame synchronously before returning, because the harness reads the canvas immediately afterwards. Without the sample file the C2 preview scene renders. The sidecar's `state.renderer` is `'sample'` or `'preview'`; a preview capture is never D1 evidence. The preview path is removed once the sample is merged.
+- Architecture captures: `npm run capture -- --target architecture [--view street|awning|town|bakery|bank|town_hall|clinic|fountain_square|office] [--variant code|hybrid-original|hybrid-palette] [--palette a|b|c] [--reaction-ms N] [--reduced-motion] --out <file.png>`.
+  - `street`/`awning` (D1): the harness calls Codex's `createRenderingSample` (`src/client/town/sample.ts`) with a borrowed renderer, awaits `whenReady()`, calls `setTime(reactionMs)` once and measures. Sidecar `renderer: 'sample'`.
+  - `town` and the close-ups (C3, `src/client/visual-test/architecture-town.ts`): Codex's `createMaterialKit` and `createAssetSource`, a palette ground slab and `STREET_EDGES` roads, `createTownBuildings(createTownLayout(), ctx)`, and the approved render settings (§5b). `town` uses `createTownCamera({})` at its default target and distance (the real game framing). Close-ups look at the piece from offset (0, 13, 13). No citizens. Awaits `buildings.ready`; a rejection or nonempty `degraded` fails the capture. Sidecar `renderer: 'town-architecture'`. `--variant` is ignored here.
+  - The C2 preview kit (`preview-kit.ts`) is deleted (C3).
 - Viewing: Claude opens PNGs with its Read tool. Codex opens PNGs with its own image viewer. Each agent looks at its own captures directly.
 
 ## 5a. Character inspection scenario (D0 support)
@@ -171,15 +177,14 @@ User approvals relayed 2026-10-19 after viewing Codex's D1 rendering-sample capt
 | Citizens | **Kenney Mini Characters 1** (`public/models/characters/kenney-mini/`, Codex). The atlas is kept through `MaterialKit.preserve`. |
 | Citizen scale | **3.29 world units of visible idle body height, before the cap** (`CITIZEN_REFERENCE_HEIGHT`). The cap adds a little on top. Crowd clearance at full town scale is checked in D2. |
 | Custom signatures | Striped awning, pretzel on the gable, lit window, gas lamp, newsstand and bench (C2). C3 adds bank columns, the town-hall clock tower, the clinic's lit cross, office chimneys and paper-color banners, and the fountain square. |
-| Orientation | Y up. Piece origin at ground in the footprint center. +Z faces the street. Kenney models face +Z (D0). The root sits on its map node; nodes, routes and anchors never move. |
+| Orientation | Y up. Piece origin at ground in the footprint center. +Z faces the street. Kenney models face +Z (D0). Building bodies sit in the lot behind their node (§4, C3); nodes, routes and anchors never move. |
 | Materials | Palette surfaces through `MaterialKit.surface`; atlas models through `preserve`; no hex literals in pieces. Codex's kit: 3-band toon gradient with nearest filtering, polygon offset, static edge outlines (45° threshold), and normal-expanded skinned hulls bound to the rig's own skeleton. |
 | Approved render settings | `ACESFilmicToneMapping` at exposure 1, `SRGBColorSpace` output, `PCFShadowMap` at 2048, a hemisphere light at 1.1 plus a directional light at 2.4. Palette B was approved under these settings. D2 keeps them, or shows the user new captures before changing them. |
 
-**Open for C3 and D2** (not decided here):
-- Entrance offset relative to the node (§4).
-- `getLocationAnchor` heights. The bakery is about 7.2 tall and its anchor is at 5.8.
+**Open for D2** (C3 settled the entrance offset and label heights in §4):
 - Outline weight. Static edge lines are 1 device pixel, while skinned hulls are thicker.
-- Thirty-citizen crowd clearance.
+- Thirty-citizen crowd rings inside the §4 clearance radii.
+- Camera framing. At the default distance the top and bottom offices are cropped, and a 390 × 844 view shows only the centre (C3 captures `town-b.png`, `town-b-narrow.png`).
 
 ## 6. Acknowledgments
 
