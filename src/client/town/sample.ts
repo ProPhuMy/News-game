@@ -52,7 +52,7 @@ export function createRenderingSample(options: RenderingSampleOptions): Renderin
   slab(48, 40, palette.town.ground, -0.05, 0);
   slab(48, 2.4, palette.town.plaza, -0.02, 3.7);
   slab(48, 3.4, palette.town.road, -0.03, 6.6);
-  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   scene.add(new THREE.HemisphereLight(palette.town.sky, palette.town.ground, 1.1));
