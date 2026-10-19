@@ -213,7 +213,8 @@ describe('AppRouter Integration with ClientStore', () => {
       });
     });
 
-    expect(screen.getAllByText("Our lawyers won't print that — try again").length).toBeGreaterThan(0);
+    // Shown once: the write screen has its own banner, so the HUD does not repeat it.
+    expect(screen.getAllByText("Our lawyers won't print that — try again")).toHaveLength(1);
   });
 
   it('displays ServerRestartScreen when match ended abruptly', () => {

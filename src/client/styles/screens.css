@@ -158,6 +158,7 @@
 .locations-buttons { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .rival-picker { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .rival-select { flex: 1 1 14rem; width: auto; }
+.choice-empty, .reveal-empty { color: var(--nt-muted); font-style: italic; }
 .skip-action { display: flex; justify-content: flex-end; }
 
 /* Write */

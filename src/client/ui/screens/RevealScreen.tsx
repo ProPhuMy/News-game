@@ -34,11 +34,15 @@ export const RevealScreen: React.FC<RevealScreenProps> = ({
     <div className="screen-container reveal-screen" data-testid="reveal-screen">
       <ExposureBanner exposures={exposures} />
 
-      <div className="front-pages-carousel">
-        {frontPages.map((page, index) => (
-          <FrontPageCard key={page.id ?? `${page.seatId}-${index}`} page={page} />
-        ))}
-      </div>
+      {frontPages.length === 0 ? (
+        <p className="reveal-empty">No front pages were printed this round.</p>
+      ) : (
+        <div className="front-pages-carousel">
+          {frontPages.map((page, index) => (
+            <FrontPageCard key={page.id ?? `${page.seatId}-${index}`} page={page} />
+          ))}
+        </div>
+      )}
 
       {shouldRenderBubbles && displayBubbles.length > 0 && (
         <div className="speech-bubbles-overlay" aria-label="Citizen reactions">

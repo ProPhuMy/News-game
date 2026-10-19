@@ -72,6 +72,9 @@ export const InvestigateScreen: React.FC<InvestigateScreenProps> = ({
           </div>
         </section>
 
+        {(round < 2 || rivalHeadlines.length === 0) && (
+          <p className="choice-empty">No rival headline is open to investigation right now.</p>
+        )}
         {round >= 2 && rivalHeadlines.length > 0 && (
           <section className="choice-section">
             <h3>Option B: Investigate a Rival Headline (Search for Proof of Lie)</h3>
