@@ -158,6 +158,29 @@ export type PropFactory = (kind: string, ctx: ArchitectureContext) => PlacedPiec
 - Verified by Claude on a merge of `claude/inspection-scenario` (`b6faba1`) and `codex/visual-d0` (`ff54573`): `--count 30` with `idle`, `walk`, `sprint` and the bind pose all report `instances: 30`; a repeated `walk` capture is byte-identical; `walk30.png` (6 × 5 grid, red hats, mid-stride) and `walk1.png` (hat fully in frame) were inspected.
 - Command: `npm run capture -- --target character [--model characters/kenney-mini/character-male-a.glb] [--clip idle|walk|sprint] [--time-ms 0] [--count 1] --out <file.png>` (no `--prod`).
 
+## 5b. D1 art decision (recorded by Claude, 2026-10-19)
+
+User approvals relayed 2026-10-19 after viewing Codex's D1 rendering-sample captures (`codex/visual-d1` `f00be06`, `handoffs/D1.md` "Final capture verification"). These bind C3 and D2. Changing any of them reopens this section.
+
+| Decision | Recorded value |
+|---|---|
+| Palette | **B** (`PALETTES.b` in `src/client/visuals/palette.ts`; brick red and teal lead). `PaletteId` stays `'a' \| 'b' \| 'c'` until a rename is requested. Production passes `getPalette('b')` to the town in D2. The UI still applies `'a'` at startup (`src/client/main.tsx:8`); switching it to `'b'` is a Claude follow-up, so UI and town paper colors agree. |
+| Building source | **Code-built** bodies and signature details through the C2 factories (`createBakery`, `createProp`; C3 extends them). Kit buildings are not used. |
+| Foliage | **Kenney Nature Kit 2.1** under `public/models/props/kenney-nature/` (`tree_oak`, `tree_default`, `plant_bush`, `flower_redA`), recolored by material name (`NATURE_MATERIAL_ROLES`: `leafsGreen` and `grass` use `foliage`, `woodBark` uses `wood`, `colorRed` uses `brick`). |
+| Kit awning | **Not adopted.** `public/models/buildings/kenney-commercial/` and `createBakeryHybrid` stay as the recorded comparison only (`--variant hybrid-original\|hybrid-palette`). The town never places them. |
+| Citizens | **Kenney Mini Characters 1** (`public/models/characters/kenney-mini/`, Codex). The atlas is kept through `MaterialKit.preserve`. |
+| Citizen scale | **3.29 world units of visible idle body height, before the cap** (`CITIZEN_REFERENCE_HEIGHT`). The cap adds a little on top. Crowd clearance at full town scale is checked in D2. |
+| Custom signatures | Striped awning, pretzel on the gable, lit window, gas lamp, newsstand and bench (C2). C3 adds bank columns, the town-hall clock tower, the clinic's lit cross, office chimneys and paper-color banners, and the fountain square. |
+| Orientation | Y up. Piece origin at ground in the footprint center. +Z faces the street. Kenney models face +Z (D0). The root sits on its map node; nodes, routes and anchors never move. |
+| Materials | Palette surfaces through `MaterialKit.surface`; atlas models through `preserve`; no hex literals in pieces. Codex's kit: 3-band toon gradient with nearest filtering, polygon offset, static edge outlines (45° threshold), and normal-expanded skinned hulls bound to the rig's own skeleton. |
+| Approved render settings | `ACESFilmicToneMapping` at exposure 1, `SRGBColorSpace` output, `PCFShadowMap` at 2048, a hemisphere light at 1.1 plus a directional light at 2.4. Palette B was approved under these settings. D2 keeps them, or shows the user new captures before changing them. |
+
+**Open for C3 and D2** (not decided here):
+- Entrance offset relative to the node (§4).
+- `getLocationAnchor` heights. The bakery is about 7.2 tall and its anchor is at 5.8.
+- Outline weight. Static edge lines are 1 device pixel, while skinned hulls are thicker.
+- Thirty-citizen crowd clearance.
+
 ## 6. Acknowledgments
 
 | Agent | Revision read | Captured and viewed PNG | Date | Notes |
@@ -167,3 +190,9 @@ export type PropFactory = (kind: string, ctx: ArchitectureContext) => PlacedPiec
 | Claude | `codex/visual-d1` `b7810b4` (`plans/D1.md`, Claude requests 1–4) | `wood-b.png`: palette b preview capture, bark and door brown, lamps teal | 2026-10-19 | Accepted requests 1–4 with the decisions in `plans/D1-claude-requests.md`; delivered on `claude/d1-requests` (§1 `wood`, §2 `preserve`, §5 D1 wiring). Will record the user's final art decisions after D1's rendered choice. |
 
 Codex acknowledged the D1 delivery at `95b6885` (2026-10-19, recorded in `codex/visual-d1` `ae1ca0d`, `handoffs/D1.md`): `preserve`, the wood swatches, the painted-iron lamp deviation and the renderer contract accepted, no blocking findings. Codex's disposable combined tree passed 533 tests, typecheck, lint and build.
+
+Claude counterpart review of D1 at `codex/visual-d1` `f00be06` (2026-10-19): handoff-compatible, no blocking findings.
+- Checked resource ownership and late disposal, the borrowed renderer, atlas preservation, skinned outlines, and exact-time and reduced-motion poses.
+- Recaptured on a combined tree (`f00be06` plus `7719607`, tree `5bf52c1`). Palette A code/street at 1000 ms is byte-identical to Codex's `final-a.png` (SHA-256 `9158ba80...`).
+- Viewed palette B street, the awning view at 1300 ms, and reduced motion: all `renderer: sample`, 0 console errors.
+- The decisions are recorded in §5b.
