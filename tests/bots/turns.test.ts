@@ -53,19 +53,29 @@ describe('bot turns', () => {
     expect(applyCommand(s, 0, lockClaim(s, 'bank', 'scandal'), now + 2).result).toEqual({ ok: false, error: 'ALREADY_ACTED' });
   });
 
-  it('the Caretaker follows Gazette rules (sometimes probes a rival), publishes every round, and never prints a blind all_clear', () => {
+  it('the Caretaker follows Gazette rules (sometimes probes a rival), never prints a blind all_clear, and sits out only after a fruitless probe', () => {
     let probedRival = false;
+    let skipped = 0;
     for (let seed = 1; seed <= 40; seed++) {
       let s = soloMatch(seed);
       s = applyCommand(s, 0, { type: 'connection', connected: false }, 0).state;
       while (s.phase !== 'ended') s = tick(s, s.deadlineMs).state;
-      if (s.seats[0]!.investigations.some((i) => i.target.kind === 'headline')) probedRival = true;
+      const seat = s.seats[0]!;
+      if (seat.investigations.some((i) => i.target.kind === 'headline')) probedRival = true;
       expect(s.headlines.filter((h) => h.seatId === 0 && h.claim === 'all_clear' && !h.evidence)).toEqual([]);
       for (let round = 1; round <= TUNING.rounds; round++) {
-        expect(s.headlines.filter((h) => h.seatId === 0 && h.round === round), `seed ${seed} round ${round}`).toHaveLength(1);
+        const mine = s.headlines.filter((h) => h.seatId === 0 && h.round === round);
+        expect(mine.length, `seed ${seed} round ${round}`).toBeLessThanOrEqual(1);
+        if (mine.length > 0) continue;
+        // Deliberate exception kept from before C1.5: no headline only when its rival probe left it without a card or proof.
+        skipped++;
+        const probe = seat.investigations.find((i) => i.round === round);
+        expect(probe?.target.kind, `seed ${seed} round ${round}`).toBe('headline');
+        expect(seat.evidence.some((c) => c.round === round), `seed ${seed} round ${round}`).toBe(false);
       }
     }
     expect(probedRival).toBe(true);
+    expect(skipped).toBeGreaterThan(0);
   });
 
   const botLineup = [{ kind: 'bot' }, { kind: 'bot' }, { kind: 'bot' }, { kind: 'bot' }] as const;

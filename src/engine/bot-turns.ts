@@ -24,7 +24,7 @@ function actFor(s: MatchState, seat: Seat, nowMs: number, events: EngineEvent[])
     const d = decideInvestigate(personality, publicView(s), privateView(s, seat.seatId), rng);
     if (d.kind === 'investigate') investigate(s, seat, d.target);
   } else if (s.phase === 'write') {
-    const d = decideWrite(personality, publicView(s), privateView(s, seat.seatId), rng);
+    const d = decideWrite(personality, publicView(s), privateView(s, seat.seatId), rng, { caretaker: seat.personality === null });
     if (d.kind === 'lock') lockHeadline(s, seat, d.story, botText(s, seat, d.story, rng), nowMs, events);
   }
 }

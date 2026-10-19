@@ -75,6 +75,15 @@ describe('Gazette', () => {
     priv.tip = null;
     expect(decideWrite('gazette', pub, priv, YES())).toEqual({ kind: 'skip' });
   });
+
+  it('as the Caretaker without evidence, skips unless the 10% lie prints the tip claim', () => {
+    const { pub, priv } = views(2);
+    priv.evidence = [];
+    expect(decideWrite('gazette', pub, priv, NO(), { caretaker: true })).toEqual({ kind: 'skip' });
+    expect(decideWrite('gazette', pub, priv, YES(), { caretaker: true })).toEqual({ kind: 'lock', story: { kind: 'claim', location: 'bakery', claim: 'health_scare', attachEvidence: false } });
+    priv.evidence = [{ round: 2, location: 'bakery', claim: 'health_scare', text: 'x' }];
+    expect(decideWrite('gazette', pub, priv, NO(), { caretaker: true })).toEqual({ kind: 'lock', story: { kind: 'claim', location: 'bakery', claim: 'health_scare', attachEvidence: true } });
+  });
 });
 
 describe('Wildcard', () => {

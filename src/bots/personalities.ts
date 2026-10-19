@@ -53,7 +53,9 @@ export function decideInvestigate(personality: Personality, pub: PublicSnapshot,
   }
 }
 
-export function decideWrite(personality: Personality, pub: PublicSnapshot, priv: PrivateSnapshot, rng: Rng): WriteDecision {
+/** `caretaker`: the Caretaker plays Gazette rules but keeps the pre-C1.5 no-evidence skip (user decision, 2026-10-19). */
+export function decideWrite(personality: Personality, pub: PublicSnapshot, priv: PrivateSnapshot, rng: Rng,
+  { caretaker = false } = {}): WriteDecision {
   const card = todaysCard(pub, priv);
   const tip = priv.tip;
   switch (personality) {
@@ -68,8 +70,11 @@ export function decideWrite(personality: Personality, pub: PublicSnapshot, priv:
       if (expose) return expose;
       const lie = rng.chance(TUNING.bots.gazetteLie);
       if (card) return lie ? claim(card.location, hottestClaim(card.claim)) : claim(card.location, card.claim, true);
-      // No evidence card (it probed a rival and found no proof): print its tip story, lying 10% of the time; skip only with no tip.
-      return tip ? claim(tip.location, lie ? hottestClaim(tip.claim) : tip.claim) : { kind: 'skip' };
+      // No evidence card (it probed a rival and found no proof): the Caretaker sits out unless the lie roll prints the tip claim;
+      // the Gazette prints its tip story, lying 10% of the time. Either skips with no tip.
+      if (!tip) return { kind: 'skip' };
+      if (caretaker) return lie ? claim(tip.location, tip.claim) : { kind: 'skip' };
+      return claim(tip.location, lie ? hottestClaim(tip.claim) : tip.claim);
     }
     case 'wildcard': {
       const expose = exposeWith(priv);
