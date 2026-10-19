@@ -37,6 +37,14 @@ describe('code-built bakery', () => {
     expect(piece.object.getObjectByName('bakery-pretzel')).toBeDefined();
   });
 
+  it('door is wood', () => {
+    const ctx = fakeContext('b');
+    const piece = createBakery(ctx);
+    const door = piece.object.getObjectByName('bakery-door') as THREE.Mesh;
+    const index = [...ctx.kitMaterials].indexOf(door.material as THREE.Material);
+    expect(ctx.surfaces[index]?.hex).toBe(ctx.palette.town.wood);
+  });
+
   it('uses only kit materials in palette colors', () => {
     const ctx = fakeContext();
     const piece = createBakery(ctx);

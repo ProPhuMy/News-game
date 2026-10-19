@@ -10,7 +10,7 @@ export type NatureKind = 'tree-oak' | 'tree-round' | 'bush' | 'flowers';
 /** Kit material name to palette role. A name missing here falls back to `trim` and is reported in `degraded`. */
 export const NATURE_MATERIAL_ROLES: Readonly<Record<string, keyof PresentationPalette['town']>> = {
   leafsGreen: 'foliage',
-  woodBark: 'roof', // the palette has no wood color; roof is the darkest warm brown
+  woodBark: 'wood',
   grass: 'foliage',
   colorRed: 'brick',
 };
@@ -28,10 +28,10 @@ export function natureUrl(kind: NatureKind): string {
 }
 
 function standIn(ctx: ArchitectureContext, parts: PieceParts, height: number): THREE.Group {
-  const { foliage, roof } = ctx.palette.town;
+  const { foliage, wood } = ctx.palette.town;
   const group = new THREE.Group();
   group.name = 'nature-stand-in';
-  group.add(at(parts.mesh(new THREE.CylinderGeometry(height * 0.05, height * 0.06, height * 0.4, 6), roof), 0, height * 0.2, 0));
+  group.add(at(parts.mesh(new THREE.CylinderGeometry(height * 0.05, height * 0.06, height * 0.4, 6), wood), 0, height * 0.2, 0));
   group.add(at(parts.mesh(new THREE.ConeGeometry(height * 0.25, height * 0.7, 8), foliage), 0, height * 0.65, 0));
   return group;
 }
