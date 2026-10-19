@@ -34,7 +34,8 @@ export function applyPaletteCssVariables(root: HTMLElement, palette: Presentatio
 ```
 
 - Rule: themed colors live only in `palette.ts`. `PAPER_COLOR_HEX` and `PAPER_GREY_HEX` in `src/client/town/citizens.ts` (Codex) move to `palette.paper[color].hex` and `palette.unsubscribed.hex` during D1/D2.
-- The screenshot command gains `--palette a|b|c` when `palette.ts` exists (Claude, C1/C2); the harness then calls `getPalette` and passes it to the renderer through the D1 entry point Codex defines.
+- **C1 (implemented):** `palette.ts` exists with the shapes above, plus one additive export, `paletteCssVariables(palette): Readonly<Record<string, string>>`. It is the pure map of `--nt-*` names to values that `applyPaletteCssVariables` uses, so the capture command can apply a palette outside the browser. The UI applies palette `a` at startup (`src/client/main.tsx`). Variants are previews; variant `a` keeps today's paper hexes, so UI and town agree until D1/D2. The `town` values are first proposals for D1.
+- The screenshot command has `--palette a|b|c` (C1). On `--target app` it is applied to the page. On `--target town` it is only added to the harness URL (`&palette=`) and the sidecar; the town harness does not use it yet. Wiring it into the renderer is a D1 step through the entry point Codex defines.
 
 ## 2. Materials on imported meshes
 
@@ -120,6 +121,12 @@ export type PropFactory = (kind: string, ctx: ArchitectureContext) => PlacedPiec
 ## 5. Screenshot command and readiness
 
 - Command (owner Claude): `npm run capture -- --out <file.png> [--target town|app] [--fixture solo-honest] [--round 1] [--phase reveal] [--reaction-ms 6000] [--reduced-motion] [--seed 1] [--width 1280] [--height 720] [--prod] [--timeout-ms 60000]`.
+- UI flags (C1, additive; town and character captures unchanged): `--screen home|join|lobby|match|loading|disconnected|error`, `--palette a|b|c`, `--stress-text`, `--tab <n>`, `--scroll <selector>`, `--block-fonts`.
+  - `home`/`join`/`lobby` drive the real dev server.
+  - The other screens load the dev-only UI harness `src/client/visual-test/app.html`, which renders the real `AppRouter` and town over a fixture-fed store with the virtual clock.
+  - `--stress-text` renders a copy of the fixture with every name, headline and bubble at its `TUNING.limits` maximum; fixture files are never changed.
+  - Every `--target app` capture waits for `document.fonts.ready` and records a `layout` check in the sidecar. It fails when the page scrolls sideways or a control is outside the viewport with no scrolling ancestor.
+  - The sidecar's `stylesheets` list also records font responses.
 - Output: the PNG and `<file.png>.json` (scenario, browser version, ready state, stylesheet responses, console errors). A failed or empty capture exits 1 and leaves no PNG.
 - Determinism: the harness (`src/client/visual-test/`) stubs `Date.now`, `performance.now`, `requestAnimationFrame`, `cancelAnimationFrame`, and `Math.random` (seeded). Renderer code must take time only from those sources. Measured in C0: two captures with identical inputs were byte-identical. Known gap: town speech bubbles expire through `setTimeout` in `src/client/town/bubbles.ts` (4 s, real time), and their 0.2 s opacity transition is CSS on real time. `clock.advance` is synchronous, so no bubble ever expires inside a capture: every bubble shown during the reaction window is still on screen at capture time (up to the cap of 6), even when the requested timestamp is long past its real expiry. Captures therefore over-show bubbles. Codex decides in D1 whether bubble lifetime moves to the frame clock.
 - Renderer-ready signal: Codex adds `whenReady(): Promise<SceneReadiness>` to `TownView` when async assets arrive (D1).
