@@ -1,8 +1,14 @@
+import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
 import { BAKERY_FOOTPRINT } from '../../../src/client/town/architecture/bakery.ts';
 import { BANK_FOOTPRINT } from '../../../src/client/town/architecture/bank.ts';
 import { CLINIC_FOOTPRINT } from '../../../src/client/town/architecture/clinic.ts';
-import { FOUNTAIN_OFFSET, FOUNTAIN_RADIUS } from '../../../src/client/town/architecture/fountain.ts';
+import { createBakery } from '../../../src/client/town/architecture/bakery.ts';
+import { createBank } from '../../../src/client/town/architecture/bank.ts';
+import { createClinic } from '../../../src/client/town/architecture/clinic.ts';
+import { createOffice } from '../../../src/client/town/architecture/office.ts';
+import { createTownHall } from '../../../src/client/town/architecture/town-hall.ts';
+import { PLAZA_SIZE, FOUNTAIN_OFFSET, FOUNTAIN_RADIUS } from '../../../src/client/town/architecture/fountain.ts';
 import { LOCATION_LOT_SIDES, OFFICE_LOT_SIDES, ROAD_CLEAR, lotCenter } from '../../../src/client/town/architecture/lots.ts';
 import { OFFICE_FOOTPRINT } from '../../../src/client/town/architecture/office.ts';
 import { TOWN_HALL_FOOTPRINT } from '../../../src/client/town/architecture/town-hall.ts';
@@ -10,7 +16,7 @@ import { PAPERBOY_SPOTS, TOWN_DRESSING } from '../../../src/client/town/props/dr
 import { PROP_KINDS, createProp } from '../../../src/client/town/props/index.ts';
 import { LOCATION_NODES, OFFICE_NODES, STREET_NODES } from '../../../src/shared/town-map.ts';
 import { clearanceViolations, groundRects, type GroundRect } from '../architecture/clearance.ts';
-import { fakeContext } from '../architecture/fake-context.ts';
+import { fakeContext, meshes } from '../architecture/fake-context.ts';
 
 const nodeOf = (id: string) => STREET_NODES.find((n) => n.id === id)!;
 const rect = (name: string, x: number, z: number, w: number, d: number): GroundRect => ({ name, minX: x - w / 2, maxX: x + w / 2, minZ: z - d / 2, maxZ: z + d / 2 });
@@ -35,19 +41,20 @@ const hitsFountain = (r: GroundRect) =>
 
 function footprintRect(p: (typeof TOWN_DRESSING)[number]): GroundRect {
   const { footprint } = createProp(p.kind, fakeContext());
-  const turned = p.rotationY === Math.PI / 2;
+  const turned = Math.round((p.rotationY ?? 0) / (Math.PI / 2)) % 2 !== 0;
   return rect(`${p.kind}@${p.x},${p.z}`, p.x, p.z, turned ? footprint.depth : footprint.width, turned ? footprint.width : footprint.depth);
 }
 
 describe('town dressing', () => {
-  it('has 50-110 placements of known kinds, within +-46, with rotation 0 or pi/2', () => {
+  it('has 50-110 placements of known kinds, within +-46, with rotation in quarter turns', () => {
     expect(TOWN_DRESSING.length).toBeGreaterThanOrEqual(50);
     expect(TOWN_DRESSING.length).toBeLessThanOrEqual(110);
     for (const p of TOWN_DRESSING) {
       expect(PROP_KINDS).toContain(p.kind);
       expect(Math.abs(p.x)).toBeLessThanOrEqual(46);
       expect(Math.abs(p.z)).toBeLessThanOrEqual(46);
-      expect([undefined, 0, Math.PI / 2]).toContain(p.rotationY);
+      const quarters = (p.rotationY ?? 0) / (Math.PI / 2);
+      expect(Math.abs(quarters - Math.round(quarters))).toBeLessThan(1e-9);
     }
   });
 
@@ -94,6 +101,50 @@ describe('town dressing', () => {
       expect(TOWN_DRESSING.some((p) => p.kind === 'newsstand' && Math.hypot(p.x - n.x, p.z - n.z) < 14), id).toBe(true);
     }
     expect(TOWN_DRESSING.filter((p) => p.kind === 'cart')).toHaveLength(1);
+  });
+});
+
+describe('placement rules', () => {
+  it('benches and the plaza newsstand face the fountain', () => {
+    const near = TOWN_DRESSING.filter((p) => (p.kind === 'bench' || p.kind === 'newsstand') && Math.hypot(p.x - plaza.x, p.z - plaza.z) < PLAZA_SIZE / 2);
+    expect(near.length).toBeGreaterThanOrEqual(5);
+    for (const p of near) {
+      const r = p.rotationY ?? 0;
+      const dot = Math.sin(r) * (fountain.x - p.x) + Math.cos(r) * (fountain.z - p.z);
+      expect(dot, `${p.kind}@${p.x},${p.z}`).toBeGreaterThan(0);
+    }
+  });
+
+  it('keeps every door approach clear (flower boxes excepted)', () => {
+    const ctx = fakeContext();
+    const doors = [
+      ...(['bakery', 'bank', 'town_hall', 'clinic'] as const).map((loc) => {
+        const make = { bakery: createBakery, bank: createBank, town_hall: createTownHall, clinic: createClinic }[loc];
+        return { piece: make(ctx), center: lotCenter(nodeOf(LOCATION_NODES[loc]), LOCATION_LOT_SIDES[loc], { bakery: BAKERY_FOOTPRINT, bank: BANK_FOOTPRINT, town_hall: TOWN_HALL_FOOTPRINT, clinic: CLINIC_FOOTPRINT }[loc]), name: loc };
+      }),
+      ...OFFICE_NODES.map((id, i) => ({ piece: createOffice(ctx, 0xffffff), center: lotCenter(nodeOf(id), OFFICE_LOT_SIDES[i]!, OFFICE_FOOTPRINT), name: `office ${i}` })),
+    ];
+    const problems: string[] = [];
+    for (const { piece, center, name } of doors) {
+      piece.object.position.set(center.x, 0, center.z);
+      piece.object.updateMatrixWorld(true);
+      const door = meshes(piece.object).find((m) => m.name.endsWith('-door'));
+      expect(door, name).toBeDefined();
+      const box = new THREE.Box3().setFromObject(door!);
+      const x = (box.min.x + box.max.x) / 2;
+      const front = center.z + piece.footprint.depth / 2;
+      const approach: GroundRect = { name: `${name} door approach`, minX: x - 1.5, maxX: x + 1.5, minZ: front, maxZ: front + 3 };
+      for (const p of TOWN_DRESSING) {
+        if (p.kind !== 'flower-box' && overlaps(footprintRect(p), approach)) problems.push(`${p.kind}@${p.x},${p.z} blocks ${approach.name}`);
+      }
+    }
+    expect(problems).toEqual([]);
+  });
+
+  it('no two placements overlap', () => {
+    const rects = TOWN_DRESSING.map(footprintRect);
+    const problems = rects.flatMap((a, i) => rects.slice(i + 1).filter((b) => overlaps(a, b)).map((b) => `${a.name} overlaps ${b.name}`));
+    expect(problems).toEqual([]);
   });
 });
 
