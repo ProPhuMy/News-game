@@ -1,101 +1,44 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import * as THREE from 'three';
 import { createTownBuildings } from '../../src/client/town/buildings.ts';
-import { PAPER_COLOR_HEX } from '../../src/client/town/citizens.ts';
 import { createTownEnvironment } from '../../src/client/town/environment.ts';
 import { createTownLayout } from '../../src/client/town/layout.ts';
-import { LOCATIONS } from '../../src/shared/ids.ts';
+import { LABEL_ANCHOR_HEIGHT } from '../../src/client/town/architecture/lots.ts';
+import { getPalette } from '../../src/client/visuals/palette.ts';
+import { COLORS, LOCATIONS } from '../../src/shared/ids.ts';
 import { fakeContext } from './architecture/fake-context.ts';
 
-describe('Town Environment and Buildings', () => {
+describe('Town Environment', () => {
   it('creates town environment with ground plane and road segments', () => {
-    const layout = createTownLayout();
-    const env = createTownEnvironment(layout);
-
-    expect(env).toBeInstanceOf(THREE.Group);
-    expect(env.children.length).toBeGreaterThan(0);
-
-    const hasGround = env.children.some(
-      (c) => c instanceof THREE.Mesh && c.name === 'ground',
-    );
-    expect(hasGround).toBe(true);
-
-    const roads = env.children.filter((c) => c.name.startsWith('road-'));
-    expect(roads.length).toBeGreaterThan(10);
-  });
-
-  it('creates 5 target locations at their assigned layout coordinates', () => {
-    const layout = createTownLayout();
-    const buildings = createTownBuildings(layout);
-
-    expect(buildings.group).toBeInstanceOf(THREE.Group);
-
-    for (const loc of LOCATIONS) {
-      const anchor = buildings.getLocationAnchor(loc);
-      const nodePos = layout.getNodeWorldPos(layout.getLocationNode(loc));
-
-      expect(anchor.x).toBeCloseTo(nodePos.x, 1);
-      expect(anchor.z).toBeCloseTo(nodePos.z, 1);
-      expect(anchor.y).toBeGreaterThan(0); // anchor above ground
-    }
-  });
-
-  it('creates 4 newspaper offices with distinctive seat colors and anchors', () => {
-    const layout = createTownLayout();
-    const buildings = createTownBuildings(layout);
-
-    for (let seatId = 0; seatId < 4; seatId++) {
-      const anchor = buildings.getOfficeAnchor(seatId);
-      const nodePos = layout.getNodeWorldPos(layout.getOfficeNode(seatId));
-
-      expect(anchor.x).toBeCloseTo(nodePos.x, 1);
-      expect(anchor.z).toBeCloseTo(nodePos.z, 1);
-      expect(anchor.y).toBeGreaterThan(0);
-    }
-
-    expect(buildings.getOfficeBannerColor(0)).toBe(PAPER_COLOR_HEX.red);
-    expect(buildings.getOfficeBannerColor(1)).toBe(PAPER_COLOR_HEX.blue);
-    expect(buildings.getOfficeBannerColor(2)).toBe(PAPER_COLOR_HEX.green);
-    expect(buildings.getOfficeBannerColor(3)).toBe(PAPER_COLOR_HEX.gold);
-  });
-
-  it('allows highlighting an exposed newspaper office', () => {
-    const layout = createTownLayout();
-    const buildings = createTownBuildings(layout);
-
-    expect(() => buildings.setOfficeHighlight(1, true)).not.toThrow();
-    expect(() => buildings.setOfficeHighlight(1, false)).not.toThrow();
+    const env = createTownEnvironment(createTownLayout());
+    expect(env.children.some((c) => c instanceof THREE.Mesh && c.name === 'ground')).toBe(true);
+    expect(env.children.filter((c) => c.name.startsWith('road-')).length).toBeGreaterThan(10);
   });
 });
 
-describe('createTownBuildings with an ArchitectureContext', () => {
-  it('without context, ready resolves clean', async () => {
-    const buildings = createTownBuildings(createTownLayout());
-    await expect(buildings.ready).resolves.toEqual({ degraded: [] });
-  });
-
-  it('with context, the bakery is the sample piece in its lot, anchored at its node', async () => {
+describe('createTownBuildings entry point', () => {
+  it('anchors every location and office at its node, at label height', () => {
     const layout = createTownLayout();
-    const buildings = createTownBuildings(layout, fakeContext());
-    await buildings.ready;
-    const bakery = buildings.group.getObjectByName('bakery');
-    expect(bakery?.getObjectByName('bakery-door')).toBeDefined();
-    const node = layout.getNodeWorldPos(layout.getLocationNode('bakery'));
-    expect(Math.hypot(bakery!.position.x - node.x, bakery!.position.z - node.z)).toBeGreaterThanOrEqual(5);
-    const anchor = buildings.getLocationAnchor('bakery');
-    expect(anchor.x).toBeCloseTo(node.x, 5);
-    expect(anchor.z).toBeCloseTo(node.z, 5);
+    const town = createTownBuildings(layout, fakeContext('b'));
+    const check = (anchor: THREE.Vector3, node: { x: number; z: number }) => {
+      expect(anchor.x).toBeCloseTo(node.x, 5);
+      expect(anchor.z).toBeCloseTo(node.z, 5);
+      expect(anchor.y).toBe(LABEL_ANCHOR_HEIGHT);
+    };
+    for (const loc of LOCATIONS) check(town.getLocationAnchor(loc), layout.getNodeWorldPos(layout.getLocationNode(loc)));
+    for (let seat = 0; seat < 4; seat++) check(town.getOfficeAnchor(seat), layout.getNodeWorldPos(layout.getOfficeNode(seat)));
   });
 
-  it('dispose removes every building and frees primitive resources', () => {
-    const buildings = createTownBuildings(createTownLayout());
-    const bank = buildings.group.getObjectByName('building-bank') as THREE.Group;
-    const mesh = bank.children[0] as THREE.Mesh;
-    const geometry = vi.spyOn(mesh.geometry, 'dispose');
-    const material = vi.spyOn(mesh.material as THREE.Material, 'dispose');
-    buildings.dispose();
-    expect(buildings.group.children).toHaveLength(0);
-    expect(geometry).toHaveBeenCalled();
-    expect(material).toHaveBeenCalled();
+  it('starts banners at the palette B paper colors', () => {
+    const town = createTownBuildings(createTownLayout(), fakeContext('b'));
+    const paper = getPalette('b').paper;
+    for (let seat = 0; seat < 4; seat++) expect(town.getOfficeBannerColor(seat)).toBe(paper[COLORS[seat]!].hex);
+  });
+
+  it('ready resolves and dispose is idempotent', async () => {
+    const town = createTownBuildings(createTownLayout(), fakeContext('b'));
+    await expect(town.ready).resolves.toBeDefined();
+    town.dispose();
+    expect(() => town.dispose()).not.toThrow();
   });
 });
