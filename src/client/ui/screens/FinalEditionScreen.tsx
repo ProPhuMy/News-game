@@ -4,6 +4,7 @@ import { ScoreboardTable } from '../components/ScoreboardTable';
 import { Button } from '../components/Button';
 import type { ExposureEvent } from '../components/ExposureBanner';
 import type { FinalHeadlineSummary, TruthRecordView } from '../mapper';
+import { TUNING } from '../../../shared/tuning';
 
 export interface FinalEditionScreenProps {
   scoreboard: FinalScoreRow[];
@@ -49,7 +50,7 @@ export const FinalEditionScreen: React.FC<FinalEditionScreenProps> = ({
           {winnerText}
         </div>
         <p className="formula-explanation">
-          Score = total readers × (final trust ÷ 50)
+          {`Score = Total readers × Trust ÷ ${TUNING.scoreTrustDivisor}, rounded`}
         </p>
 
         <ScoreboardTable scores={scoreboard} />

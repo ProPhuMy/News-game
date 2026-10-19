@@ -1,8 +1,9 @@
 /** @vitest-environment jsdom */
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { FinalEditionScreen } from '../../src/client/ui/screens/FinalEditionScreen';
+import { TUNING } from '../../src/shared/tuning';
 import type { FinalScoreRow } from '../../src/client/ui/components/ScoreboardTable';
 
 describe('FinalEditionScreen', () => {
@@ -79,5 +80,11 @@ describe('FinalEditionScreen', () => {
     expect(screen.getByText('"All calm at Town Hall"')).toBeDefined();
     expect(screen.getByText('✓ TRUE')).toBeDefined();
     expect(screen.getByText('✗ EXPOSED LIE')).toBeDefined();
+  });
+
+  it('labels cumulative readers and derives the score formula from tuning', () => {
+    const view = within(render(<FinalEditionScreen scoreboard={mockScores} onPlayAgain={() => {}} />).container);
+    expect(view.getByRole('columnheader', { name: 'Total readers' })).toBeDefined();
+    expect(view.getByText(`Score = Total readers × Trust ÷ ${TUNING.scoreTrustDivisor}, rounded`)).toBeDefined();
   });
 });

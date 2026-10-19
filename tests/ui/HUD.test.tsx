@@ -13,6 +13,7 @@ describe('HUD', () => {
       playerName: 'Alice',
       color: 'red',
       readers: 12,
+      totalReaders: 40,
       trust: 54,
       score: 13,
       isBot: false,
@@ -25,6 +26,7 @@ describe('HUD', () => {
       playerName: 'Bob',
       color: 'blue',
       readers: 8,
+      totalReaders: 25,
       trust: 60,
       score: 10,
       isBot: true,
@@ -47,7 +49,9 @@ describe('HUD', () => {
     expect(screen.getByText('Round 2 of 5')).toBeDefined();
     expect(screen.getByText('Write Headline')).toBeDefined();
     expect(screen.getByText('The Daily Gasp')).toBeDefined();
-    expect(screen.getByText('12 readers')).toBeDefined();
+    const alice = screen.getByText('The Daily Gasp').closest('.paper-card');
+    expect(alice?.querySelector('.stat-readers')?.textContent).toBe('Readers now 12');
+    expect(alice?.querySelector('.stat-total-readers')?.textContent).toBe('Total readers 40');
     expect(screen.getByText('Trust: 54')).toBeDefined();
   });
 
