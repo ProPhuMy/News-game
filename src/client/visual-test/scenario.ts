@@ -1,5 +1,6 @@
 import { FixtureSchema, type Fixture } from '../../shared/fixture.ts';
 import { PHASES, type Phase } from '../../shared/ids.ts';
+import { APPROVED_PALETTE, type PaletteId } from '../visuals/palette.ts';
 
 export interface VisualScenario {
   /** Fixture file name in src/sim/fixtures without ".json". */
@@ -55,6 +56,14 @@ export function parseScenario(search: string): VisualScenario {
     reducedMotion: reduced === 'true',
     seed: readInt(params, 'seed', DEFAULT_SCENARIO.seed, 0, 2 ** 31 - 1),
   };
+}
+
+/** The ?palette= id for the town harness; absent means the production palette. */
+export function parsePalette(search: string): PaletteId {
+  const raw = new URLSearchParams(search).get('palette');
+  if (raw === null) return APPROVED_PALETTE;
+  if (raw !== 'a' && raw !== 'b' && raw !== 'c') throw new Error(`palette must be a, b or c, got "${raw}"`);
+  return raw;
 }
 
 export function parseFixture(raw: unknown): Fixture {

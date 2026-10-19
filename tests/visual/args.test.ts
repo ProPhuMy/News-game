@@ -91,6 +91,13 @@ describe('app screens', () => {
     ]))).toBe('/visual-test/app.html?fixture=solo-honest&round=5&phase=final&reactionMs=6000&reducedMotion=false&seed=1&screen=match&palette=b&stressText=true');
   });
 
+  it('rejects a non-production palette on live screens only', () => {
+    const live = ['--target', 'app', '--screen', 'lobby', '--palette', 'a', '--out', 'u.png'];
+    expect(() => parseCaptureArgs(live)).toThrow('live screens render the production palette (b); --palette a applies only to harness screens');
+    expect(parseCaptureArgs(['--target', 'app', '--screen', 'lobby', '--palette', 'b', '--out', 'u.png']).palette).toBe('b');
+    expect(parseCaptureArgs(['--target', 'app', '--screen', 'match', '--palette', 'a', '--out', 'u.png']).palette).toBe('a');
+  });
+
   it('passes the palette to the town harness for D1', () => {
     expect(harnessPath(parseCaptureArgs(['--palette', 'b', '--out', 't.png']))).toContain('&palette=b');
   });

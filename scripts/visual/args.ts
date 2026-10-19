@@ -127,6 +127,9 @@ export function parseCaptureArgs(argv: readonly string[]): CaptureOptions {
   if (architectureOnly && options.target !== 'architecture') throw new Error('--variant and --view need --target architecture');
   if (options.prod && options.target !== 'app') throw new Error('--prod only supports --target app (the town harness is dev-only)');
   if (options.prod && options.screen !== 'home') throw new Error('--prod supports only --screen home (the UI harness is dev-only)');
+  if (options.target === 'app' && LIVE_SCREENS.includes(options.screen) && options.palette !== APPROVED_PALETTE) {
+    throw new Error(`live screens render the production palette (${APPROVED_PALETTE}); --palette ${options.palette} applies only to harness screens`);
+  }
   return { ...options, out: options.out };
 }
 

@@ -1,5 +1,6 @@
 // Full-town and close-up architecture captures (C3): our assembled buildings on a ground slab and road strips.
 import * as THREE from 'three';
+import { LOCATIONS } from '../../shared/ids.ts';
 import { GRID, STREET_EDGES } from '../../shared/town-map.ts';
 import { FOUNTAIN_OFFSET } from '../town/architecture/fountain.ts';
 import { createAssetSource } from '../town/assets/source.ts';
@@ -34,6 +35,20 @@ export function closeTarget(group: THREE.Group, view: Close, layout: ReturnType<
     at.set(node.x + FOUNTAIN_OFFSET.x / 2, 0, node.z + FOUNTAIN_OFFSET.z / 2);
   }
   return at;
+}
+
+/**
+ * Camera framing bounds for the assembled town. Mirrors production (src/client/town/index.ts): every
+ * target-building root named by LOCATIONS plus every office root, each street node at y 4, expanded by 1.
+ */
+export function townFrameBounds(group: THREE.Group, layout: ReturnType<typeof createTownLayout>): THREE.Box3 {
+  const bounds = new THREE.Box3();
+  const targets = new Set<string>(LOCATIONS.map((location) => location.replaceAll('_', '-')));
+  for (const child of group.children) {
+    if (targets.has(child.name) || child.name === 'office') bounds.expandByObject(child, true);
+  }
+  for (const node of layout.getStreetNodes()) bounds.expandByPoint(new THREE.Vector3(node.x, 4, node.z));
+  return bounds.expandByScalar(1);
 }
 
 export async function runArchitectureTown(
@@ -98,7 +113,10 @@ export async function runArchitectureTown(
     const view = scenario.view;
     if (view === 'street' || view === 'awning') throw new Error(`${view} is a rendering-sample view`);
     if (view === 'town') {
-      camera = createTownCamera({}).camera;
+      const townCamera = createTownCamera({});
+      townCamera.frame(townFrameBounds(buildings.group, layout));
+      townCamera.resize(container.clientWidth || 1280, container.clientHeight || 720);
+      camera = townCamera.camera;
     } else {
       const at = closeTarget(buildings.group, view, layout);
       camera = new THREE.PerspectiveCamera(35, aspect, 0.1, 400);

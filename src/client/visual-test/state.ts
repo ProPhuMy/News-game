@@ -1,12 +1,13 @@
 import type { AppScenario, HarnessScreen } from './app-scenario.ts';
 import type { ArchitectureScenario } from './architecture-scenario.ts';
+import type { PaletteId } from '../visuals/palette.ts';
 import type { InspectionScenario } from './inspection-scenario.ts';
 import type { VisualScenario } from './scenario.ts';
 
 /** What the harness publishes on window.__NEWS_TOWN_VISUAL__ for the capture command. */
 export type VisualState =
   | { status: 'loading' }
-  | { status: 'ready'; scene: 'town'; scenario: VisualScenario; width: number; height: number; distinctColors: number }
+  | { status: 'ready'; scene: 'town'; scenario: VisualScenario; palette: PaletteId; width: number; height: number; distinctColors: number }
   | {
       status: 'ready';
       scene: 'inspect-character';
@@ -22,6 +23,7 @@ export type VisualState =
       scene: 'app';
       scenario: AppScenario;
       screen: HarnessScreen;
+      palette: PaletteId;
       width: number;
       height: number;
       distinctColors: number;

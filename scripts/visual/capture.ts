@@ -3,7 +3,7 @@ import { access, mkdir, rm, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { chromium, type Response } from 'playwright-core';
 import { harnessPath, LIVE_SCREENS, parseCaptureArgs, type CaptureOptions } from './args.ts';
-import { applyPalette, focusAndScroll, measureLayout, openLiveScreen, type LayoutReport } from './app-screens.ts';
+import { focusAndScroll, measureLayout, openLiveScreen, type LayoutReport } from './app-screens.ts';
 import { waitForHarnessState } from './harness-state.ts';
 import { withBrowserAndServer } from './lifecycle.ts';
 import { freePort, startGameServer, waitForServer } from './server.ts';
@@ -73,7 +73,6 @@ async function capture(options: CaptureOptions): Promise<void> {
       if (status.status !== 'ready') throw new Error(`harness reported ${status.status}: ${status.error ?? 'unknown error'}`);
     } else {
       await openLiveScreen(page, options);
-      await applyPalette(page, options);
       state = { status: 'ready', screen: options.screen };
     }
     if (options.target === 'app') {

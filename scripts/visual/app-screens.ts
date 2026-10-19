@@ -3,7 +3,6 @@
 import type { Page } from 'playwright-core';
 import { stressText } from '../../src/client/visual-test/stress-text.ts';
 import { TUNING } from '../../src/shared/tuning.ts';
-import { getPalette, paletteCssVariables } from '../../src/client/visuals/palette.ts';
 import type { CaptureOptions } from './args.ts';
 import { layoutProblems, type LayoutNode, type LayoutProblems } from './layout.ts';
 
@@ -23,12 +22,6 @@ export async function openLiveScreen(page: Page, options: CaptureOptions): Promi
   await page.getByRole('button', { name: 'Select Red' }).click();
   await page.getByRole('button', { name: 'Claim Printing Press' }).click();
   await page.waitForSelector('[data-testid="lobby-screen"]', { timeout });
-}
-
-export async function applyPalette(page: Page, options: CaptureOptions): Promise<void> {
-  await page.evaluate((vars) => {
-    for (const [name, value] of Object.entries(vars)) document.documentElement.style.setProperty(name, value);
-  }, paletteCssVariables(getPalette(options.palette)));
 }
 
 export async function focusAndScroll(page: Page, options: CaptureOptions): Promise<void> {

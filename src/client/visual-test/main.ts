@@ -2,7 +2,7 @@
 import { SERVER_EVENTS } from '../../shared/protocol.ts';
 import { createClientStore } from '../net/store.ts';
 import { createVirtualClock } from './clock.ts';
-import { parseFixture, parseScenario, selectFrameIndex } from './scenario.ts';
+import { parseFixture, parsePalette, parseScenario, selectFrameIndex } from './scenario.ts';
 import { mountAndSettleTown } from './town-mount.ts';
 import { runArchitecture } from './architecture.ts';
 import { runInspection } from './inspect.ts';
@@ -43,7 +43,7 @@ async function run(): Promise<void> {
     store.receive(SERVER_EVENTS.private, frame.private);
   }
 
-  const town = await mountAndSettleTown(container, store, clock, scenario);
+  const town = await mountAndSettleTown(container, store, clock, { ...scenario, palette: parsePalette(window.location.search) });
   publish(town.status === 'ready' ? { ...town, scene: 'town', scenario } : town);
 }
 
