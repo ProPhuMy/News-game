@@ -10,7 +10,7 @@ The filter lowercases and NFKC-normalizes the text, splits it into letter/digit 
 
 ## Where to enforce
 
-- Three entry points carry a `profile`: `createRoom`, `playSolo` and `joinRoom` (`src/shared/protocol.ts:52-54`). `playSolo` shares the `createRoom` case and calls `rooms.create` (`src/server/socket.ts:44-45`). `joinRoom` calls `rooms.join` (`:58`).
+- Three entry points carry a `profile`: `createRoom`, `playSolo` and `joinRoom` (`src/shared/protocol.ts:52-54`). `playSolo` shares the `createRoom` case and calls `rooms.create` (`src/server/socket.ts:44-47`). `joinRoom` calls `rooms.join` (`:58`).
 - Recommended: enforce inside `rooms.create` and `rooms.join` (`src/server/rooms.ts`), so every path is covered and a new entry point cannot skip it.
 - Fields: `profile.displayName` and `profile.paperName` on all three.
 - Order: `ClientMessageSchema.safeParse` (`src/server/socket.ts:29`) runs before any case. It applies `DisplayNameSchema` (max 20) and `PaperNameSchema` (max 24), which run `cleanText`, trim and check length. Then the filter runs on the parsed value. A hit returns the existing `FILTERED` error code and creates or joins nothing.
@@ -36,4 +36,4 @@ This needs one store change from Codex: `src/client/net/store.ts:118` rewrites e
 
 ## Counterpart acknowledgment
 
-Codex: pending
+Codex: acknowledged at commit `7505d43` as sufficient for D2 (2026-10-19, relayed by the user). All three entry points and both name fields are covered. Citation fix for `socket.ts:44-47` applied afterwards.
