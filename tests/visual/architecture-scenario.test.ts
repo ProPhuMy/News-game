@@ -4,7 +4,7 @@ import { sceneKind } from '../../src/client/visual-test/inspection-scenario.ts';
 
 describe('parseArchitectureScenario', () => {
   it('fills defaults', () => {
-    expect(parseArchitectureScenario('?scene=architecture')).toEqual({ variant: 'code', view: 'street', palette: 'a', seed: 1, reactionMs: 0, reducedMotion: false });
+    expect(parseArchitectureScenario('?scene=architecture')).toEqual({ variant: 'code', view: 'street', palette: 'b', seed: 1, reactionMs: 0, reducedMotion: false });
   });
 
   it('reads every parameter', () => {

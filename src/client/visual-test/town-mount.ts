@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import type { ClientStore } from '../net/store.ts';
-import { createTownView, mountTown, type TownView, type TownViewOptions } from '../town/index.ts';
+import { createTownView, mountTown, type MountTownOptions, type TownView, type TownViewOptions } from '../town/index.ts';
 import { getPalette, type PaletteId } from '../visuals/palette.ts';
 import type { VirtualClock } from './clock.ts';
 import { measureCanvas, readyVerdict } from './pixels.ts';
@@ -22,6 +22,15 @@ export function recordingFactory(
     record.view = create(options);
     return record.view;
   };
+}
+
+/** The options handed to mountTown: the scenario's palette must reach the real town. */
+export function townMountOptions(
+  scenario: { reducedMotion: boolean; palette: PaletteId },
+  renderer: THREE.WebGLRenderer,
+  viewFactory: NonNullable<MountTownOptions['viewFactory']>,
+): MountTownOptions {
+  return { customRenderer: renderer, reducedMotion: scenario.reducedMotion, palette: getPalette(scenario.palette), viewFactory };
 }
 
 /**
@@ -46,12 +55,7 @@ export async function mountAndSettleTown(
   renderer.domElement.style.cssText = 'width: 100%; height: 100%; display: block;';
 
   const holder: FactoryRecord = { view: null, palette: null };
-  mountTown(container, store, {
-    customRenderer: renderer,
-    reducedMotion: scenario.reducedMotion,
-    palette: getPalette(scenario.palette),
-    viewFactory: recordingFactory(holder),
-  });
+  mountTown(container, store, townMountOptions(scenario, renderer, recordingFactory(holder)));
   const view = holder.view;
   if (!view) throw new Error('mountTown did not create a view');
   if (holder.palette === null) return { status: 'error', error: 'town view factory received no palette' };

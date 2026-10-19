@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { TownView } from '../../src/client/town/index.ts';
-import { recordingFactory, type FactoryRecord } from '../../src/client/visual-test/town-mount.ts';
-import { parsePalette } from '../../src/client/visual-test/scenario.ts';
+import { recordingFactory, townMountOptions, type FactoryRecord } from '../../src/client/visual-test/town-mount.ts';
+import { parsePalette, parseTownScenario } from '../../src/client/visual-test/scenario.ts';
 import { getPalette } from '../../src/client/visuals/palette.ts';
 
 const fakeView = {} as TownView;
@@ -26,5 +26,19 @@ describe('parsePalette', () => {
     expect(parsePalette('')).toBe('b');
     expect(parsePalette('?palette=a')).toBe('a');
     expect(() => parsePalette('?palette=z')).toThrow(/palette must be a, b or c/);
+  });
+});
+
+describe('palette forwarding', () => {
+  it('townMountOptions hands the scenario palette to mountTown', () => {
+    for (const id of ['a', 'c'] as const) {
+      const options = townMountOptions({ reducedMotion: false, palette: id }, {} as never, () => fakeView);
+      expect(options.palette?.id).toBe(id);
+    }
+  });
+
+  it('parseTownScenario carries ?palette= into the scenario', () => {
+    expect(parseTownScenario('?palette=c').palette).toBe('c');
+    expect(parseTownScenario('').palette).toBe('b');
   });
 });

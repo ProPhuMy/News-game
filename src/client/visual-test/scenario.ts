@@ -66,6 +66,11 @@ export function parsePalette(search: string): PaletteId {
   return raw;
 }
 
+/** What the town harness page mounts: the parsed scenario plus its palette. */
+export function parseTownScenario(search: string): VisualScenario & { palette: PaletteId } {
+  return { ...parseScenario(search), palette: parsePalette(search) };
+}
+
 export function parseFixture(raw: unknown): Fixture {
   return FixtureSchema.parse(raw);
 }

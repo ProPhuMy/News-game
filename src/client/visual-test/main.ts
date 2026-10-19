@@ -2,7 +2,7 @@
 import { SERVER_EVENTS } from '../../shared/protocol.ts';
 import { createClientStore } from '../net/store.ts';
 import { createVirtualClock } from './clock.ts';
-import { parseFixture, parsePalette, parseScenario, selectFrameIndex } from './scenario.ts';
+import { parseFixture, parseTownScenario, selectFrameIndex } from './scenario.ts';
 import { mountAndSettleTown } from './town-mount.ts';
 import { runArchitecture } from './architecture.ts';
 import { runInspection } from './inspect.ts';
@@ -21,7 +21,7 @@ async function run(): Promise<void> {
     publish(await runScene(window.location.search, container));
     return;
   }
-  const scenario = parseScenario(window.location.search);
+  const scenario = parseTownScenario(window.location.search);
   const loader = fixtureLoaders[`../../sim/fixtures/${scenario.fixture}.json`];
   if (!loader) throw new Error(`unknown fixture "${scenario.fixture}"; known: ${Object.keys(fixtureLoaders).join(', ')}`);
   const fixture = parseFixture(await loader());
@@ -43,7 +43,7 @@ async function run(): Promise<void> {
     store.receive(SERVER_EVENTS.private, frame.private);
   }
 
-  const town = await mountAndSettleTown(container, store, clock, { ...scenario, palette: parsePalette(window.location.search) });
+  const town = await mountAndSettleTown(container, store, clock, scenario);
   publish(town.status === 'ready' ? { ...town, scene: 'town', scenario } : town);
 }
 

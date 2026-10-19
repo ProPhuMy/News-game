@@ -4,7 +4,7 @@ import { parseAppScenario } from '../../src/client/visual-test/app-scenario.ts';
 describe('parseAppScenario', () => {
   it('fills defaults on top of the town scenario', () => {
     expect(parseAppScenario('?round=2&phase=write')).toMatchObject({
-      fixture: 'solo-honest', round: 2, phase: 'write', screen: 'match', palette: 'a', stressText: false,
+      fixture: 'solo-honest', round: 2, phase: 'write', screen: 'match', palette: 'b', stressText: false,
     });
   });
 
