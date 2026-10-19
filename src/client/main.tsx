@@ -3,6 +3,9 @@ import { createRoot } from 'react-dom/client';
 import { AppRouter } from './ui/screens/AppRouter.tsx';
 import { store } from './net/index.ts';
 import { mountTown } from './town/index.ts';
+import { applyPaletteCssVariables, getPalette } from './visuals/palette.ts';
+
+applyPaletteCssVariables(document.documentElement, getPalette('a'));
 
 const townContainer = document.getElementById('town-canvas-container');
 let townCleanup: (() => void) | undefined;
