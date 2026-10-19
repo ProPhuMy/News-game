@@ -49,6 +49,11 @@ export interface CaptureOptions {
   citizenHeight: number | null;
   /** --target town or app only: launch Chromium without WebGL to capture the real fallback. */
   noWebgl: boolean;
+  /** Live lobby only: test input for the create-room form (null keeps the default). Typed with page.fill, never as HTML. */
+  playerName: string | null;
+  paperName: string | null;
+  /** Live lobby only: name resubmitted after the server rejects --player-name. */
+  correctPlayerName: string | null;
 }
 
 const SWIFTSHADER_ARGS = ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'];
@@ -64,7 +69,10 @@ const DEFAULTS: Omit<CaptureOptions, 'out'> = {
   model: 'characters/kenney-mini/character-male-a.glb', clip: null, timeMs: 0, count: 1,
   screen: 'home', palette: APPROVED_PALETTE, stressText: false, tab: 0, scroll: null, blockFonts: false,
   variant: 'code', view: 'street', citizenHeight: null, noWebgl: false,
+  playerName: null, paperName: null, correctPlayerName: null,
 };
+
+const NAME_FLAGS = { '--player-name': 'playerName', '--paper-name': 'paperName', '--correct-player-name': 'correctPlayerName' } as const;
 
 const NUMBER_FLAGS = {
   '--round': 'round', '--reaction-ms': 'reactionMs', '--seed': 'seed',
@@ -93,7 +101,10 @@ export function parseCaptureArgs(argv: readonly string[]): CaptureOptions {
       i++;
       continue;
     }
-    if (flag === '--target') {
+    if (flag in NAME_FLAGS) {
+      if (value === undefined) throw new Error(`${flag} needs a value`);
+      options[NAME_FLAGS[flag as keyof typeof NAME_FLAGS]] = value;
+    } else if (flag === '--target') {
       if (value !== 'town' && value !== 'app' && value !== 'character' && value !== 'architecture' && value !== 'crowd') {
         throw new Error(`--target must be town, app, character, architecture or crowd, got "${value ?? ''}"`);
       }
@@ -144,6 +155,12 @@ export function parseCaptureArgs(argv: readonly string[]): CaptureOptions {
   if (options.target === 'crowd' && options.citizenHeight === null) throw new Error('--citizen-height is required with --target crowd');
   if (options.target !== 'crowd' && options.citizenHeight !== null) throw new Error('--citizen-height needs --target crowd');
   if (options.noWebgl && options.target !== 'town' && options.target !== 'app') throw new Error('--no-webgl supports only --target town or app');
+  const live = options.target === 'app' && LIVE_SCREENS.includes(options.screen);
+  if (options.noWebgl && live) throw new Error('--no-webgl does not apply to live screens (the real app URL never carries it); use a harness screen or --target town');
+  if ((options.playerName ?? options.paperName ?? options.correctPlayerName) !== null && !(options.target === 'app' && options.screen === 'lobby')) {
+    throw new Error('--player-name, --paper-name and --correct-player-name need --target app --screen lobby');
+  }
+  if (options.correctPlayerName !== null && options.playerName === null) throw new Error('--correct-player-name needs --player-name');
   if (options.prod && options.target !== 'app') throw new Error('--prod only supports --target app (the town harness is dev-only)');
   if (options.prod && options.screen !== 'home') throw new Error('--prod supports only --screen home (the UI harness is dev-only)');
   if (options.target === 'app' && LIVE_SCREENS.includes(options.screen) && options.palette !== APPROVED_PALETTE) {

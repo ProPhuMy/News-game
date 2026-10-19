@@ -9,6 +9,7 @@ describe('parseCaptureArgs', () => {
       model: 'characters/kenney-mini/character-male-a.glb', clip: null, timeMs: 0, count: 1,
       screen: 'home', palette: 'b', stressText: false, tab: 0, scroll: null, blockFonts: false,
       variant: 'code', view: 'street', citizenHeight: null, noWebgl: false,
+      playerName: null, paperName: null, correctPlayerName: null,
     });
   });
 
@@ -154,5 +155,32 @@ describe('crowd and no-webgl flags', () => {
     expect(chromiumArgs(false)).toContain('--use-angle=swiftshader');
     const off = chromiumArgs(true);
     expect(off).toEqual(['--disable-webgl', '--disable-3d-apis']);
+  });
+});
+
+describe('join name flags and live --no-webgl', () => {
+  const live = ['--target', 'app', '--screen', 'lobby', '--out', 'j.png'];
+
+  it('parses the three name flags on the live lobby', () => {
+    expect(parseCaptureArgs([...live, '--player-name', 'Daily Shit', '--paper-name', 'P', '--correct-player-name', 'Ada']))
+      .toMatchObject({ playerName: 'Daily Shit', paperName: 'P', correctPlayerName: 'Ada' });
+  });
+
+  it('rejects name flags outside --target app --screen lobby', () => {
+    for (const flag of ['--player-name', '--paper-name', '--correct-player-name']) {
+      expect(() => parseCaptureArgs(['--target', 'app', '--screen', 'join', flag, 'x', '--out', 'j.png'])).toThrow(/need --target app --screen lobby/);
+      expect(() => parseCaptureArgs([flag, 'x', '--out', 'j.png'])).toThrow(/need --target app --screen lobby/);
+    }
+  });
+
+  it('needs --player-name before a correction, and a value for each flag', () => {
+    expect(() => parseCaptureArgs([...live, '--correct-player-name', 'Ada'])).toThrow(/--correct-player-name needs --player-name/);
+    expect(() => parseCaptureArgs([...live, '--player-name'])).toThrow(/--player-name needs a value/);
+  });
+
+  it('rejects --no-webgl on live screens, which never carry it', () => {
+    for (const screen of ['home', 'join', 'lobby']) {
+      expect(() => parseCaptureArgs(['--target', 'app', '--screen', screen, '--no-webgl', '--out', 'x.png'])).toThrow(/--no-webgl does not apply to live screens/);
+    }
   });
 });

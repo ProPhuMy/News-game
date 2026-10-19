@@ -70,8 +70,8 @@ async function capture(options: CaptureOptions): Promise<void> {
       const status = state as { status: string; error?: string };
       if (status.status !== 'ready') throw new Error(`harness reported ${status.status}: ${status.error ?? 'unknown error'}`);
     } else {
-      await openLiveScreen(page, options);
-      state = { status: 'ready', screen: options.screen };
+      const join = await openLiveScreen(page, options);
+      state = { status: 'ready', screen: options.screen, ...(join ? { join } : {}) };
     }
     if (options.target === 'app') {
       await page.evaluate(() => document.fonts.ready.then(() => undefined));
