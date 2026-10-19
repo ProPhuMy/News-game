@@ -1,6 +1,6 @@
 # Presentation interface (owner: Claude)
 
-Status: acknowledged by Claude and Codex (C0). **Reopened in C3 (§3, §4, §5): Codex acknowledgment pending.** Reopen explicitly if compatibility changes. Source: overhaul design §11 "Handoff decisions". Base commit: `main` `3c02902` (bootstrap merged); branch `claude/c0-foundation`.
+Status: acknowledged by Claude and Codex (C0). **Reopened in C3 (§3, §4, §5, §5b); Codex acknowledged at `ed4ca7f` (2026-10-19).** Reopen explicitly if compatibility changes. Source: overhaul design §11 "Handoff decisions". Base commit: `main` `3c02902` (bootstrap merged); branch `claude/c0-foundation`.
 This is a presentation interface, not a gameplay contract. `src/shared/` is unchanged.
 
 ## 1. Palette (shared by CSS and 3D)
@@ -201,3 +201,12 @@ Claude counterpart review of D1 at `codex/visual-d1` `f00be06` (2026-10-19): han
 - Recaptured on a combined tree (`f00be06` plus `7719607`, tree `5bf52c1`). Palette A code/street at 1000 ms is byte-identical to Codex's `final-a.png` (SHA-256 `9158ba80...`).
 - Viewed palette B street, the awning view at 1300 ms, and reduced motion: all `renderer: sample`, 0 console errors.
 - The decisions are recorded in §5b.
+
+Codex counterpart review of C3 at `claude/c3-architecture` `ed4ca7f` (2026-10-19, relayed by the user): compatible, no blocking findings.
+- Acknowledges reopened §3, §4, §5 and §5b: off-node buildings, clearance radii, 5.8 label anchors, paperboy footprints and material ownership.
+- All 40 changed files are inside Claude's ownership. 608/608 tests, typecheck, lint and build pass.
+- Town captures match each other and the supplied hash. The D1 sample capture is still byte-identical.
+- Real Nature models fit their declared footprints. The actual town geometry clears nodes, roads and all four paperboy spots.
+- Office recolor and highlight leave neighboring materials alone. Sign textures and converted materials dispose correctly.
+- Not checked yet, and left to D2: real crowds, hardware FPS and camera framing.
+- `6722ef8` after it changes only the handoff's capture path.
