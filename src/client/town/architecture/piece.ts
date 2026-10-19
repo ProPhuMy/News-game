@@ -9,12 +9,14 @@ export const CITIZEN_REFERENCE_HEIGHT = 3.29;
 export interface PieceParts {
   /** A shadow-casting mesh on a kit surface. The geometry is tracked and freed by dispose(). */
   mesh(geometry: THREE.BufferGeometry, hex: number, options?: { emissive?: number }): THREE.Mesh;
+  /** Tracks a resource the piece created itself (geometry, texture, non-kit material) and frees it in dispose(). */
+  own<T extends { dispose(): void }>(resource: T): T;
   /** Frees every tracked geometry once. Safe to call again. */
   dispose(): void;
 }
 
 export function createPieceParts(ctx: ArchitectureContext): PieceParts {
-  const geometries = new Set<THREE.BufferGeometry>();
+  const geometries = new Set<{ dispose(): void }>();
   return {
     mesh(geometry, hex, options) {
       geometries.add(geometry);
@@ -22,6 +24,10 @@ export function createPieceParts(ctx: ArchitectureContext): PieceParts {
       mesh.castShadow = true;
       mesh.receiveShadow = true;
       return mesh;
+    },
+    own(resource) {
+      geometries.add(resource);
+      return resource;
     },
     dispose() {
       for (const geometry of geometries) geometry.dispose();
