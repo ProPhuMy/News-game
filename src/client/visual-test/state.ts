@@ -1,3 +1,4 @@
+import type { AppScenario, HarnessScreen } from './app-scenario.ts';
 import type { InspectionScenario } from './inspection-scenario.ts';
 import type { VisualScenario } from './scenario.ts';
 
@@ -11,6 +12,15 @@ export type VisualState =
       scenario: InspectionScenario;
       clips: readonly string[];
       instances: number;
+      width: number;
+      height: number;
+      distinctColors: number;
+    }
+  | {
+      status: 'ready';
+      scene: 'app';
+      scenario: AppScenario;
+      screen: HarnessScreen;
       width: number;
       height: number;
       distinctColors: number;

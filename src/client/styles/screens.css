@@ -1,0 +1,205 @@
+/* Screens: setup (home, join, lobby), loading and error views, overlays, and the phase panels' contents. */
+
+/* Setup and full-screen states: one bounded card centered over the town. */
+.app-layout > .screen-container {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+}
+:is(.home-card, .join-profile-card, .lobby-card, .loading-card, .error-card) {
+  display: grid;
+  gap: var(--space-4);
+  width: min(100%, 32rem);
+  max-height: 100%;
+  overflow-y: auto;
+  padding: var(--space-6);
+  border: 2px solid var(--nt-ink);
+  border-radius: var(--radius-md);
+  background: var(--nt-panel);
+  box-shadow: var(--shadow-card);
+  pointer-events: auto;
+}
+.lobby-card { width: min(100%, 44rem); }
+
+/* Home */
+.game-title {
+  font-size: clamp(2.5rem, 9vw, 4rem);
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-align: center;
+  border-bottom: 3px double var(--nt-ink);
+}
+.game-subtitle { text-align: center; color: var(--nt-muted); font-style: italic; }
+.home-actions { display: grid; gap: var(--space-2); }
+.join-form { display: grid; gap: var(--space-2); padding-top: var(--space-3); border-top: 1px solid var(--nt-border); }
+.join-input-group { display: flex; gap: var(--space-2); }
+.code-input { text-transform: uppercase; letter-spacing: 0.2em; font-family: var(--font-mono); }
+
+/* Join */
+.room-code-badge .btn { font-family: var(--font-body); letter-spacing: normal; }
+.join-profile-card form, .join-profile-card { align-content: start; }
+.join-room-badge, .room-code-badge {
+  justify-self: start;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  border: 2px solid var(--nt-ink);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-weight: 800;
+  letter-spacing: 0.15em;
+}
+.color-picker-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr)); gap: var(--space-2); }
+.color-choice-btn {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  border: 3px solid var(--paper);
+  border-radius: var(--radius-sm);
+  background: var(--nt-panel);
+  color: var(--nt-ink);
+  text-transform: capitalize;
+  font-weight: 700;
+}
+.color-choice-btn .icon { font-size: 1.4rem; }
+/* box-shadow, not outline, so the :focus-visible ring still shows on the selected color. */
+.color-choice-btn.selected { background: color-mix(in srgb, var(--paper) 22%, var(--nt-panel)); box-shadow: 0 0 0 3px var(--nt-ink); }
+.color-choice-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.taken-label { font-size: 0.8rem; color: var(--nt-danger); }
+.join-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); justify-content: space-between; }
+
+/* Lobby */
+.lobby-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.seats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)); gap: var(--space-2); }
+.seat-card {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  border: 2px solid var(--nt-ink);
+  border-radius: var(--radius-sm);
+  min-width: 0;
+}
+.seat-card.empty { border-style: dashed; border-color: var(--nt-border); color: var(--nt-muted); }
+.seat-number { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--nt-muted); }
+.seat-info { display: grid; gap: var(--space-1); min-width: 0; }
+.seat-empty-message { font-style: italic; }
+.lobby-footer { display: grid; gap: var(--space-2); justify-items: center; }
+.waiting-message { color: var(--nt-muted); font-style: italic; text-align: center; }
+
+/* Loading and server restart */
+.loading-card, .error-card { text-align: center; }
+.final-loading { color: var(--nt-muted); font-style: italic; }
+
+/* Connection overlay */
+.connection-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  background: color-mix(in srgb, var(--nt-ink) 45%, transparent);
+}
+.connection-modal {
+  display: grid;
+  gap: var(--space-3);
+  width: min(100%, 26rem);
+  padding: var(--space-6);
+  border: 2px solid var(--nt-ink);
+  border-radius: var(--radius-md);
+  background: var(--nt-panel);
+  text-align: center;
+}
+.reconnecting-pill {
+  position: fixed;
+  top: var(--space-2);
+  left: 50%;
+  z-index: 20;
+  transform: translateX(-50%);
+  padding: var(--space-1) var(--space-4);
+  border: 2px solid var(--nt-ink);
+  border-radius: 999px;
+  background: var(--nt-panel);
+  font-weight: 700;
+}
+
+/* Intro */
+.intro-card-deck { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: var(--space-2); }
+.rule-card {
+  display: grid;
+  gap: var(--space-1);
+  align-content: start;
+  padding: var(--space-3);
+  border: 1px solid var(--nt-border);
+  border-radius: var(--radius-sm);
+}
+.card-index {
+  display: inline-grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background: var(--nt-ink);
+  color: var(--nt-panel);
+  font-weight: 800;
+}
+.intro-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); }
+
+/* Investigate */
+/* minmax(0, 1fr): a long rival headline in the select must not widen the panel. */
+.investigate-choices { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
+.choice-section { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-2); }
+.choice-section h3 { font-size: 1.05rem; }
+.locations-buttons { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.rival-picker { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.rival-select { flex: 1 1 14rem; width: auto; min-width: 0; max-width: 100%; text-overflow: ellipsis; }
+.choice-empty, .reveal-empty { color: var(--nt-muted); font-style: italic; }
+.skip-action { display: flex; justify-content: flex-end; }
+
+/* Write */
+.editor-card, .locked-card { display: grid; gap: var(--space-3); }
+.editor-section { display: grid; gap: var(--space-2); }
+.textarea-header { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-2); }
+.proof-buttons-row { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.expose-mode-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.expose-badge { font-weight: 800; color: var(--nt-danger); text-transform: uppercase; letter-spacing: 0.08em; }
+.editor-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-2); }
+.locked-headline-preview {
+  padding: var(--space-3);
+  border-left: 6px solid var(--nt-ink);
+  background: var(--nt-paper);
+  font-family: var(--font-headline);
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+/* Dev fixture player (development builds only) */
+.fixture-player-toolbar, .fixture-playback-container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  background: var(--nt-panel);
+  border-bottom: 2px solid var(--nt-ink);
+}
+.fixture-info, .step-label { font-family: var(--font-mono); font-size: 0.85rem; }
+.fixture-actions, .step-actions { display: flex; gap: var(--space-2); }
+
+@media (max-width: 640px) {
+  /* Setup cards become a full-width bottom sheet so the town stays visible above. */
+  .app-layout > .screen-container { align-items: flex-end; padding: var(--space-2) 0 0; }
+  :is(.home-card, .join-profile-card, .lobby-card, .loading-card, .error-card) {
+    width: 100%;
+    padding: var(--space-4);
+    border-width: 2px 0 0;
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+  }
+}

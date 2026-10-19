@@ -1,0 +1,139 @@
+/* In-match HUD: top bar, standings, and the bounded action area. The town stays visible around them. */
+
+.hud-overlay {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.hud-top-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 3px double var(--nt-ink);
+  background: var(--nt-panel);
+  box-shadow: var(--shadow-card);
+}
+.round-badge {
+  flex: none;
+  padding: var(--space-1) var(--space-3);
+  border-radius: 999px;
+  background: var(--nt-ink);
+  color: var(--nt-panel);
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+.phase-title { font-family: var(--font-headline); font-size: 1.35rem; font-weight: 800; min-width: 0; }
+.top-bar-controls { display: flex; align-items: center; gap: var(--space-2); margin-left: auto; }
+.motion-toggle-btn, .sound-toggle-btn {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 2px solid var(--nt-ink);
+  border-radius: var(--radius-sm);
+  background: var(--nt-panel);
+  color: var(--nt-ink);
+}
+
+.hud-body {
+  display: grid;
+  grid-template-columns: 16rem minmax(0, 1fr);
+  gap: var(--space-4);
+  min-height: 0;
+  padding: var(--space-4);
+}
+
+/* Standings */
+.hud-side-panel {
+  align-self: start;
+  max-height: 100%;
+  overflow-y: auto;
+  padding: var(--space-3);
+  border: 2px solid var(--nt-ink);
+  border-radius: var(--radius-md);
+  background: var(--nt-panel);
+  box-shadow: var(--shadow-card);
+}
+.panel-title { font-size: 1.1rem; margin-bottom: var(--space-2); }
+.papers-list { display: grid; gap: var(--space-2); }
+.paper-card {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  border: 1px solid var(--nt-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+}
+.paper-card.locked { border-color: var(--nt-ink); }
+.paper-card-header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); min-width: 0; }
+.paper-editor-line { color: var(--nt-muted); min-width: 0; }
+.bot-tag, .caretaker-tag { font-style: italic; }
+.paper-stats { display: flex; flex-wrap: wrap; column-gap: var(--space-3); row-gap: 0; }
+.stat-label { color: var(--nt-muted); }
+.trust-bar-container { display: grid; gap: 2px; }
+.trust-bar-label { font-size: 0.8rem; }
+.trust-bar-track { height: 6px; border: 1px solid var(--nt-ink); border-radius: 3px; overflow: hidden; }
+.trust-bar-fill { height: 100%; background: var(--nt-ink); transition: width var(--transition-normal); }
+
+/* Action area: phase panels sit at the bottom center, bounded, scrolling inside. */
+.hud-center-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 0;
+}
+.hud-center-content > .hud-error-banner { width: min(100%, 48rem); pointer-events: auto; }
+.hud-center-content > :is(.intro-screen, .investigate-panel, .write-screen, .reveal-screen) {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: min(100%, 48rem);
+  max-height: 100%;
+  overflow-y: auto;
+  padding: var(--space-4);
+  border: 2px solid var(--nt-ink);
+  border-radius: var(--radius-md);
+  background: var(--nt-panel);
+  box-shadow: var(--shadow-card);
+  pointer-events: auto;
+}
+
+/* Children keep their height; the panel scrolls instead of squeezing a scroll container to zero. */
+.hud-center-content > :is(.intro-screen, .investigate-panel, .write-screen, .reveal-screen) > * { flex-shrink: 0; }
+
+@media (max-width: 640px) {
+  .hud-top-bar { padding: var(--space-2) var(--space-3); gap: var(--space-2); }
+  .phase-title { font-size: 1.05rem; }
+  .motion-toggle-btn, .sound-toggle-btn { width: 2.25rem; height: 2.25rem; }
+
+  .hud-body {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: var(--space-2);
+    padding: var(--space-2) 0 0;
+  }
+  /* Standings become a horizontal strip under the top bar. */
+  .hud-side-panel {
+    max-height: none;
+    margin: 0 var(--space-2);
+    padding: var(--space-2);
+    overflow: hidden;
+  }
+  .panel-title { display: none; }
+  .papers-list { display: flex; gap: var(--space-2); overflow-x: auto; padding-bottom: var(--space-1); }
+  .paper-card { flex: 0 0 10.5rem; padding: var(--space-1) var(--space-2); font-size: 0.8rem; }
+  .paper-editor-line { display: none; }
+  .trust-bar-container { display: none; }
+
+  /* Action panels become a full-width bottom sheet. */
+  .hud-center-content > :is(.intro-screen, .investigate-panel, .write-screen, .reveal-screen) {
+    width: 100%;
+    padding: var(--space-3);
+    border-width: 2px 0 0;
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+  }
+  .hud-center-content > .hud-error-banner { width: calc(100% - 2 * var(--space-2)); }
+}

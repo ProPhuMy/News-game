@@ -1,0 +1,183 @@
+/* Shared components: buttons, paper identity, chips, form fields, banners, cards. Colors come from --nt-* (palette.ts). */
+
+/* Paper identity: one custom property per color family; icon and name always accompany the color. */
+.paper-color-red, .paper-border-red, .color-red { --paper: var(--nt-paper-red); }
+.paper-color-blue, .paper-border-blue, .color-blue { --paper: var(--nt-paper-blue); }
+.paper-color-green, .paper-border-green, .color-green { --paper: var(--nt-paper-green); }
+.paper-color-gold, .paper-border-gold, .color-gold { --paper: var(--nt-paper-gold); }
+
+/* Long user text wraps inside its panel instead of pushing controls away. */
+.paper-name, .editor-name, .player-sub, .seat-player-name, .headline-text, .archive-text, .archive-paper,
+.bubble-text, .recap-text, .exposure-entry, .exposed-reason, .tip-text, .locked-headline-preview,
+.winner-announcement, .final-exposure-item, .truth-record-card h3, .rival-select, .card-desc {
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 2.5rem;
+  padding: var(--space-2) var(--space-4);
+  border: 2px solid var(--nt-ink);
+  border-radius: var(--radius-sm);
+  background: var(--nt-panel);
+  color: var(--nt-ink);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  transition: background-color var(--transition-fast), transform var(--transition-fast);
+}
+.btn:hover:not(:disabled) { background: color-mix(in srgb, var(--nt-accent) 22%, var(--nt-panel)); }
+.btn:active:not(:disabled) { transform: translateY(1px); }
+.btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.btn-primary { background: var(--nt-ink); color: var(--nt-panel); }
+.btn-primary:hover:not(:disabled) { background: color-mix(in srgb, var(--nt-ink) 82%, var(--nt-accent)); }
+.btn-danger { background: var(--nt-danger); border-color: var(--nt-danger); color: var(--nt-panel); }
+.btn-danger:hover:not(:disabled) { background: color-mix(in srgb, var(--nt-danger) 85%, var(--nt-ink)); }
+.btn-retro { border-style: dashed; background: transparent; }
+.btn-large { min-height: 3rem; padding: var(--space-3) var(--space-6); font-size: 1.1rem; }
+.btn-sm { min-height: 2rem; padding: var(--space-1) var(--space-3); font-size: 0.9rem; }
+
+/* Paper badge */
+.paper-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  max-width: 100%;
+  padding-left: var(--space-2);
+  border-left: 6px solid var(--paper, var(--nt-unsubscribed));
+  font-weight: 700;
+}
+.paper-icon { flex: none; }
+
+/* Chips */
+.chips-row { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.chip {
+  padding: var(--space-1) var(--space-3);
+  border: 2px solid var(--nt-border);
+  border-radius: 999px;
+  background: var(--nt-panel);
+  color: var(--nt-ink);
+  font-size: 0.95rem;
+}
+.chip:hover:not(:disabled) { border-color: var(--nt-ink); }
+.chip.selected { border-color: var(--nt-ink); background: var(--nt-ink); color: var(--nt-panel); }
+.chip:disabled { opacity: 0.55; cursor: not-allowed; }
+
+/* Form fields */
+input[type='text'], input:not([type]), textarea, select {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 2px solid var(--nt-border);
+  border-radius: var(--radius-sm);
+  background: var(--nt-panel);
+  color: var(--nt-ink);
+  font-size: 1rem;
+  user-select: text;
+}
+input:focus-visible, textarea:focus-visible, select:focus-visible { border-color: var(--nt-ink); }
+textarea { min-height: 5rem; resize: vertical; }
+.form-group { display: grid; gap: var(--space-1); }
+.form-group label, .form-label, .form-label-title, .section-label { font-weight: 700; }
+.char-counter { font-size: 0.85rem; color: var(--nt-muted); }
+.char-counter.near-limit { color: var(--nt-danger); font-weight: 700; }
+
+/* Banners */
+.screen-error-banner, .mod-error-banner {
+  padding: var(--space-2) var(--space-3);
+  border-left: 6px solid var(--nt-danger);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--nt-danger) 12%, var(--nt-panel));
+  color: var(--nt-ink);
+  font-weight: 600;
+}
+.recap-banner, .exposure-banner, .proof-exposure-banner, .locked-banner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: 2px solid var(--nt-ink);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--nt-accent) 18%, var(--nt-panel));
+}
+.exposure-banner { border-color: var(--nt-danger); background: color-mix(in srgb, var(--nt-danger) 12%, var(--nt-panel)); }
+.exposure-entry { width: 100%; }
+
+/* Tip card */
+.tip-card {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border: 2px dashed var(--nt-ink);
+  border-radius: var(--radius-sm);
+  background: var(--nt-paper);
+}
+.tip-stamp {
+  justify-self: start;
+  padding: 0 var(--space-2);
+  border: 2px solid var(--nt-danger);
+  color: var(--nt-danger);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+}
+.tip-text { font-family: var(--font-headline); font-size: 1.1rem; }
+
+/* Countdown */
+.countdown-timer { font-family: var(--font-mono); font-weight: 800; font-size: 1.25rem; }
+.countdown-timer.urgent { color: var(--nt-danger); }
+
+/* Evidence */
+.evidence-attach-panel { display: grid; gap: var(--space-2); }
+.evidence-card-label { display: flex; align-items: flex-start; gap: var(--space-2); cursor: pointer; }
+.evidence-card-label input { width: auto; margin-top: 0.2rem; }
+
+/* Front page cards (reveal) */
+.front-pages-carousel {
+  display: flex;
+  gap: var(--space-3);
+  overflow-x: auto;
+  padding-bottom: var(--space-2);
+  scroll-snap-type: x proximity;
+}
+.front-page-card {
+  flex: 0 0 min(17rem, 80%);
+  display: grid;
+  align-content: start;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 2px solid var(--nt-ink);
+  border-top: 10px solid var(--paper, var(--nt-unsubscribed));
+  border-radius: var(--radius-sm);
+  background: var(--nt-panel);
+  scroll-snap-align: start;
+}
+.newspaper-masthead { display: grid; gap: var(--space-1); border-bottom: 2px solid var(--nt-ink); padding-bottom: var(--space-1); }
+.masthead-date { font-size: 0.8rem; color: var(--nt-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+.headline-text { font-family: var(--font-headline); font-size: 1.2rem; font-weight: 800; line-height: 1.2; }
+.front-page-badges { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.evidence-stamp, .exposed-stamp {
+  padding: 0 var(--space-2);
+  border: 2px solid currentColor;
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+}
+.exposed-stamp { color: var(--nt-danger); }
+.front-page-card.exposed { border-color: var(--nt-danger); }
+
+/* 2D speech bubbles (no-WebGL fallback only) */
+.speech-bubbles-overlay { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.citizen-speech-bubble {
+  max-width: 20rem;
+  padding: var(--space-1) var(--space-3);
+  border: 2px solid var(--nt-ink);
+  border-radius: var(--radius-md);
+  background: var(--nt-panel);
+}

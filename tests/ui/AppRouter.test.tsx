@@ -213,7 +213,35 @@ describe('AppRouter Integration with ClientStore', () => {
       });
     });
 
-    expect(screen.getAllByText("Our lawyers won't print that — try again").length).toBeGreaterThan(0);
+    // Shown once: the write screen has its own banner, so the HUD does not repeat it.
+    expect(screen.getAllByText("Our lawyers won't print that — try again")).toHaveLength(1);
+  });
+
+  it('keeps the HUD error banner after the player has acted, when the panel shows no error', () => {
+    const { store } = setupTestStore();
+    render(<AppRouter store={store} />);
+    store.setConnection('connected');
+    let initActionId = '';
+    act(() => { initActionId = store.actions.createRoom(profile)!; });
+    act(() => {
+      store.receive(SERVER_EVENTS.ack, { actionId: initActionId, ok: true, session, serverNowMs: 1000 });
+      store.receive(SERVER_EVENTS.room, {
+        code: 'ABCDE', status: 'playing', hostSeatId: 0, you: 0,
+        seats: [
+          { seatId: 0, occupant: 'human', displayName: 'Jane', paperName: 'Daily Post', color: 'red', connected: true },
+          { seatId: 1, occupant: 'ai', displayName: 'Bot 1', paperName: 'Paper 1', color: 'blue', connected: true },
+          { seatId: 2, occupant: 'ai', displayName: 'Bot 2', paperName: 'Paper 2', color: 'green', connected: true },
+          { seatId: 3, occupant: 'ai', displayName: 'Bot 3', paperName: 'Paper 3', color: 'gold', connected: true },
+        ],
+      });
+    });
+    const { pub, priv } = createMatchSnapshots();
+    act(() => {
+      store.receive(SERVER_EVENTS.public, { ...pub, version: 3, phase: 'write' });
+      store.receive(SERVER_EVENTS.private, { ...priv, version: 3, seatId: 0, acted: true });
+    });
+    act(() => { store.receive(SERVER_EVENTS.public, { broken: true }); });
+    expect(screen.getByTestId('hud-error').textContent).toContain('Invalid public snapshot');
   });
 
   it('displays ServerRestartScreen when match ended abruptly', () => {

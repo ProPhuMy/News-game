@@ -1,0 +1,100 @@
+/* Final edition: one centered, bounded results card. The body scrolls; Play Again stays visible. */
+
+.hud-center-content > .final-edition-screen {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 0;
+}
+.results-card {
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 52rem);
+  max-height: 100%;
+  border: 2px solid var(--nt-ink);
+  border-radius: var(--radius-md);
+  background: var(--nt-panel);
+  box-shadow: var(--shadow-card);
+  pointer-events: auto;
+}
+.results-header {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-4) var(--space-6) var(--space-3);
+  border-bottom: 3px double var(--nt-ink);
+  text-align: center;
+}
+.results-header h1 { font-size: clamp(1.5rem, 4vw, 2.25rem); }
+.winner-announcement { font-family: var(--font-headline); font-size: 1.25rem; font-weight: 700; }
+/* Flex column, not grid: a definite-height grid shrinks scroll-container rows (the score table) to zero. */
+.results-body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-4) var(--space-6);
+}
+.results-body > * { flex-shrink: 0; }
+.results-footer {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-3);
+  border-top: 1px solid var(--nt-border);
+}
+.formula-explanation { color: var(--nt-muted); font-size: 0.9rem; text-align: center; }
+.results-empty { color: var(--nt-muted); font-style: italic; }
+
+/* Score table: scrolls sideways inside the card on narrow screens, never the page. */
+.scoreboard-scroll { overflow-x: auto; }
+.scoreboard-table { width: 100%; min-width: 34rem; border-collapse: collapse; font-size: 0.95rem; }
+.scoreboard-table th {
+  padding: var(--space-2);
+  border-bottom: 2px solid var(--nt-ink);
+  text-align: left;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.scoreboard-table td { padding: var(--space-2); border-bottom: 1px solid var(--nt-border); vertical-align: top; }
+.scoreboard-table td:first-child { min-width: 10rem; }
+.winner-row { background: color-mix(in srgb, var(--nt-accent) 18%, var(--nt-panel)); }
+.score-value { white-space: nowrap; }
+
+/* The truth comes out */
+.headline-truth-archive { display: grid; gap: var(--space-2); }
+.archive-list { display: grid; gap: var(--space-2); list-style: none; }
+.archive-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 10rem) minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--nt-border);
+}
+.archive-round { font-size: 0.8rem; color: var(--nt-muted); white-space: nowrap; }
+.archive-paper { font-weight: 700; }
+.archive-text { font-family: var(--font-headline); }
+.archive-truth { font-weight: 800; font-size: 0.85rem; white-space: nowrap; }
+.truth-lie { color: var(--nt-danger); }
+
+/* Secondary records, collapsed by default */
+.results-details { border: 1px solid var(--nt-border); border-radius: var(--radius-sm); padding: var(--space-2) var(--space-3); }
+.results-details summary { cursor: pointer; font-family: var(--font-headline); font-weight: 700; font-size: 1.05rem; }
+.results-details[open] summary { margin-bottom: var(--space-2); }
+.final-exposure-item { padding: var(--space-1) 0; }
+.truth-records-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: var(--space-2); }
+.truth-record-card { padding: var(--space-2); border: 1px solid var(--nt-border); border-radius: var(--radius-sm); }
+.truth-record-card h3 { font-size: 1rem; }
+
+@media (max-width: 640px) {
+  .hud-center-content > .final-edition-screen { align-items: stretch; }
+  .results-card { width: 100%; border-width: 2px 0 0; border-radius: var(--radius-md) var(--radius-md) 0 0; }
+  .results-header { padding: var(--space-3); }
+  .results-body { padding: var(--space-3); }
+  .archive-item { grid-template-columns: auto minmax(0, 1fr); }
+  .archive-text, .archive-truth { grid-column: 1 / -1; }
+}

@@ -29,4 +29,14 @@ describe('InvestigateScreen', () => {
     fireEvent.click(screen.getByText('Skip Investigation'));
     expect(onSkip).toHaveBeenCalled();
   });
+
+  it('explains when no rival headline can be probed', () => {
+    const { container } = render(
+      <InvestigateScreen
+        tipText="Tip" round={3} hasLocked={false} rivalHeadlines={[]}
+        onInvestigateLocation={vi.fn()} onInvestigateRival={vi.fn()} onSkip={vi.fn()}
+      />
+    );
+    expect(container.textContent).toContain('No rival headline is open to investigation right now.');
+  });
 });

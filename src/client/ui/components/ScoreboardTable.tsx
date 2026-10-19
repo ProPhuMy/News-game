@@ -24,10 +24,10 @@ export const ScoreboardTable: React.FC<ScoreboardTableProps> = ({ scores }) => {
       <thead>
         <tr>
           <th>Paper</th>
-          <th>Total Readers</th>
+          <th>Final Score</th>
+          <th>Total readers</th>
           <th>Final Trust</th>
           <th>Truth Record</th>
-          <th>Final Score</th>
         </tr>
       </thead>
       <tbody>
@@ -37,13 +37,13 @@ export const ScoreboardTable: React.FC<ScoreboardTableProps> = ({ scores }) => {
               <PaperBadge paperName={row.paperName} color={row.color} />
               <div className="player-sub">{row.playerName}</div>
             </td>
-            <td>{row.totalReaders}</td>
-            <td>{Math.round(row.finalTrust)} / 100</td>
-            <td>{row.truthRecord}</td>
             <td className="score-cell">
               <strong className="score-value">Score: {row.finalScore}</strong>
               {row.isWinner && <span className="winner-trophy" aria-label="Winner trophy"> 🏆</span>}
             </td>
+            <td>{row.totalReaders}</td>
+            <td>{Math.round(row.finalTrust)} / 100</td>
+            <td>{row.truthRecord}</td>
           </tr>
         ))}
       </tbody>

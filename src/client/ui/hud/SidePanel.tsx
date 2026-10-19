@@ -8,6 +8,7 @@ export interface PaperView {
   playerName: string;
   color: PaperColor;
   readers: number;
+  totalReaders: number;
   trust: number;
   score: number;
   isBot: boolean;
@@ -40,7 +41,12 @@ export const SidePanel: React.FC<SidePanelProps> = ({ papers }) => {
               {paper.isBot && !paper.isCaretaker && <span className="bot-tag"> (AI)</span>}
             </div>
             <div className="paper-stats">
-              <span className="stat-readers">{paper.readers} readers</span>
+              <span className="stat-readers">
+                <span className="stat-label">Readers now</span> <strong>{paper.readers}</strong>
+              </span>
+              <span className="stat-total-readers">
+                <span className="stat-label">Total readers</span> <strong>{paper.totalReaders}</strong>
+              </span>
               <span className="stat-score">Score: {paper.score}</span>
             </div>
             <div className="trust-bar-container">

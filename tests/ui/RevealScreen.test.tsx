@@ -270,4 +270,9 @@ describe('RevealScreen', () => {
     );
     expect(normalRecap).toBe('8 citizens lined up outside the Bakery; 3 citizens switched to Daily Gasp.');
   });
+
+  it('shows an empty state when no paper printed a front page', () => {
+    render(<RevealScreen frontPages={[]} exposures={[]} recap="Quiet day." bubbles={[]} showBubbles={false} />);
+    expect(screen.getByText('No front pages were printed this round.')).toBeDefined();
+  });
 });

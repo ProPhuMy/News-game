@@ -225,7 +225,9 @@ export const AppRouter: React.FC<AppRouterProps> = ({ store = defaultStore }) =>
         deadlineMs={publicSnapshot.deadlineMs}
         serverTimeOffset={serverOffsetMs}
         papers={papers}
-        error={formattedError}
+        // Investigate and write panels show errors until the player acts; the HUD banner covers everything else.
+        error={(publicSnapshot.phase === 'investigate' || publicSnapshot.phase === 'write') && !privateSnapshot.acted
+          ? null : formattedError}
       >
         {publicSnapshot.phase === 'intro' && (
           <IntroScreen

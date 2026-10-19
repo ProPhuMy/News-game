@@ -49,6 +49,7 @@ export function paperPublicToView(p: PaperPublic, serverNowMs: number): PaperVie
     playerName: p.displayName,
     color: p.color,
     readers: p.readers,
+    totalReaders: p.totalReaders,
     trust: p.trust,
     score: p.score,
     isBot: p.controller === 'bot',

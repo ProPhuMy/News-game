@@ -1,11 +1,13 @@
 /** @vitest-environment jsdom */
 import React from 'react';
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { afterEach, describe, it, expect, vi } from 'vitest';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import { FinalEditionScreen } from '../../src/client/ui/screens/FinalEditionScreen';
+import { TUNING } from '../../src/shared/tuning';
 import type { FinalScoreRow } from '../../src/client/ui/components/ScoreboardTable';
 
 describe('FinalEditionScreen', () => {
+  afterEach(cleanup);
   const mockScores: FinalScoreRow[] = [
     {
       seatId: 0,
@@ -79,5 +81,57 @@ describe('FinalEditionScreen', () => {
     expect(screen.getByText('"All calm at Town Hall"')).toBeDefined();
     expect(screen.getByText('✓ TRUE')).toBeDefined();
     expect(screen.getByText('✗ EXPOSED LIE')).toBeDefined();
+  });
+
+  it('labels cumulative readers and derives the score formula from tuning', () => {
+    const view = within(render(<FinalEditionScreen scoreboard={mockScores} onPlayAgain={() => {}} />).container);
+    expect(view.getByRole('columnheader', { name: 'Total readers' })).toBeDefined();
+    expect(view.getByText(`Score = Total readers × Trust ÷ ${TUNING.scoreTrustDivisor}, rounded`)).toBeDefined();
+  });
+
+  describe('results card', () => {
+    const headlines = [
+      { id: 'h1', round: 1, paperName: 'The Bugle', text: 'All calm at Town Hall', truth: 'true' as const, exposed: false },
+    ];
+    const records = [{ paperName: 'The Bugle', color: 'red' as const, liesTold: 0, liesCaught: 0, liesEscaped: 0 }];
+    const exposures = [{ paperName: 'The Gazette', reason: 'Never happened.' }];
+
+    it('puts the winner in the header and the truth history in the scrollable body', () => {
+      const { container } = render(<FinalEditionScreen scoreboard={mockScores} headlines={headlines} onPlayAgain={vi.fn()} />);
+      const card = container.querySelector('section.results-card')!;
+      expect(card.getAttribute('aria-labelledby')).toBeTruthy();
+      expect(card.querySelector('header')?.textContent).toContain('Winner: The Bugle!');
+      const body = card.querySelector('.results-body')!;
+      expect(body.getAttribute('tabindex')).toBe('0');
+      expect(body.getAttribute('aria-label')).toBeTruthy();
+      expect(within(body as HTMLElement).getByRole('heading', { name: /The truth comes out/ })).toBeDefined();
+      expect(within(body as HTMLElement).getByTestId('scoreboard-table')).toBeDefined();
+    });
+
+    it('collapses scandals and integrity records by default', () => {
+      const { container } = render(
+        <FinalEditionScreen scoreboard={mockScores} finalExposures={exposures} truthRecords={records} onPlayAgain={vi.fn()} />,
+      );
+      const details = [...container.querySelectorAll('.results-body details')];
+      expect(details.map((d) => d.querySelector('summary')?.textContent)).toEqual([
+        expect.stringContaining('Final edition scandals'), expect.stringContaining('Integrity records'),
+      ]);
+      for (const d of details) expect(d.hasAttribute('open')).toBe(false);
+    });
+
+    it('keeps Play Again outside the scroll area', () => {
+      const onPlayAgain = vi.fn();
+      const { container } = render(<FinalEditionScreen scoreboard={mockScores} onPlayAgain={onPlayAgain} />);
+      const button = within(container).getByRole('button', { name: 'Play Again' });
+      expect(button.closest('.results-body')).toBeNull();
+      expect(button.closest('.results-footer')).not.toBeNull();
+      button.click();
+      expect(onPlayAgain).toHaveBeenCalledOnce();
+    });
+
+    it('shows an empty-state line when there are no headlines', () => {
+      const { container } = render(<FinalEditionScreen scoreboard={mockScores} onPlayAgain={vi.fn()} />);
+      expect(within(container).getByText('No headlines were printed this match.')).toBeDefined();
+    });
   });
 });
