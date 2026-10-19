@@ -10,14 +10,15 @@ The filter lowercases and NFKC-normalizes the text, splits it into letter/digit 
 
 ## Where to enforce
 
-- Messages: `createRoom` and `joinRoom` (`src/server/socket.ts:44`, `:58`; rooms in `src/server/rooms.ts`).
-- Fields: `profile.displayName` and `profile.paperName` on both.
-- Order: zod parse first (`DisplayNameSchema` max 20, `PaperNameSchema` max 24; this runs `cleanText`, trims, checks length). Then the filter on the parsed value. A hit returns the existing `FILTERED` error code and creates or joins nothing.
+- Three entry points carry a `profile`: `createRoom`, `playSolo` and `joinRoom` (`src/shared/protocol.ts:52-54`). `playSolo` shares the `createRoom` case and calls `rooms.create` (`src/server/socket.ts:44-45`). `joinRoom` calls `rooms.join` (`:58`).
+- Recommended: enforce inside `rooms.create` and `rooms.join` (`src/server/rooms.ts`), so every path is covered and a new entry point cannot skip it.
+- Fields: `profile.displayName` and `profile.paperName` on all three.
+- Order: `ClientMessageSchema.safeParse` (`src/server/socket.ts:29`) runs before any case. It applies `DisplayNameSchema` (max 20) and `PaperNameSchema` (max 24), which run `cleanText`, trim and check length. Then the filter runs on the parsed value. A hit returns the existing `FILTERED` error code and creates or joins nothing.
 - The name is never rewritten, masked, or truncated by the filter.
 
 ## Examples
 
-`NAME_FILTER_EXAMPLES` (`{ accepted, rejected }`) is exported from `src/content/word-filter.ts` and re-exported by `src/content/index.ts`. D2 server tests should import it and assert that every `rejected` name gets `FILTERED` at `createRoom` and `joinRoom` for both fields, and that every `accepted` name is allowed. `tests/content-schema/content.test.ts` pins that each example passes the schemas, is unchanged by `cleanText`, and is accepted or rejected by the filter as listed.
+`NAME_FILTER_EXAMPLES` (`{ accepted, rejected }`) is exported from `src/content/word-filter.ts` and re-exported by `src/content/index.ts`. D2 server tests should import it and assert that every `rejected` name gets `FILTERED` at `createRoom`, `playSolo` and `joinRoom` for both fields, and that every `accepted` name is allowed. Every example is valid for both `displayName` and `paperName` (all are 20 characters or fewer). `tests/content-schema/content.test.ts` pins that each example passes both schemas, is unchanged by `cleanText`, and is accepted or rejected by the filter as listed.
 
 `dick` and `chink` are rejected on purpose (see the header of `word-filter.ts`).
 

@@ -68,11 +68,10 @@ describe('content schema', () => {
 
 describe('name filter policy', () => {
   const filter = createWordFilter(WORD_LIST);
-  // Rule: every example must parse under PaperNameSchema (max 24), and under DisplayNameSchema (max 20) when it fits.
-  const schemaOk = (name: string) =>
-    PaperNameSchema.safeParse(name).success && (name.length > 20 || DisplayNameSchema.safeParse(name).success);
+  // Rule: every example must parse under both DisplayNameSchema (max 20) and PaperNameSchema (max 24).
+  const schemaOk = (name: string) => DisplayNameSchema.safeParse(name).success && PaperNameSchema.safeParse(name).success;
 
-  it('accepted examples pass the schemas (Paper always, Display if <=20 chars), the filter, and stay unchanged', () => {
+  it('accepted examples pass both name schemas, the filter, and stay unchanged', () => {
     for (const name of NAME_FILTER_EXAMPLES.accepted) {
       expect(schemaOk(name), name).toBe(true);
       expect(cleanText(name), name).toBe(name);
@@ -80,7 +79,7 @@ describe('name filter policy', () => {
     }
   });
 
-  it('rejected examples pass the schemas (Paper always, Display if <=20 chars) and stay unchanged, but fail the filter', () => {
+  it('rejected examples pass both name schemas and stay unchanged, but fail the filter', () => {
     for (const name of NAME_FILTER_EXAMPLES.rejected) {
       expect(schemaOk(name), name).toBe(true);
       expect(cleanText(name), name).toBe(name);

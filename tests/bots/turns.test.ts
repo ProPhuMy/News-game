@@ -53,7 +53,7 @@ describe('bot turns', () => {
     expect(applyCommand(s, 0, lockClaim(s, 'bank', 'scandal'), now + 2).result).toEqual({ ok: false, error: 'ALREADY_ACTED' });
   });
 
-  it('the Caretaker follows Gazette rules (sometimes probes a rival) yet never prints a blind all_clear', () => {
+  it('the Caretaker follows Gazette rules (sometimes probes a rival), publishes every round, and never prints a blind all_clear', () => {
     let probedRival = false;
     for (let seed = 1; seed <= 40; seed++) {
       let s = soloMatch(seed);
@@ -61,6 +61,9 @@ describe('bot turns', () => {
       while (s.phase !== 'ended') s = tick(s, s.deadlineMs).state;
       if (s.seats[0]!.investigations.some((i) => i.target.kind === 'headline')) probedRival = true;
       expect(s.headlines.filter((h) => h.seatId === 0 && h.claim === 'all_clear' && !h.evidence)).toEqual([]);
+      for (let round = 1; round <= TUNING.rounds; round++) {
+        expect(s.headlines.filter((h) => h.seatId === 0 && h.round === round), `seed ${seed} round ${round}`).toHaveLength(1);
+      }
     }
     expect(probedRival).toBe(true);
   });
