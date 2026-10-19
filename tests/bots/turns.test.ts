@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyCommand, createMatch, tick, type EngineEvent } from '../../src/engine/index.ts';
+import { applyCommand, applyRating, createMatch, tick, type EngineEvent } from '../../src/engine/index.ts';
 import { TUNING } from '../../src/shared/tuning.ts';
 import { SAMPLE_CONTENT } from '../../src/sim/sample-content.ts';
 import { advanceTo, checkLocation, lockClaim, run, soloMatch } from '../engine/helpers.ts';
@@ -65,12 +65,45 @@ describe('bot turns', () => {
     expect(probedRival).toBe(true);
   });
 
-  it('plays a bot-only match to the end; only the Gazette may sit a round out', () => {
-    let s = createMatch({ content: SAMPLE_CONTENT, startMs: 0 }, 9, [{ kind: 'bot' }, { kind: 'bot' }, { kind: 'bot' }, { kind: 'bot' }]);
-    while (s.phase !== 'ended') s = tick(s, s.deadlineMs).state;
-    for (const seat of s.seats.filter((x) => x.personality !== 'gazette')) {
-      expect(s.headlines.filter((h) => h.seatId === seat.seatId)).toHaveLength(TUNING.rounds);
+  const botLineup = [{ kind: 'bot' }, { kind: 'bot' }, { kind: 'bot' }, { kind: 'bot' }] as const;
+
+  it('AI disabled: every bot publishes exactly once per round (seeds 1–200)', () => {
+    for (let seed = 1; seed <= 200; seed++) {
+      let s = createMatch({ content: SAMPLE_CONTENT, startMs: 0 }, seed, [...botLineup]);
+      while (s.phase !== 'ended') s = tick(s, s.deadlineMs).state;
+      for (const seat of s.seats) {
+        for (let round = 1; round <= TUNING.rounds; round++) {
+          const mine = s.headlines.filter((h) => h.seatId === seat.seatId && h.round === round);
+          expect(mine, `seed ${seed} seat ${seat.seatId} (${seat.personality}) round ${round}`).toHaveLength(1);
+        }
+      }
+      for (const h of s.headlines) {
+        expect(h.revealed).toBe(true);
+        expect(h.rating).not.toBeNull();
+        expect(h.botAuthored).toBe(true);
+      }
+      expect(s.final?.winners.length).toBeGreaterThan(0);
     }
-    expect(s.final?.winners.length).toBeGreaterThan(0);
+  }, 60_000); // 200 full matches: ~6 s alone, slower under the parallel suite
+
+  it('AI generation failure: invalid bot text keeps the template headline', () => {
+    let s = createMatch({ content: SAMPLE_CONTENT, startMs: 0 }, 9, [...botLineup]);
+    const template = new Map<string, string>();
+    while (s.phase !== 'ended') {
+      const out = tick(s, s.deadlineMs);
+      s = out.state;
+      for (const e of out.events) {
+        if (e.type !== 'headlineLocked') continue;
+        template.set(e.headlineId, e.text);
+        s = applyRating(s, e.headlineId, e.fallbackRating, '');
+        s = applyRating(s, e.headlineId, e.fallbackRating, 'x'.repeat(TUNING.limits.headlineChars + 1));
+      }
+    }
+    expect(template.size).toBe(TUNING.seats * TUNING.rounds);
+    expect(s.headlines).toHaveLength(template.size);
+    for (const h of s.headlines) {
+      expect(h.text).toBe(template.get(h.id));
+      expect(h.revealed).toBe(true);
+    }
   });
 });
