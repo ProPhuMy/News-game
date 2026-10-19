@@ -44,10 +44,10 @@ export function createTownHall(ctx: ArchitectureContext): PlacedPiece {
 
   root.add(at(parts.mesh(new THREE.BoxGeometry(5, 0.25, 0.5), trim), 0, 0.125, 2.25));
   root.add(at(parts.mesh(new THREE.BoxGeometry(4.2, 0.5, 0.3), trim), 0, 0.25, 2.15));
-  const door = at(parts.mesh(new THREE.BoxGeometry(1.6, 4.3, 0.12), wood), 0, 0.5 + 2.15, WALL_FRONT + 0.06);
+  const door = at(parts.mesh(new THREE.BoxGeometry(1.6, 4.2, 0.12), wood), 0, 0.5 + 2.1, WALL_FRONT + 0.06);
   door.name = 'town-hall-door';
   root.add(door);
-  root.add(at(createSignboard(ctx, parts, 'TOWN HALL', 0.6), 0, 5.0, WALL_FRONT + 0.05));
+  root.add(at(createSignboard(ctx, parts, 'TOWN HALL', 0.45), 0, 5.0, WALL_FRONT + 0.05));
 
   ctx.materials.outline(root);
   return placedPiece(root, parts, { width, depth });

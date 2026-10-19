@@ -35,6 +35,7 @@ describe.each(cases)('code-built $name', ({ footprint, create, door, sign }) => 
     expect(d.getCenter(new THREE.Vector3()).z).toBeGreaterThan(0);
     const s = piece.object.getObjectByName(sign);
     expect(s).toBeDefined();
+    expect(new THREE.Box3().setFromObject(s!).min.y).toBeGreaterThanOrEqual(d.max.y);
     expect(new THREE.Box3().setFromObject(s!).getCenter(new THREE.Vector3()).z).toBeGreaterThan(0);
   });
 
@@ -56,7 +57,7 @@ describe.each(cases)('code-built $name', ({ footprint, create, door, sign }) => 
       if (call.emissive !== undefined) expect(allowed).toContain(call.emissive);
     }
     for (const mesh of meshes(piece.object)) {
-      expect(ctx.kitMaterials.has(mesh.material as THREE.Material) || ctx.preserved.length > 0).toBe(true);
+      expect(ctx.kitMaterials.has(mesh.material as THREE.Material) || ctx.preservedResults.has(mesh.material as THREE.Material)).toBe(true);
     }
     expect(ctx.outlined).toEqual([piece.object]);
     const b = fakeContext('b');
