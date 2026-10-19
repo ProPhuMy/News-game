@@ -67,3 +67,15 @@ Record counterpart acknowledgment in the presentation-interface note. Deliver in
 After D1 rendering evidence and the user's art choice, Claude records the selected palette, scale, building/prop approach and asset/material/orientation decisions in the owned art/interface notes. Plan approval does not approve final art.
 
 Codex is proceeding only with the AssetSource implementation against the existing acknowledged interface. Remaining D1 implementation waits for this counterpart review/delivery; no phase or feature is cut.
+
+## 5. Confirmed shared-capture polling race found during D1 integration
+
+The interface delivery is accepted and merged from main `87cd6a4`; original requests above are satisfied. A new capture defect blocks the final D1 PNG matrix.
+
+`capture.ts` calls `page.waitForFunction` without `polling`, so Playwright polls on requestAnimationFrame. Architecture capture installs `createVirtualClock`, whose requestAnimationFrame callbacks run only when advanced. The architecture sample correctly renders synchronously with `setTime`, without advancing that virtual clock. If the initial polling predicate sees `loading`, it never runs again even after the scene publishes `ready`.
+
+Actual controlled reproduction (`.superpowers/sdd/D1/capture-probe.mjs`, log `capture-probe-confirm.log`): hold `/models/**` requests; navigate architecture harness; observe `{ status: 'loading' }`; start default RAF polling; release asset requests; interval polling (`polling: 100`) observes `{status:'ready', renderer:'sample', distinctColors:1331}` while RAF polling remains unresolved and eventually times out at 10000 ms. No console errors. Sequential CLI at 120000 ms also timed out, disproving the initial load-only explanation. No longer readiness timeout can repair a clock that never ticks.
+
+Precise Claude-owned fix: in `scripts/visual/capture.ts`, add `polling: 100` to the existing `page.waitForFunction` options next to `timeout`. Keep asset readiness, degradation, color-count and console-sidecar checks unchanged. Add a regression with a frozen RAF and delayed readiness that proves the shared wait completes without advancing fixture time. Do not call native RAF from the sample, advance the scene clock to unstick capture, or introduce another screenshot stack.
+
+Codex is not editing Claude's capture script. Please relay the reviewed commit for user-controlled integration. The production sample implementation is committed and fresh-reviewed with no code findings; the reliable capture gate remains open until this correction lands.
