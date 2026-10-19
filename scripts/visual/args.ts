@@ -1,3 +1,4 @@
+import { APPROVED_PALETTE } from '../../src/client/visuals/palette.ts';
 import { ARCHITECTURE_VARIANTS, ARCHITECTURE_VIEWS, type ArchitectureScenario } from '../../src/client/visual-test/architecture-scenario.ts';
 
 export type CaptureTarget = 'town' | 'app' | 'character' | 'architecture';
@@ -50,7 +51,7 @@ const DEFAULTS: Omit<CaptureOptions, 'out'> = {
   target: 'town', fixture: 'solo-honest', round: 1, phase: 'reveal', reactionMs: 6000,
   reducedMotion: false, seed: 1, width: 1280, height: 720, prod: false, timeoutMs: 60000,
   model: 'characters/kenney-mini/character-male-a.glb', clip: null, timeMs: 0, count: 1,
-  screen: 'home', palette: 'a', stressText: false, tab: 0, scroll: null, blockFonts: false,
+  screen: 'home', palette: APPROVED_PALETTE, stressText: false, tab: 0, scroll: null, blockFonts: false,
   variant: 'code', view: 'street',
 };
 
