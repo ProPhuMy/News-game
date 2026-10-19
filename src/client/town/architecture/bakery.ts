@@ -48,7 +48,7 @@ function gableRoof(): THREE.BufferGeometry {
 }
 
 export function createBakery(ctx: ArchitectureContext, options: { awning?: boolean } = {}): PlacedPiece {
-  const { brick, trim, roof, lampGlow } = ctx.palette.town;
+  const { brick, trim, roof, wood, lampGlow } = ctx.palette.town;
   const parts = createPieceParts(ctx);
   const { width, depth } = BAKERY_FOOTPRINT;
   const root = new THREE.Group();
@@ -58,7 +58,7 @@ export function createBakery(ctx: ArchitectureContext, options: { awning?: boole
   root.add(at(parts.mesh(new THREE.BoxGeometry(width - 0.2, WALL_TOP - 0.6, FRONT_Z * 2), trim), 0, (WALL_TOP + 0.6) / 2, 0));
   root.add(at(parts.mesh(gableRoof(), roof), 0, WALL_TOP, 0));
 
-  const door = at(parts.mesh(new THREE.BoxGeometry(1.8, 4.2, 0.12), roof), -1.4, 2.1, FRONT_Z + 0.06);
+  const door = at(parts.mesh(new THREE.BoxGeometry(1.8, 4.2, 0.12), wood), -1.4, 2.1, FRONT_Z + 0.06);
   door.name = 'bakery-door';
   root.add(door);
   const display = at(parts.mesh(new THREE.BoxGeometry(2.4, 2.0, 0.1), lampGlow, { emissive: lampGlow }), 1.3, 2.4, FRONT_Z + 0.05);

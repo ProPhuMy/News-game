@@ -6,11 +6,16 @@ import { CITIZEN_REFERENCE_HEIGHT } from '../town/architecture/piece.ts';
 import { createProp, type PropKind } from '../town/props/index.ts';
 import { getPalette } from '../visuals/palette.ts';
 import type { ArchitectureContext, PlacedPiece } from '../visuals/town-types.ts';
+import { runRenderingSample, type RenderingSampleModule } from './architecture-sample.ts';
 import { parseArchitectureScenario, type ArchitectureScenario } from './architecture-scenario.ts';
 import { createVirtualClock } from './clock.ts';
 import { measureCanvas, readyVerdict } from './pixels.ts';
 import { createPreviewAssets, createPreviewKit } from './preview-kit.ts';
 import type { VisualState } from './state.ts';
+
+// Codex's D1 rendering sample. Until it exists, the C2 preview scene below renders instead (sidecar: renderer 'preview').
+const SAMPLE_ENTRY = '../town/sample.ts';
+const sampleLoaders = import.meta.glob<RenderingSampleModule>('../town/sample.ts');
 
 /** Street props along the bakery's lot: [kind, x, z]. The bakery spans x -3..3, z -2.5..2.5; the street is +Z. */
 const PROPS: readonly (readonly [PropKind, number, number])[] = [
@@ -55,9 +60,13 @@ export async function runArchitecture(search: string, container: HTMLElement): P
   }
   renderer.setPixelRatio(1);
   renderer.setSize(container.clientWidth, container.clientHeight);
+  container.appendChild(renderer.domElement);
+
+  const sampleLoader = sampleLoaders[SAMPLE_ENTRY];
+  if (sampleLoader) return runRenderingSample(await sampleLoader(), scenario, container, renderer);
+
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-  container.appendChild(renderer.domElement);
 
   const ctx: ArchitectureContext = { palette, materials: createPreviewKit(palette.town.outline), assets: createPreviewAssets() };
   const scene = new THREE.Scene();
@@ -104,5 +113,5 @@ export async function runArchitecture(search: string, container: HTMLElement): P
   const stats = measureCanvas(renderer.domElement);
   const verdict = readyVerdict({ webgl: true, distinctColors: stats.distinctColors });
   if (verdict.status === 'error') return verdict;
-  return { status: 'ready', scene: 'architecture', scenario, ...stats };
+  return { status: 'ready', scene: 'architecture', scenario, renderer: 'preview', ...stats };
 }
