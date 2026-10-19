@@ -21,7 +21,12 @@ describe('TownScene', () => {
     const lights = townScene.scene.children.filter((c) => c instanceof THREE.Light);
     expect(lights.length).toBeGreaterThanOrEqual(2);
 
-    const hasAmbient = lights.some((l) => l instanceof THREE.AmbientLight);
+    const hasAmbient = lights.some((l) => l instanceof THREE.HemisphereLight && l.intensity === 1.1);
+    expect(townScene.sunLight.intensity).toBe(2.4);
+    expect(mockRenderer.shadowMap.enabled).toBe(true);
+    expect(mockRenderer.shadowMap.type).toBe(THREE.PCFShadowMap);
+    expect(townScene.sunLight.shadow.mapSize.toArray()).toEqual([2048, 2048]);
+    expect(mockRenderer.outputColorSpace).toBe(THREE.SRGBColorSpace);
     const hasDirectional = lights.some((l) => l instanceof THREE.DirectionalLight);
     expect(hasAmbient).toBe(true);
     expect(hasDirectional).toBe(true);

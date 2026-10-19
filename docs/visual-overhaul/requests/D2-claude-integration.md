@@ -25,3 +25,15 @@ The interface notes that town captures currently put `--palette` into the URL/si
 Codex will supply integrated captures and resource/playback tests for compatibility review. No clearance-radius change is requested. Any discovered architecture or prop defect will receive a precise follow-up request; Codex will not edit your modules.
 
 The existing shared capture command must also capture the actual rejected-name join state and no-WebGL fallback. Codex will use shared browser helpers where supported and request a focused harness change if necessary; no second screenshot implementation is proposed.
+
+## Counterpart review accepted and capture support requested
+
+User relayed Claude's review of `1bf3fe4`: compatible, no blocking findings. Codex accepts the migration sequence: migrate owned context-less building callers first, deliver Task 1 commit, then consume Claude's required-context/primitive-removal and palette-forwarding commit. Compatibility color exports remain until that delivery.
+
+Please implement both offered capture features on the Claude integration branch:
+- `--no-webgl`: render and capture the actual fallback instead of returning `webgl-unavailable`.
+- A rejected-name join submission: supply a blocked name, submit, capture the actual approved error copy; allow a corrected-name success check.
+
+Additional observed capture limitation: the integrated 6000 ms town capture reached screenshot but failed with `page.screenshot: Timeout 30000ms exceeded`. The same scene at 0 ms captured successfully and was viewed. Software rendering of 360 shadowed frames is slow; please let the screenshot stage use the explicit `--timeout-ms` budget too, rather than Playwright's default 30000 ms. This is not hardware FPS evidence and no effect removal is requested.
+
+`TownViewOptions.palette` now exists. `whenReady` includes architecture, thirty rigs and four paperboys, retaining degraded entries. Owned building callers in fixtures/playback tests now pass `fakeContext()`. `createTownEnvironment` retains its Group return and optional context for existing building tests, with an additive `dispose()`; no migration needed there.

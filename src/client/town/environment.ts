@@ -1,14 +1,20 @@
 import * as THREE from 'three';
+import { APPROVED_PALETTE, getPalette } from '../visuals/palette.ts';
+import { createMaterialKit } from './materials.ts';
+import type { ArchitectureContext } from '../visuals/town-types.ts';
 import { STREET_EDGES } from '../../shared/town-map.ts';
 import type { TownLayout } from './types.ts';
 
-export function createTownEnvironment(layout: TownLayout): THREE.Group {
+export function createTownEnvironment(layout: TownLayout, ctx?: ArchitectureContext): THREE.Group & { dispose(): void } {
+  const palette = ctx?.palette ?? getPalette(APPROVED_PALETTE);
+  const ownedKit = ctx ? null : createMaterialKit(palette);
+  const kit = ctx?.materials ?? ownedKit!;
   const group = new THREE.Group();
   group.name = 'town-environment';
 
   // Ground plane
   const groundGeo = new THREE.PlaneGeometry(96, 96);
-  const groundMat = new THREE.MeshLambertMaterial({ color: 0x98b87e });
+  const groundMat = kit.surface(palette.town.ground);
   const groundMesh = new THREE.Mesh(groundGeo, groundMat);
   groundMesh.name = 'ground';
   groundMesh.rotation.x = -Math.PI / 2;
@@ -17,7 +23,7 @@ export function createTownEnvironment(layout: TownLayout): THREE.Group {
   group.add(groundMesh);
 
   // Roads along street edges
-  const roadMat = new THREE.MeshLambertMaterial({ color: 0xded5c5 });
+  const roadMat = kit.surface(palette.town.road);
   const roadWidth = 3.4;
 
   STREET_EDGES.forEach(([fromId, toId]) => {
@@ -39,5 +45,12 @@ export function createTownEnvironment(layout: TownLayout): THREE.Group {
     group.add(roadMesh);
   });
 
-  return group;
+  let disposed = false;
+  return Object.assign(group, { dispose() {
+    if (disposed) return;
+    disposed = true;
+    group.traverse(object => { if (object instanceof THREE.Mesh) object.geometry.dispose(); });
+    group.removeFromParent();
+    ownedKit?.dispose();
+  } });
 }

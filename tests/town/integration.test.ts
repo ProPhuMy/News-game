@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { APPROVED_PALETTE, getPalette } from '../../src/client/visuals/palette.ts';
 import { describe, expect, it, vi } from 'vitest';
 import * as THREE from 'three';
 import { createTownView } from '../../src/client/town/index.ts';
@@ -182,7 +183,7 @@ describe('Town View Integration', () => {
     reqSpy.mockRestore();
   });
 
-  it('exposes setReducedMotion on TownView and CitizenManager and smoothly crossfades citizen hat colors', () => {
+  it('exposes reduced motion and applies authoritative hat changes immediately', () => {
     const container = document.createElement('div');
     const mockRenderer = {
       setSize: vi.fn(),
@@ -214,33 +215,24 @@ describe('Town View Integration', () => {
     citizenMgr.setReducedMotion(true);
 
     // Initial hat color is grey
-    expect(citizenMgr.getCitizenHatColor(0)).toBe(0x7f8c8d);
+    expect(citizenMgr.getCitizenHatColor(0)).toBe(palette.unsubscribed.hex);
 
-    // Change to seat 0 (default red: 0xc0392b)
+    // Change to seat 0 (default red: palette.paper.red.hex)
     citizenMgr.setCitizenPaper(0, 0);
 
-    // Immediately at t = 0, color has not snapped to red
-    expect(citizenMgr.getCitizenHatColor(0)).not.toBe(0xc0392b);
-
-    // Advance 0.15s (halfway through 0.3s duration)
+    expect(citizenMgr.getCitizenHatColor(0)).toBe(palette.paper.red.hex);
     citizenMgr.update(0.15);
-    const midColor = citizenMgr.getCitizenHatColor(0);
-    expect(midColor).not.toBe(0x7f8c8d);
-    expect(midColor).not.toBe(0xc0392b);
-
-    // Advance another 0.15s (completing 0.3s duration)
-    citizenMgr.update(0.15);
-    expect(citizenMgr.getCitizenHatColor(0)).toBe(0xc0392b);
+    expect(citizenMgr.getCitizenHatColor(0)).toBe(palette.paper.red.hex);
 
     // Disable reduced motion and verify instant snap back to grey
     citizenMgr.setReducedMotion(false);
     citizenMgr.setCitizenPaper(0, null);
-    expect(citizenMgr.getCitizenHatColor(0)).toBe(0x7f8c8d);
+    expect(citizenMgr.getCitizenHatColor(0)).toBe(palette.unsubscribed.hex);
 
     citizenMgr.dispose();
   });
 
-  it('smoothly crossfades citizen hat colors during playback when reduced motion is enabled dynamically', async () => {
+  it('updates citizen hat identity immediately during reduced-motion playback', async () => {
     let animCallback: ((now: number) => void) | null = null;
     vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => {
       animCallback = cb;
@@ -274,7 +266,7 @@ describe('Town View Integration', () => {
           behavior: 'flee',
           route: ['r0c0', 'r0c1'],
           fromPaper: null,
-          toPaper: 0, // seat 0 is red: 0xc0392b
+          toPaper: 0, // seat 0 is red: palette.paper.red.hex
           bubble: null,
         },
       ],
@@ -291,8 +283,8 @@ describe('Town View Integration', () => {
     // Start plan with 2.0s duration
     const planPromise = view.playReactionPlan(plan, 2.0);
 
-    // Initial hat color at plan start should be fromPaper (grey 0x7f8c8d) immediately without lerp
-    expect(view.getCitizenHatColor(0)).toBe(0x7f8c8d);
+    // Initial hat color at plan start should be fromPaper (grey palette.unsubscribed.hex) immediately without lerp
+    expect(view.getCitizenHatColor(0)).toBe(palette.unsubscribed.hex);
 
     let now = performance.now();
     const step = (seconds: number) => {
@@ -305,21 +297,13 @@ describe('Town View Integration', () => {
 
     // Advance 1.0s (progress = 0.5 < transitEnd 0.7): citizen still in transit, wearing fromPaper
     step(1.0);
-    expect(view.getCitizenHatColor(0)).toBe(0x7f8c8d);
+    expect(view.getCitizenHatColor(0)).toBe(palette.unsubscribed.hex);
 
-    // Advance to 1.45s (past transitEnd = 1.4s): paper switch has triggered and lerp started
+    // Arrival applies the authoritative paper immediately, with no intermediate color.
     step(0.45);
-    expect(view.getCitizenHatColor(0)).not.toBe(0xc0392b);
-
-    // Advance 0.15s (halfway through 0.3s lerp duration)
-    step(0.15);
-    const midColor = view.getCitizenHatColor(0);
-    expect(midColor).not.toBe(0x7f8c8d);
-    expect(midColor).not.toBe(0xc0392b);
-
-    // Advance another 0.15s (completing 0.3s lerp duration)
-    step(0.15);
-    expect(view.getCitizenHatColor(0)).toBe(0xc0392b);
+    expect(view.getCitizenHatColor(0)).toBe(palette.paper.red.hex);
+    step(0.3);
+    expect(view.getCitizenHatColor(0)).toBe(palette.paper.red.hex);
 
     // Advance past end of plan
     step(0.3);
@@ -350,7 +334,8 @@ describe('Town View Integration', () => {
     });
 
     expect(townView.isWebGLSupported()).toBe(false);
-    expect(disposeSpy).toHaveBeenCalled();
+    expect(disposeSpy).not.toHaveBeenCalled();
+    expect(container.querySelector('canvas')).toBeNull();
     townView.dispose();
     cancelRafSpy.mockRestore();
   });
@@ -380,3 +365,5 @@ describe('Town View Integration', () => {
   });
 });
 
+
+const palette = getPalette(APPROVED_PALETTE);

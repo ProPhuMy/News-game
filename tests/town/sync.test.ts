@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { APPROVED_PALETTE, getPalette } from '../../src/client/visuals/palette.ts';
 import * as THREE from 'three';
 import { describe, it, expect, vi } from 'vitest';
 import { createTownView } from '../../src/client/town/index.ts';
@@ -43,12 +44,12 @@ describe('TownView syncFromSnapshot', () => {
     const expectedPos = view.getNodeWorldPosition('r2c3');
     expect(citizen0Pos.x).toBeCloseTo(expectedPos.x, 2);
     expect(citizen0Pos.z).toBeCloseTo(expectedPos.z, 2);
-    expect(view.getCitizenHatColor(0)).toBe(0xd4ac0d); // gold
-    expect(view.getCitizenHatColor(1)).toBe(0x7f8c8d); // grey
-    expect(view.getOfficeBannerColor(0)).toBe(0xd4ac0d); // gold
-    expect(view.getOfficeBannerColor(1)).toBe(0x2980b9); // blue
-    expect(view.getOfficeBannerColor(2)).toBe(0x27ae60); // green
-    expect(view.getOfficeBannerColor(3)).toBe(0xc0392b); // red
+    expect(view.getCitizenHatColor(0)).toBe(palette.paper.gold.hex); // gold
+    expect(view.getCitizenHatColor(1)).toBe(palette.unsubscribed.hex); // grey
+    expect(view.getOfficeBannerColor(0)).toBe(palette.paper.gold.hex); // gold
+    expect(view.getOfficeBannerColor(1)).toBe(palette.paper.blue.hex); // blue
+    expect(view.getOfficeBannerColor(2)).toBe(palette.paper.green.hex); // green
+    expect(view.getOfficeBannerColor(3)).toBe(palette.paper.red.hex); // red
     view.dispose();
   });
 
@@ -96,3 +97,5 @@ describe('TownView syncFromSnapshot', () => {
     view.dispose();
   });
 });
+
+const palette = getPalette(APPROVED_PALETTE);

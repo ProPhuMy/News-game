@@ -1,3 +1,4 @@
+import { fakeContext } from './architecture/fake-context.ts';
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest';
 import * as THREE from 'three';
@@ -46,7 +47,7 @@ describe('Town Fixture Playback Integration', () => {
 
       const scene = new THREE.Scene();
       const layout = createTownLayout();
-      const buildings = createTownBuildings(layout);
+      const buildings = createTownBuildings(layout, fakeContext());
       const poof = createPoofEffect(scene);
       const citizens = createCitizenManager(layout, scene, poof);
       const interpolator = createRouteInterpolator(layout);

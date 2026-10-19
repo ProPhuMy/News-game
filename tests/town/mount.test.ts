@@ -19,6 +19,7 @@ function createMockTownView(): TownView & {
   const mockDispose = vi.fn();
 
   return {
+    whenReady: async () => ({ degraded: [] }),
     isWebGLSupported: () => true,
     playReactionPlan: mockPlayPlan,
     setPhase: mockSetPhase,

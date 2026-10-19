@@ -1,3 +1,5 @@
+import { APPROVED_PALETTE, getPalette } from '../../src/client/visuals/palette.ts';
+import { fakeContext } from './architecture/fake-context.ts';
 import { describe, expect, it, vi } from 'vitest';
 import * as THREE from 'three';
 import { createTownBuildings } from '../../src/client/town/buildings.ts';
@@ -12,7 +14,7 @@ describe('Playback Coordinator', () => {
   it('orchestrates exposure highlighting, route transit, and paper switching', async () => {
     const scene = new THREE.Scene();
     const layout = createTownLayout();
-    const buildings = createTownBuildings(layout);
+    const buildings = createTownBuildings(layout, fakeContext());
     const poof = createPoofEffect(scene);
     const citizenMgr = createCitizenManager(layout, scene, poof);
     const interpolator = createRouteInterpolator(layout);
@@ -128,7 +130,7 @@ describe('Playback Coordinator', () => {
   it('guarantees all citizens reach destination with toPaper when started with short duration', async () => {
     const scene = new THREE.Scene();
     const layout = createTownLayout();
-    const buildings = createTownBuildings(layout);
+    const buildings = createTownBuildings(layout, fakeContext());
     const poof = createPoofEffect(scene);
     const citizenMgr = createCitizenManager(layout, scene, poof);
     const interpolator = createRouteInterpolator(layout);
@@ -150,14 +152,14 @@ describe('Playback Coordinator', () => {
       const pos = citizenMgr.getCitizenPosition(entry.citizenId);
       const dest = layout.getNodeWorldPosition(entry.route[entry.route.length - 1]!);
       expect(Math.hypot(pos.x - dest.x, pos.z - dest.z)).toBeLessThan(3.0); // within slot radius
-      expect(citizenMgr.getCitizenHatColor(entry.citizenId)).not.toBe(0x7f8c8d); // not grey
+      expect(citizenMgr.getCitizenHatColor(entry.citizenId)).not.toBe(palette.unsubscribed.hex); // not grey
     }
   });
 
   it('gracefully handles unknown route node without crashing loop', () => {
     const scene = new THREE.Scene();
     const layout = createTownLayout();
-    const buildings = createTownBuildings(layout);
+    const buildings = createTownBuildings(layout, fakeContext());
     const poof = createPoofEffect(scene);
     const citizenMgr = createCitizenManager(layout, scene, poof);
     const interpolator = createRouteInterpolator(layout);
@@ -180,7 +182,7 @@ describe('Playback Coordinator', () => {
   it('assigns distinct slot offsets so citizens at the same destination do not overlap', async () => {
     const scene = new THREE.Scene();
     const layout = createTownLayout();
-    const buildings = createTownBuildings(layout);
+    const buildings = createTownBuildings(layout, fakeContext());
     const poof = createPoofEffect(scene);
     const citizenMgr = createCitizenManager(layout, scene, poof);
     const interpolator = createRouteInterpolator(layout);
@@ -210,7 +212,7 @@ describe('Playback Coordinator', () => {
   it('sets loyal reader hat to fromPaper at plan start before paper switches', () => {
     const scene = new THREE.Scene();
     const layout = createTownLayout();
-    const buildings = createTownBuildings(layout);
+    const buildings = createTownBuildings(layout, fakeContext());
     const poof = createPoofEffect(scene);
     const citizenMgr = createCitizenManager(layout, scene, poof);
     const interpolator = createRouteInterpolator(layout);
@@ -227,8 +229,10 @@ describe('Playback Coordinator', () => {
     const plan = createMockPlan(); // citizen 0 has fromPaper: 0, toPaper: 0
     coordinator.startPlan(plan, 2.0);
 
-    // Initial hat color should be seat 0's color (red: 0xc0392b), not grey (0x7f8c8d)
-    expect(citizenMgr.getCitizenHatColor(0)).toBe(0xc0392b);
+    // Initial hat color should be seat 0's color (red: palette.paper.red.hex), not grey (palette.unsubscribed.hex)
+    expect(citizenMgr.getCitizenHatColor(0)).toBe(palette.paper.red.hex);
   });
 });
 
+
+const palette = getPalette(APPROVED_PALETTE);

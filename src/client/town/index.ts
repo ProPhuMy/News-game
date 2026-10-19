@@ -1,4 +1,9 @@
 import * as THREE from 'three';
+import { APPROVED_PALETTE, getPalette, type PresentationPalette } from '../visuals/palette.ts';
+import type { SceneReadiness } from '../visuals/town-types.ts';
+import { createAssetSource } from './assets/source.ts';
+import { createMaterialKit } from './materials.ts';
+import { createPaperboys } from './paperboys.ts';
 import type { Location, Phase, SeatId } from '../../shared/ids.ts';
 import type { PublicSnapshot, ReactionPlan } from '../../shared/snapshots.ts';
 import { createBubbleManager } from './bubbles.ts';
@@ -17,12 +22,14 @@ import type { TownLayout } from './types.ts';
 
 export interface TownViewOptions {
   container?: HTMLElement;
+  palette?: PresentationPalette;
   reducedMotion?: boolean;
   forceWebGL?: boolean;
   customRenderer?: THREE.WebGLRenderer;
 }
 
 export interface TownView {
+  whenReady(): Promise<SceneReadiness>;
   isWebGLSupported(): boolean;
   playReactionPlan(plan: ReactionPlan, durationSeconds?: number): Promise<void>;
   setPhase(phase: Phase): void;
@@ -44,6 +51,7 @@ function createFallbackTownView(container: HTMLElement, layout?: TownLayout): To
   const fallback = createFallbackView(container);
   const actualLayout = layout ?? createTownLayout();
   return {
+    whenReady: async () => ({ degraded: [] }),
     isWebGLSupported: () => false,
     playReactionPlan: async () => {},
     setPhase: () => {},
@@ -56,7 +64,7 @@ function createFallbackTownView(container: HTMLElement, layout?: TownLayout): To
     getCitizenRotation: () => 0,
     setCitizenPosition: () => {},
     setCitizenRotation: () => {},
-    getCitizenHatColor: () => 0x7f8c8d,
+    getCitizenHatColor: () => getPalette(APPROVED_PALETTE).unsubscribed.hex,
     getNodeWorldPosition: (nodeId: string) => {
       const p = actualLayout.getNodeWorldPos(nodeId);
       return new THREE.Vector3(p.x, p.y, p.z);
@@ -88,6 +96,13 @@ export function createTownView(
     return createFallbackTownView(container);
   }
 
+  const palette = options.palette ?? getPalette(APPROVED_PALETTE);
+  const materials = createMaterialKit(palette);
+  const assets = createAssetSource();
+  const ctx = { palette, materials, assets };
+  let buildings: ReturnType<typeof createTownBuildings> | null = null;
+  let environment: ReturnType<typeof createTownEnvironment> | null = null;
+  let paperboys: ReturnType<typeof createPaperboys> | null = null;
   let canvas: HTMLCanvasElement | null = null;
   let scene: ReturnType<typeof createTownScene> | null = null;
   let poof: ReturnType<typeof createPoofEffect> | null = null;
@@ -103,6 +118,7 @@ export function createTownView(
   let isDisposed = false;
 
   const cleanupResources = (): void => {
+    if (fallbackView) { fallbackView.dispose(); fallbackView = null; }
     if (isDisposed) return;
     isDisposed = true;
 
@@ -113,10 +129,6 @@ export function createTownView(
     if (resizeObserver) {
       resizeObserver.disconnect();
       resizeObserver = null;
-    }
-    if (fallbackView) {
-      fallbackView.dispose();
-      fallbackView = null;
     }
     if (cleanupControls) {
       cleanupControls();
@@ -130,6 +142,11 @@ export function createTownView(
     bubbles?.dispose();
     citizens?.dispose();
     poof?.dispose();
+    buildings?.dispose();
+    environment?.dispose();
+    paperboys?.dispose();
+    materials.dispose();
+    assets.dispose();
     scene?.dispose();
 
     if (canvas && canvas.parentElement === container) {
@@ -155,26 +172,28 @@ export function createTownView(
 
     const layout = createTownLayout();
     const camera = createTownCamera({ reducedMotion: currentReducedMotion });
-    const activeScene = createTownScene(canvas, { renderer: options.customRenderer });
+    const activeScene = createTownScene(canvas, { renderer: options.customRenderer, palette });
     scene = activeScene;
-    const environment = createTownEnvironment(layout);
-    const buildings = createTownBuildings(layout);
+    const townEnvironment = createTownEnvironment(layout, ctx); environment = townEnvironment;
+    const townBuildings = createTownBuildings(layout, ctx); buildings = townBuildings;
+    const townPaperboys = createPaperboys(ctx); paperboys = townPaperboys;
     const activePoof = createPoofEffect(activeScene.scene);
     poof = activePoof;
     const activeCitizens = createCitizenManager(layout, activeScene.scene, activePoof, {
-      reducedMotion: currentReducedMotion,
+      reducedMotion: currentReducedMotion, context: ctx,
     });
     citizens = activeCitizens;
     const interpolator = createRouteInterpolator(layout);
     const activeBubbles = createBubbleManager(container, camera.camera);
     bubbles = activeBubbles;
 
-    activeScene.scene.add(environment);
-    activeScene.scene.add(buildings.group);
+    activeScene.scene.add(townEnvironment);
+    activeScene.scene.add(townPaperboys.group);
+    activeScene.scene.add(townBuildings.group);
 
     const activeCoordinator = createPlaybackCoordinator({
       layout,
-      buildings,
+      buildings: townBuildings,
       citizens: activeCitizens,
       interpolator,
       bubbles: activeBubbles,
@@ -184,6 +203,18 @@ export function createTownView(
       },
     });
     coordinator = activeCoordinator;
+
+    const ready = Promise.all([townBuildings.ready, activeCitizens.whenReady(), townPaperboys.ready])
+      .then(results => {
+        if (isDisposed) throw new Error('town disposed before readiness');
+        return { degraded: results.flatMap(result => result.degraded) };
+      }).catch((error: unknown) => {
+        const showFallback = !isDisposed;
+        cleanupResources();
+        if (showFallback) fallbackView = createFallbackView(container);
+        throw error;
+      });
+    void ready.catch(() => {});
 
     cleanupContextLoss = attachContextLossHandler(activeScene.renderer.domElement || canvas, {
       onLost: () => {
@@ -264,7 +295,8 @@ export function createTownView(
     animFrameId = requestAnimationFrame(animate);
 
     return {
-      isWebGLSupported: () => true,
+      whenReady: () => ready,
+      isWebGLSupported: () => !fallbackView,
 
       playReactionPlan(plan: ReactionPlan, durationSeconds?: number): Promise<void> {
         return activeCoordinator.startPlan(plan, durationSeconds);
@@ -280,7 +312,7 @@ export function createTownView(
 
       setTargetLocation(location: Location | null): void {
         if (location) {
-          const anchor = buildings.getLocationAnchor(location);
+          const anchor = townBuildings.getLocationAnchor(location);
           camera.setTarget(anchor.x, anchor.z);
         } else {
           camera.setTarget(0, 0);
@@ -300,7 +332,7 @@ export function createTownView(
           activeCitizens.syncCitizens(snapshot.citizens, snapshot.papers);
         }
         if (snapshot.papers) {
-          buildings.syncOffices(snapshot.papers);
+          townBuildings.syncOffices(snapshot.papers);
         }
       },
 
@@ -313,7 +345,7 @@ export function createTownView(
         const p = layout.getNodeWorldPos(nodeId);
         return new THREE.Vector3(p.x, p.y, p.z);
       },
-      getOfficeBannerColor: (seatId: SeatId) => buildings.getOfficeBannerColor(seatId),
+      getOfficeBannerColor: (seatId: SeatId) => townBuildings.getOfficeBannerColor(seatId),
 
       resize: handleResize,
 
