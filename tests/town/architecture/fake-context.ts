@@ -24,6 +24,7 @@ export function fakeContext(
   const outlined: THREE.Object3D[] = [];
   const preserved: THREE.Material[] = [];
   const preservedResults = new Set<THREE.Material>();
+  const cache = new Map<string, THREE.Material>();
   return {
     palette: getPalette(paletteId),
     surfaces,
@@ -34,7 +35,12 @@ export function fakeContext(
     materials: {
       surface(hex, options) {
         surfaces.push({ hex, ...options });
+        // Like the real kit, one material per (hex, emissive).
+        const key = `${hex}:${options?.emissive ?? ''}`;
+        const cached = cache.get(key);
+        if (cached) return cached;
         const material = new THREE.MeshBasicMaterial({ color: hex });
+        cache.set(key, material);
         kitMaterials.add(material);
         return material;
       },
