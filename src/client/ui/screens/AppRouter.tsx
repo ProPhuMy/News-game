@@ -116,7 +116,7 @@ export const AppRouter: React.FC<AppRouterProps> = ({ store = defaultStore }) =>
       return (
         <JoinScreen
           pending={isPending}
-          error={formattedError}
+          error={formatErrorMessage(error, 'setup')}
           roomCode={joinTarget.mode === 'join' ? joinTarget.code : undefined}
           onBack={() => setJoinTarget(null)}
           onSubmit={(p) => {

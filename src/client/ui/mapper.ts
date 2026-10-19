@@ -36,8 +36,12 @@ export const ERROR_MESSAGES: Record<string, string> = {
   BAD_TOKEN: 'Session expired. Please join again.',
 };
 
-export function formatErrorMessage(error: string | null): string | null {
+/** Before a match, FILTERED can only mean a rejected player or newspaper name. */
+const NAME_FILTERED_MESSAGE = 'That name contains blocked language. Please choose another.';
+
+export function formatErrorMessage(error: string | null, context: 'setup' | 'match' = 'match'): string | null {
   if (!error) return null;
+  if (error === 'FILTERED' && context === 'setup') return NAME_FILTERED_MESSAGE;
   return ERROR_MESSAGES[error] ?? error;
 }
 

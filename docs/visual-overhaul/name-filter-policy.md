@@ -30,7 +30,9 @@ The filter lowercases and NFKC-normalizes the text, splits it into letter/digit 
 
 ## UI copy
 
-The client already maps `FILTERED` to "Our lawyers won't print that — try again." (`src/client/ui/mapper.ts:27`). It reads as a headline message; Claude will adjust it if names need their own wording.
+A rejected player or newspaper name shows: "That name contains blocked language. Please choose another." (user decision, 2026-10-19). `formatErrorMessage(error, 'setup')` in `src/client/ui/mapper.ts` returns it for `FILTERED` on the join screen. Headlines keep "Our lawyers won't print that — try again."
+
+This needs one store change from Codex: `src/client/net/store.ts:118` rewrites every `FILTERED` ack into the headline sentence. Limit that rewrite to `lockHeadline`, so a `FILTERED` ack for `createRoom`, `playSolo` or `joinRoom` reaches the UI as the code. See `requests/C1.5-codex-name-filter.md`.
 
 ## Counterpart acknowledgment
 
