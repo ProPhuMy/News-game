@@ -11,7 +11,7 @@ Models and sounds listed below are dedicated to the Public Domain under Creative
 | Citizen Gasp Sound (Replacement) | https://freesound.org/people/Topschool/sounds/360469/ | Topschool (`gasp.mp3`) | CC0 1.0 Universal | `public/sounds/gasp.mp3` |
 | Crowd Murmur Sound (Replacement) | https://freesound.org/people/mglennsound/sounds/678671/ | mglennsound (`AF Crowd Suprised Murmur 1.wav`) | CC0 1.0 Universal | `public/sounds/crowd-murmur.mp3` |
 
-*Note: Town buildings, environment, and citizens are original procedural Three.js code with no third-party assets.*
+*The current gameplay town still uses procedural Three.js geometry. The D1 rendering sample combines code-built bakery/street pieces with the attributed character and foliage packs below; its hybrid comparison also uses the attributed kit awning.*
 
 ## Character candidates validated in D0 (Codex)
 
@@ -19,7 +19,7 @@ Models and sounds listed below are dedicated to the Public Domain under Creative
 |---|---|---|---|---|
 | Mini Characters 1 (1.0), all 12 character variants and shared atlas | https://opengameart.org/content/mini-character-1 (archive: https://opengameart.org/sites/default/files/kenney_mini-characters.zip) | Kenney | CC0 1.0; original archive `License.txt` retained at `public/models/characters/kenney-mini/License.txt` | `public/models/characters/kenney-mini/character-{female,male}-{a,b,c,d,e,f}.glb`, `public/models/characters/kenney-mini/Textures/colormap.png`, accompanying license |
 
-These are validation candidates, not yet the active town renderer or a user-approved D1 art sample. Downloaded 2026-10-15; archive SHA-256: `a95a02b556735246570549d0c4a1fcd13ea46ede18187c63d463575a56fd6e1d`. GLB files retain their original bytes and local atlas reference; no third-party runtime URL is used.
+The D1 sample uses character-male-a with its local atlas and idle/walk/sprint clips plus procedural reading/cheering. The pack is not yet the active gameplay town renderer or user-approved final art. Downloaded 2026-10-15; archive SHA-256: `a95a02b556735246570549d0c4a1fcd13ea46ede18187c63d463575a56fd6e1d`. GLB files retain their original bytes and local atlas reference; no third-party runtime URL is used.
 
 ## Building and prop sample assets delivered in C2 (Claude)
 
