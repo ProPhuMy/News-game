@@ -26,7 +26,16 @@ export type VisualState =
       height: number;
       distinctColors: number;
     }
-  | { status: 'ready'; scene: 'architecture'; scenario: ArchitectureScenario; width: number; height: number; distinctColors: number }
+  | {
+      status: 'ready';
+      scene: 'architecture';
+      scenario: ArchitectureScenario;
+      /** 'sample' is Codex's D1 rendering sample; 'preview' is the C2 stand-in and is never D1 evidence. */
+      renderer: 'sample' | 'preview';
+      width: number;
+      height: number;
+      distinctColors: number;
+    }
   | { status: 'error'; error: string };
 
 declare global {

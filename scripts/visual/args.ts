@@ -142,6 +142,7 @@ export function harnessPath(options: CaptureOptions): string {
   if (options.target === 'architecture') {
     const query = new URLSearchParams({
       scene: 'architecture', variant: options.variant, view: options.view, palette: options.palette, seed: String(options.seed),
+      reactionMs: String(options.reactionMs), reducedMotion: String(options.reducedMotion),
     });
     return `/visual-test/index.html?${query.toString()}`;
   }

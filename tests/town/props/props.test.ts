@@ -25,9 +25,9 @@ describe('props', () => {
     const gltf = fakeGltf('woodBark');
     const ctx = fakeContext('a', () => Promise.resolve(gltf.group));
     await createProp('tree-oak', ctx).ready;
-    expect(NATURE_MATERIAL_ROLES.woodBark).toBe('roof');
+    expect(NATURE_MATERIAL_ROLES.woodBark).toBe('wood');
     expect(ctx.kitMaterials.has(gltf.mesh.material as THREE.Material)).toBe(true);
-    expect(ctx.surfaces.at(-1)?.hex).toBe(ctx.palette.town.roof);
+    expect(ctx.surfaces.at(-1)?.hex).toBe(ctx.palette.town.wood);
   });
 
   it('an unmapped material falls back to trim and is reported', async () => {
@@ -54,6 +54,12 @@ describe('props', () => {
       expect(allowed).toContain(call.hex);
       if (call.emissive !== undefined) expect(allowed).toContain(call.emissive);
     }
+  });
+
+  it('bench legs are wood', () => {
+    const ctx = fakeContext('c');
+    createProp('bench', ctx);
+    expect(ctx.surfaces.map((s) => s.hex)).toContain(ctx.palette.town.wood);
   });
 
   it('gas lamp stands taller than a citizen', () => {

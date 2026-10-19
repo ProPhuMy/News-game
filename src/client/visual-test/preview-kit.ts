@@ -24,6 +24,9 @@ export function createPreviewKit(outlineHex: number): MaterialKit {
       }
       return material;
     },
+    preserve(source) {
+      throw new Error(`preview kit does not convert materials: ${source.type}`);
+    },
     outline(object) {
       // Inverted hull: a slightly larger back-face copy of each mesh in the outline color.
       const targets: THREE.Mesh[] = [];

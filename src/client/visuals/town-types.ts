@@ -9,6 +9,12 @@ export interface MaterialKit {
   surface(hex: number, options?: { emissive?: number }): THREE.Material;
   /** Adds the outline treatment to every mesh under object (Codex decides the technique). */
   outline(object: THREE.Object3D): void;
+  /**
+   * Toon version of a loaded material that keeps its base-color map, alpha, side and vertex colors.
+   * Cached per source; the kit owns and disposes the result, the AssetSource keeps owning the source.
+   * Throws an Error naming the class for unsupported materials; never flattens silently.
+   */
+  preserve(source: THREE.Material): THREE.Material;
 }
 
 /** Same shape as the harness's SceneReadiness (src/client/visual-test/settle.ts). */

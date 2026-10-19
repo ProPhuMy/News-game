@@ -11,6 +11,9 @@ export interface ArchitectureScenario {
   view: (typeof ARCHITECTURE_VIEWS)[number];
   palette: PaletteId;
   seed: number;
+  /** Exact sample time passed to the rendering sample's setTime (D1). */
+  reactionMs: number;
+  reducedMotion: boolean;
 }
 
 function oneOf<T extends string>(params: URLSearchParams, key: string, allowed: readonly T[], fallback: T): T {
@@ -21,6 +24,12 @@ function oneOf<T extends string>(params: URLSearchParams, key: string, allowed: 
   return found;
 }
 
+function readBoolean(params: URLSearchParams, key: string): boolean {
+  const raw = params.get(key) ?? 'false';
+  if (raw !== 'true' && raw !== 'false') throw new Error(`${key} must be true or false, got "${raw}"`);
+  return raw === 'true';
+}
+
 export function parseArchitectureScenario(search: string): ArchitectureScenario {
   const params = new URLSearchParams(search);
   return {
@@ -28,5 +37,7 @@ export function parseArchitectureScenario(search: string): ArchitectureScenario 
     view: oneOf(params, 'view', ARCHITECTURE_VIEWS, 'street'),
     palette: oneOf(params, 'palette', PALETTE_IDS, 'a'),
     seed: readInt(params, 'seed', 1, 0, 2 ** 31 - 1),
+    reactionMs: readInt(params, 'reactionMs', 0, 0, 600_000),
+    reducedMotion: readBoolean(params, 'reducedMotion'),
   };
 }

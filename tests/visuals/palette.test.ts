@@ -46,6 +46,14 @@ describe('presentation palette', () => {
     expect(contrast(ui.focus, ui.paper)).toBeGreaterThanOrEqual(3);
   });
 
+  it.each([['a', 0x8a5a3c], ['b', 0x7a5236], ['c', 0x9a6a42]] as const)(
+    'palette %s: wood is a brown distinct from its roof', (id, wood) => {
+      const { town } = getPalette(id);
+      expect(town.wood).toBe(wood);
+      expect(town.wood).not.toBe(town.roof);
+    },
+  );
+
   it('paletteCssVariables names every --nt-* variable', () => {
     expect(Object.keys(paletteCssVariables(getPalette('b'))).sort()).toEqual([...VARIABLES].sort());
   });

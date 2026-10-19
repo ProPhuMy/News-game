@@ -5,7 +5,7 @@ import type { ArchitectureContext, PlacedPiece } from '../../visuals/town-types.
 import { at, createPieceParts, placedPiece } from '../architecture/piece.ts';
 
 export function createGasLamp(ctx: ArchitectureContext): PlacedPiece {
-  const { roof, lampGlow } = ctx.palette.town;
+  const { roof, lampGlow } = ctx.palette.town; // painted iron takes the roof accent, not wood
   const parts = createPieceParts(ctx);
   const root = new THREE.Group();
   root.name = 'prop-gas-lamp';
@@ -19,7 +19,7 @@ export function createGasLamp(ctx: ArchitectureContext): PlacedPiece {
 }
 
 export function createNewsstand(ctx: ArchitectureContext): PlacedPiece {
-  const { brick, trim, roof } = ctx.palette.town;
+  const { brick, trim, wood } = ctx.palette.town;
   const parts = createPieceParts(ctx);
   const root = new THREE.Group();
   root.name = 'prop-newsstand';
@@ -28,18 +28,18 @@ export function createNewsstand(ctx: ArchitectureContext): PlacedPiece {
   const rack = at(parts.mesh(new THREE.BoxGeometry(1.7, 0.7, 0.08), trim), 0, 1.15, 0.78);
   rack.rotation.x = -0.4;
   root.add(rack);
-  for (const x of [-0.95, 0.95]) root.add(at(parts.mesh(new THREE.BoxGeometry(0.1, 0.9, 0.1), roof), x, 2.05, 0.6));
+  for (const x of [-0.95, 0.95]) root.add(at(parts.mesh(new THREE.BoxGeometry(0.1, 0.9, 0.1), wood), x, 2.05, 0.6));
   root.add(at(parts.mesh(new THREE.BoxGeometry(2.3, 0.16, 1.7), trim), 0, 2.55, 0.1));
   ctx.materials.outline(root);
   return placedPiece(root, parts, { width: 2.0, depth: 1.4 });
 }
 
 export function createBench(ctx: ArchitectureContext): PlacedPiece {
-  const { roof, trim } = ctx.palette.town;
+  const { wood, trim } = ctx.palette.town;
   const parts = createPieceParts(ctx);
   const root = new THREE.Group();
   root.name = 'prop-bench';
-  for (const x of [-1.0, 1.0]) root.add(at(parts.mesh(new THREE.BoxGeometry(0.12, 0.84, 0.55), roof), x, 0.42, 0));
+  for (const x of [-1.0, 1.0]) root.add(at(parts.mesh(new THREE.BoxGeometry(0.12, 0.84, 0.55), wood), x, 0.42, 0));
   root.add(at(parts.mesh(new THREE.BoxGeometry(2.4, 0.12, 0.6), trim), 0, 0.9, 0));
   const back = at(parts.mesh(new THREE.BoxGeometry(2.4, 0.55, 0.1), trim), 0, 1.3, -0.28);
   back.rotation.x = -0.15;
