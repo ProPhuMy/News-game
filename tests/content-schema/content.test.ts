@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { ContentSchema, fillTemplate } from '../../src/shared/content-schema.ts';
 import { SAMPLE_CONTENT } from '../../src/sim/sample-content.ts';
+import { createWordFilter } from '../../src/ai/text.ts';
+import { NAME_FILTER_EXAMPLES, WORD_LIST } from '../../src/content/word-filter.ts';
+import { DisplayNameSchema, PaperNameSchema, cleanText } from '../../src/shared/protocol.ts';
 
 const real = import.meta.glob<{ content?: unknown }>('../../src/content/index.ts', { eager: true });
 const hasReal = Object.keys(real).length > 0;
@@ -60,5 +63,27 @@ describe('content schema', () => {
   it('fills both placeholders', () => {
     expect(fillTemplate('{paper} lies about the {location}', { paper: 'The Daily Gasp', location: 'Bank' }))
       .toBe('The Daily Gasp lies about the Bank');
+  });
+});
+
+describe('name filter policy', () => {
+  const filter = createWordFilter(WORD_LIST);
+  // Rule: every example must parse under both DisplayNameSchema (max 20) and PaperNameSchema (max 24).
+  const schemaOk = (name: string) => DisplayNameSchema.safeParse(name).success && PaperNameSchema.safeParse(name).success;
+
+  it('accepted examples pass both name schemas, the filter, and stay unchanged', () => {
+    for (const name of NAME_FILTER_EXAMPLES.accepted) {
+      expect(schemaOk(name), name).toBe(true);
+      expect(cleanText(name), name).toBe(name);
+      expect(filter(name), name).toBe(true);
+    }
+  });
+
+  it('rejected examples pass both name schemas and stay unchanged, but fail the filter', () => {
+    for (const name of NAME_FILTER_EXAMPLES.rejected) {
+      expect(schemaOk(name), name).toBe(true);
+      expect(cleanText(name), name).toBe(name);
+      expect(filter(name), name).toBe(false);
+    }
   });
 });

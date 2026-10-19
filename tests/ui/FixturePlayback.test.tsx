@@ -48,7 +48,12 @@ describe('Fixture Playback Integration', () => {
     expect(screen.getByTestId('reveal-screen')).toBeDefined();
     expect(screen.getByTestId('exposure-banner')).toBeDefined();
     expect(screen.getByText('🚨 SCANDAL REPORT')).toBeDefined();
-    expect(screen.getByText(/The mixed Post:/)).toBeDefined();
+    const frame = exposuresFixture.frames[revealFrameIndex]!.public;
+    for (const e of frame.exposures) {
+      const paper = frame.papers.find((p) => p.seatId === e.seatId);
+      expect(paper).toBeDefined();
+      expect(screen.getByText(`${paper!.paperName}:`)).toBeDefined();
+    }
   });
 
   it('renders final edition scoreboard on finale frame', () => {

@@ -281,7 +281,8 @@ Bots are rule-based. The AI only writes their headline text, with template fallb
   1. Expose if it holds proof.
   2. Otherwise, if its evidence shows a real event, a true story with evidence.
   3. Otherwise `all_clear` with evidence at the location it checked.
-  4. There's a 10% chance it lies instead.
+  4. If it investigated a rival headline and found no proof, it holds no evidence. It then prints its tip's claim at the tip location, without evidence. The Caretaker is the exception: in this case it publishes nothing unless its 10% lie roll fires, and then it prints its tip's claim at the tip location.
+  5. There's a 10% chance it lies instead. When the Gazette bot holds no evidence, the lie is the highest-hype other claim at its tip location. This does not apply to the Caretaker, whose lie in that case is its tip's claim (item 4).
 
 **The Wildcard ("Rumor Mill Weekly")**
 - Makes uniformly random valid choices, but if it holds proof it exposes 50% of the time.
