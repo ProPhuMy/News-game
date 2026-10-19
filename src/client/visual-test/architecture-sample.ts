@@ -6,7 +6,11 @@ import type { ArchitectureScenario } from './architecture-scenario.ts';
 import { measureCanvas, readyVerdict } from './pixels.ts';
 import type { VisualState } from './state.ts';
 
-/** Structural copy of Codex's entry point (plans/D1.md), so the harness builds before it exists. */
+/**
+ * Structural copy of Codex's entry point (plans/D1.md), so the harness builds before it exists. The renderer is
+ * borrowed: already sized and attached; the sample may configure it but never disposes it. setTime(ms) must render
+ * one frame synchronously (presentation-interface note §5).
+ */
 export interface RenderingSampleModule {
   createRenderingSample(options: {
     container: HTMLElement;
