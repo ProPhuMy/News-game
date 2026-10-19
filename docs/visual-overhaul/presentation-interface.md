@@ -109,6 +109,7 @@ export type PropFactory = (kind: string, ctx: ArchitectureContext) => PlacedPiec
 ```
 
 - Integration entry point stays `createTownBuildings` in `src/client/town/buildings.ts` (Claude). In C2 it becomes `createTownBuildings(layout: TownLayout, ctx?: ArchitectureContext): TownBuildings` and `TownBuildings` gains `ready: Promise<SceneReadiness>` (all pieces, `degraded` lists merged) and `dispose(): void` (disposes every piece). Its existing members stay unchanged: `group`, `getLocationAnchor`, `getOfficeAnchor`, `setOfficeHighlight`, `syncOffices`, `getOfficeBannerColor`.
+- **C2 (implemented, shapes unchanged):** the types above are in `src/client/visuals/town-types.ts`, `createTownBuildings(layout, ctx?)` has `ready` and `dispose`, the sample factories are `createBakery`, `createBakeryHybrid` (comparison only) and `createProp`. Proposed D1 extensions (a textured `MaterialKit.preserve`, a palette wood role, open-geometry outlines) are in `requests/C2-codex-assets-materialkit.md`; none is adopted.
 - World units: the shared grid spacing is `GRID.spacing = 12` between street nodes (`src/shared/town-map.ts`). Current citizen height is measured by Codex in D0 and recorded here.
 
 ## 4. Anchors (one representation)
@@ -136,6 +137,7 @@ export type PropFactory = (kind: string, ctx: ArchitectureContext) => PlacedPiec
   - Recoverable fallbacks are listed in `degraded`. A nonempty list fails the capture with `degraded-assets: ...`, so a screenshot can never certify missing models silently.
 - Capture order (implemented in `src/client/visual-test/settle.ts`): apply the fixture frame, mount, await `whenReady()` if present, then advance the virtual clock by exactly `reactionMs` (a value of 0 still draws one frame), then measure and publish `window.__NEWS_TOWN_VISUAL__`.
 - Browser: `playwright-core` 1.63.0 with its Chromium build 1243 (software WebGL through SwiftShader). The command starts the browser without `DISPLAY` / `WAYLAND_DISPLAY`, because an inherited desktop display this account cannot open disables WebGL.
+- Architecture sample (C2, additive): `npm run capture -- --target architecture [--variant code|hybrid-original|hybrid-palette] [--view street|awning] [--palette a|b|c] --out <file.png>`. It renders the sample bakery and props with a harness-only preview `MaterialKit`/`AssetSource` (`src/client/visual-test/preview-kit.ts`), awaits every piece's `ready`, and fails on any `degraded` entry.
 - Viewing: Claude opens PNGs with its Read tool. Codex opens PNGs with its own image viewer. Each agent looks at its own captures directly.
 
 ## 5a. Character inspection scenario (D0 support)
