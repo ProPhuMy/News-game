@@ -4,23 +4,10 @@ import type { Page } from 'playwright-core';
 import { stressText } from '../../src/client/visual-test/stress-text.ts';
 import { TUNING } from '../../src/shared/tuning.ts';
 import type { CaptureOptions } from './args.ts';
+import { correctedJoinResult, firstJoinResult, joinPage, LOBBY, type JoinRecord } from './join-flow.ts';
 import { layoutProblems, type LayoutNode, type LayoutProblems } from './layout.ts';
 
 export type LayoutReport = LayoutProblems;
-
-export interface JoinRecord { outcome: 'rejected' | 'accepted' | 'corrected'; error: string | null; entry: 'createRoom' }
-
-const JOIN_ERROR = '[data-testid="join-error"]';
-const LOBBY = '[data-testid="lobby-screen"]';
-
-/** Waits for the join error banner or the lobby, whichever comes first; fails clearly if neither shows. */
-async function joinResult(page: Page, timeout: number, what: string): Promise<'error' | 'lobby'> {
-  const either = page.locator(`${JOIN_ERROR}, ${LOBBY}`).first();
-  await either.waitFor({ timeout }).catch(() => {
-    throw new Error(`${what}: neither the join error banner nor the lobby appeared within ${timeout}ms`);
-  });
-  return (await page.locator(LOBBY).count()) > 0 ? 'lobby' : 'error';
-}
 
 /**
  * Drives the real app to home, join or lobby. Lobby really creates a room on the local dev server.
@@ -43,12 +30,15 @@ export async function openLiveScreen(page: Page, options: CaptureOptions): Promi
     await page.waitForSelector(LOBBY, { timeout });
     return null;
   }
-  if (await joinResult(page, timeout, 'join') === 'lobby') return { outcome: 'accepted', error: null, entry: 'createRoom' };
-  const error = ((await page.locator(JOIN_ERROR).textContent()) ?? '').trim();
+  const jp = joinPage(page);
+  const first = await firstJoinResult(jp, timeout);
+  if (first.lobby) return { outcome: 'accepted', error: null, entry: 'createRoom' };
+  const error = first.error ?? '';
   if (options.correctPlayerName === null) return { outcome: 'rejected', error, entry: 'createRoom' };
   await page.fill('#player-name', options.correctPlayerName);
   await page.getByRole('button', { name: 'Claim Printing Press' }).click();
-  if (await joinResult(page, timeout, 'corrected join') !== 'lobby') throw new Error(`corrected name was also rejected: ${(await page.locator(JOIN_ERROR).textContent())?.trim() ?? ''}`);
+  const second = await correctedJoinResult(jp, timeout);
+  if (!second.lobby) throw new Error(`corrected name was also rejected: ${second.error ?? ''}`);
   return { outcome: 'corrected', error, entry: 'createRoom' };
 }
 

@@ -102,7 +102,7 @@ export function parseCaptureArgs(argv: readonly string[]): CaptureOptions {
       continue;
     }
     if (flag in NAME_FLAGS) {
-      if (value === undefined) throw new Error(`${flag} needs a value`);
+      if (value === undefined || value.trim() === '') throw new Error(`${flag} needs a non-empty value`);
       options[NAME_FLAGS[flag as keyof typeof NAME_FLAGS]] = value;
     } else if (flag === '--target') {
       if (value !== 'town' && value !== 'app' && value !== 'character' && value !== 'architecture' && value !== 'crowd') {
@@ -160,6 +160,7 @@ export function parseCaptureArgs(argv: readonly string[]): CaptureOptions {
   if ((options.playerName ?? options.paperName ?? options.correctPlayerName) !== null && !(options.target === 'app' && options.screen === 'lobby')) {
     throw new Error('--player-name, --paper-name and --correct-player-name need --target app --screen lobby');
   }
+  if (options.stressText && (options.playerName ?? options.paperName) !== null) throw new Error('--stress-text cannot be combined with --player-name or --paper-name');
   if (options.correctPlayerName !== null && options.playerName === null) throw new Error('--correct-player-name needs --player-name');
   if (options.prod && options.target !== 'app') throw new Error('--prod only supports --target app (the town harness is dev-only)');
   if (options.prod && options.screen !== 'home') throw new Error('--prod supports only --screen home (the UI harness is dev-only)');

@@ -175,7 +175,12 @@ describe('join name flags and live --no-webgl', () => {
 
   it('needs --player-name before a correction, and a value for each flag', () => {
     expect(() => parseCaptureArgs([...live, '--correct-player-name', 'Ada'])).toThrow(/--correct-player-name needs --player-name/);
-    expect(() => parseCaptureArgs([...live, '--player-name'])).toThrow(/--player-name needs a value/);
+    expect(() => parseCaptureArgs([...live, '--player-name'])).toThrow(/--player-name needs a non-empty value/);
+    for (const flag of ['--player-name', '--paper-name', '--correct-player-name']) {
+      for (const bad of ['', '   ']) expect(() => parseCaptureArgs([...live, flag, bad])).toThrow(/needs a non-empty value/);
+    }
+    expect(() => parseCaptureArgs([...live, '--player-name', 'x', '--stress-text'])).toThrow(/--stress-text cannot be combined/);
+    expect(() => parseCaptureArgs([...live, '--paper-name', 'x', '--stress-text'])).toThrow(/--stress-text cannot be combined/);
   });
 
   it('rejects --no-webgl on live screens, which never carry it', () => {
