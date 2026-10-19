@@ -83,8 +83,8 @@ async function capture(options: CaptureOptions): Promise<void> {
       await page.evaluate(() => document.fonts.ready.then(() => undefined));
       await focusAndScroll(page, options);
       layout = await measureLayout(page);
-      if (layout.pageOverflowX || layout.unreachable.length > 0) {
-        throw new Error(`layout: pageOverflowX=${String(layout.pageOverflowX)}; unreachable: ${layout.unreachable.join(', ') || 'none'}`);
+      if (layout.overflowX.length > 0 || layout.unreachable.length > 0) {
+        throw new Error(`layout: overflowX: ${layout.overflowX.join(', ') || 'none'}; unreachable: ${layout.unreachable.join(', ') || 'none'}`);
       }
     }
 

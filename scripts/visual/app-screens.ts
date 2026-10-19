@@ -5,8 +5,9 @@ import { stressText } from '../../src/client/visual-test/stress-text.ts';
 import { TUNING } from '../../src/shared/tuning.ts';
 import { getPalette, paletteCssVariables } from '../../src/client/visuals/palette.ts';
 import type { CaptureOptions } from './args.ts';
+import { layoutProblems, type LayoutNode, type LayoutProblems } from './layout.ts';
 
-export interface LayoutReport { pageOverflowX: boolean; unreachable: string[] }
+export type LayoutReport = LayoutProblems;
 
 /** Drives the real app to home, join or lobby. Lobby really creates a room on the local dev server. */
 export async function openLiveScreen(page: Page, options: CaptureOptions): Promise<void> {
@@ -44,35 +45,30 @@ export async function focusAndScroll(page: Page, options: CaptureOptions): Promi
   }
 }
 
-/**
- * A control is unreachable when its box is outside the viewport and no ancestor scrolls in that direction.
- * Controls inside closed <details> or hidden elements have no box and are skipped.
- */
-export function measureLayout(page: Page): Promise<LayoutReport> {
-  return page.evaluate(() => {
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    const scrolls = (el: Element, axis: 'x' | 'y') => {
+/** Collects the box tree under #ui-root in the page and checks it with layoutProblems (scripts/visual/layout.ts). */
+export async function measureLayout(page: Page): Promise<LayoutReport> {
+  const { nodes, viewport } = await page.evaluate(() => {
+    const root = document.getElementById('ui-root');
+    const elements = root ? [root, ...root.querySelectorAll('*')] : [];
+    const index = new Map(elements.map((el, i) => [el, i]));
+    const controls = 'button, input, select, textarea, a[href], summary';
+    const list = elements.map((el) => {
       const style = getComputedStyle(el);
-      const overflow = axis === 'x' ? style.overflowX : style.overflowY;
-      const room = axis === 'x' ? el.scrollWidth > el.clientWidth : el.scrollHeight > el.clientHeight;
-      return room && (overflow === 'auto' || overflow === 'scroll');
-    };
-    const hasScroller = (el: Element, axis: 'x' | 'y') => {
-      for (let p = el.parentElement; p; p = p.parentElement) if (scrolls(p, axis)) return true;
-      return false;
-    };
-    const unreachable: string[] = [];
-    for (const el of document.querySelectorAll('#ui-root :is(button, input, select, textarea, a[href], summary)')) {
-      const box = el.getBoundingClientRect();
-      if (box.width === 0 && box.height === 0) continue;
-      const outX = box.right > vw + 1 || box.left < -1;
-      const outY = box.bottom > vh + 1 || box.top < -1;
-      if ((outX && !hasScroller(el, 'x')) || (outY && !hasScroller(el, 'y'))) {
-        const label = (el.getAttribute('aria-label') ?? el.textContent ?? '').trim().slice(0, 40);
-        unreachable.push(`${el.tagName.toLowerCase()} "${label}"`);
-      }
-    }
-    return { pageOverflowX: document.documentElement.scrollWidth > vw + 1, unreachable };
+      const r = el.getBoundingClientRect();
+      const control = el.matches(controls);
+      const text = (el.getAttribute('aria-label') ?? el.textContent ?? '').trim().slice(0, 40);
+      const cls = typeof el.className === 'string' && el.className ? `.${el.className.trim().split(/\s+/).join('.')}` : '';
+      return {
+        label: control ? `${el.tagName.toLowerCase()} "${text}"` : `${el.tagName.toLowerCase()}${cls}`,
+        box: { left: r.left, top: r.top, right: r.right, bottom: r.bottom },
+        parent: el.parentElement ? (index.get(el.parentElement) ?? null) : null,
+        control,
+        clipX: style.overflowX !== 'visible', clipY: style.overflowY !== 'visible',
+        scrollX: style.overflowX === 'auto' || style.overflowX === 'scroll',
+        scrollY: style.overflowY === 'auto' || style.overflowY === 'scroll',
+      };
+    });
+    return { nodes: list, viewport: { width: window.innerWidth, height: window.innerHeight } };
   });
+  return layoutProblems(nodes satisfies LayoutNode[], viewport);
 }

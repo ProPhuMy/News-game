@@ -68,7 +68,8 @@
   font-weight: 700;
 }
 .color-choice-btn .icon { font-size: 1.4rem; }
-.color-choice-btn.selected { background: color-mix(in srgb, var(--paper) 22%, var(--nt-panel)); outline: 3px solid var(--nt-ink); }
+/* box-shadow, not outline, so the :focus-visible ring still shows on the selected color. */
+.color-choice-btn.selected { background: color-mix(in srgb, var(--paper) 22%, var(--nt-panel)); box-shadow: 0 0 0 3px var(--nt-ink); }
 .color-choice-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .taken-label { font-size: 0.8rem; color: var(--nt-danger); }
 .join-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); justify-content: space-between; }

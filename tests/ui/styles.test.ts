@@ -37,4 +37,13 @@ describe('stylesheets', () => {
     const globals = css('globals.css');
     for (const selector of POINTER_SELECTORS) expect(globals, selector).toContain(selector);
   });
+
+  it('never marks a selected control with outline, which would hide the focus ring', () => {
+    for (const file of readdirSync(STYLES).filter((f) => f.endsWith('.css'))) {
+      for (const rule of css(file).matchAll(/([^{}]*\.selected[^{}]*)\{([^}]*)\}/g)) {
+        if (rule[1]!.includes(':focus-visible')) continue;
+        expect(rule[2], `${file}: ${rule[1]!.trim()}`).not.toMatch(/(^|;|\s)outline\s*:/);
+      }
+    }
+  });
 });
