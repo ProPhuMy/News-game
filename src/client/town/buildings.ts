@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import type { Location, SeatId } from '../../shared/ids.ts';
 import { COLORS, LOCATIONS } from '../../shared/ids.ts';
 import type { PaperPublic } from '../../shared/snapshots.ts';
+import type { ArchitectureContext, PlacedPiece, SceneReadiness } from '../visuals/town-types.ts';
+import { createBakery } from './architecture/bakery.ts';
 import { PAPER_COLOR_HEX } from './citizens.ts';
 import type { TownLayout } from './types.ts';
 
@@ -12,6 +14,10 @@ export interface TownBuildings {
   setOfficeHighlight(seatId: SeatId, active: boolean): void;
   syncOffices(papers: readonly PaperPublic[]): void;
   getOfficeBannerColor(seatId: SeatId): number;
+  /** Resolves when every building's assets are in place; `degraded` merges every piece's list. */
+  ready: Promise<SceneReadiness>;
+  /** Disposes every piece and the primitive buildings' own geometries and materials. */
+  dispose(): void;
 }
 
 const SEAT_HEX_COLORS: readonly number[] = [
@@ -160,13 +166,28 @@ function buildOfficeMesh(seatId: SeatId): { group: THREE.Group; bannerMat: THREE
   return { group: g, bannerMat };
 }
 
-export function createTownBuildings(layout: TownLayout): TownBuildings {
+/** Frees what the primitive buildings created; sample pieces free their own through PlacedPiece.dispose. */
+function disposePrimitives(root: THREE.Object3D): void {
+  root.traverse((child) => {
+    if (!(child instanceof THREE.Mesh)) return;
+    child.geometry.dispose();
+    (child.material as THREE.Material).dispose();
+  });
+}
+
+/**
+ * Without `ctx`, every building is today's primitive. With `ctx` (presentation-interface note §3), the sample
+ * pieces delivered so far replace their primitives: in C2 only the bakery. C3 adds the rest.
+ */
+export function createTownBuildings(layout: TownLayout, ctx?: ArchitectureContext): TownBuildings {
   const group = new THREE.Group();
   group.name = 'town-buildings';
 
   const locationAnchors = new Map<Location, THREE.Vector3>();
   const officeAnchors = new Map<SeatId, THREE.Vector3>();
   const officeBanners: THREE.MeshLambertMaterial[] = [];
+  const pieces: PlacedPiece[] = [];
+  const primitives: THREE.Object3D[] = [];
 
   const builders: Record<Location, () => THREE.Group> = {
     bakery: buildBakeryMesh,
@@ -178,7 +199,15 @@ export function createTownBuildings(layout: TownLayout): TownBuildings {
 
   LOCATIONS.forEach((loc) => {
     const nodePos = layout.getNodeWorldPos(layout.getLocationNode(loc));
-    const mesh = builders[loc]();
+    let mesh: THREE.Object3D;
+    if (ctx && loc === 'bakery') {
+      const piece = createBakery(ctx);
+      pieces.push(piece);
+      mesh = piece.object;
+    } else {
+      mesh = builders[loc]();
+      primitives.push(mesh);
+    }
     mesh.position.set(nodePos.x, 0, nodePos.z);
     group.add(mesh);
 
@@ -194,6 +223,7 @@ export function createTownBuildings(layout: TownLayout): TownBuildings {
     const { group: officeGroup, bannerMat } = buildOfficeMesh(seatId);
     officeGroup.position.set(nodePos.x, 0, nodePos.z);
     group.add(officeGroup);
+    primitives.push(officeGroup);
     officeBanners[seatId] = bannerMat;
 
     officeAnchors.set(
@@ -202,8 +232,19 @@ export function createTownBuildings(layout: TownLayout): TownBuildings {
     );
   }
 
+  const ready = Promise.all(pieces.map((piece) => piece.ready)).then((all) => ({
+    degraded: all.flatMap((readiness) => readiness.degraded),
+  }));
+
   return {
     group,
+    ready,
+
+    dispose(): void {
+      for (const piece of pieces) piece.dispose();
+      for (const primitive of primitives) disposePrimitives(primitive);
+      group.clear();
+    },
 
     getLocationAnchor(location: Location): THREE.Vector3 {
       const a = locationAnchors.get(location);

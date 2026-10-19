@@ -1,4 +1,6 @@
-export type CaptureTarget = 'town' | 'app' | 'character';
+import { ARCHITECTURE_VARIANTS, ARCHITECTURE_VIEWS, type ArchitectureScenario } from '../../src/client/visual-test/architecture-scenario.ts';
+
+export type CaptureTarget = 'town' | 'app' | 'character' | 'architecture';
 export const APP_SCREENS = ['home', 'join', 'lobby', 'match', 'loading', 'disconnected', 'error'] as const;
 export type AppScreen = (typeof APP_SCREENS)[number];
 /** Screens driven on the real dev server; the rest come from the fixture-fed UI harness. */
@@ -38,6 +40,10 @@ export interface CaptureOptions {
   scroll: string | null;
   /** Abort /fonts/ requests, to check the fallback fonts. */
   blockFonts: boolean;
+  /** --target architecture only: which bakery variant to render. */
+  variant: ArchitectureScenario['variant'];
+  /** --target architecture only: camera view. */
+  view: ArchitectureScenario['view'];
 }
 
 const DEFAULTS: Omit<CaptureOptions, 'out'> = {
@@ -45,6 +51,7 @@ const DEFAULTS: Omit<CaptureOptions, 'out'> = {
   reducedMotion: false, seed: 1, width: 1280, height: 720, prod: false, timeoutMs: 60000,
   model: 'characters/kenney-mini/character-male-a.glb', clip: null, timeMs: 0, count: 1,
   screen: 'home', palette: 'a', stressText: false, tab: 0, scroll: null, blockFonts: false,
+  variant: 'code', view: 'street',
 };
 
 const NUMBER_FLAGS = {
@@ -60,6 +67,7 @@ function wholeNumber(flag: string, raw: string | undefined): number {
 
 export function parseCaptureArgs(argv: readonly string[]): CaptureOptions {
   const options: Omit<CaptureOptions, 'out'> & { out?: string } = { ...DEFAULTS };
+  let architectureOnly = false;
   for (let i = 0; i < argv.length; i++) {
     const flag = argv[i]!;
     if (flag === '--reduced-motion') { options.reducedMotion = true; continue; }
@@ -73,8 +81,8 @@ export function parseCaptureArgs(argv: readonly string[]): CaptureOptions {
       continue;
     }
     if (flag === '--target') {
-      if (value !== 'town' && value !== 'app' && value !== 'character') {
-        throw new Error(`--target must be town, app or character, got "${value ?? ''}"`);
+      if (value !== 'town' && value !== 'app' && value !== 'character' && value !== 'architecture') {
+        throw new Error(`--target must be town, app, character or architecture, got "${value ?? ''}"`);
       }
       options.target = value;
     } else if (flag === '--fixture') {
@@ -93,6 +101,16 @@ export function parseCaptureArgs(argv: readonly string[]): CaptureOptions {
       const palette = PALETTE_IDS.find((p) => p === value);
       if (!palette) throw new Error(`--palette must be a, b or c, got "${value ?? ''}"`);
       options.palette = palette;
+    } else if (flag === '--variant') {
+      const variant = ARCHITECTURE_VARIANTS.find((v) => v === value);
+      if (!variant) throw new Error(`--variant must be one of ${ARCHITECTURE_VARIANTS.join(', ')}, got "${value ?? ''}"`);
+      options.variant = variant;
+      architectureOnly = true;
+    } else if (flag === '--view') {
+      const view = ARCHITECTURE_VIEWS.find((v) => v === value);
+      if (!view) throw new Error(`--view must be one of ${ARCHITECTURE_VIEWS.join(', ')}, got "${value ?? ''}"`);
+      options.view = view;
+      architectureOnly = true;
     } else if (flag === '--scroll') {
       if (!value) throw new Error('--scroll needs a CSS selector');
       options.scroll = value;
@@ -105,6 +123,7 @@ export function parseCaptureArgs(argv: readonly string[]): CaptureOptions {
   }
   if (!options.out) throw new Error('--out <file.png> is required');
   if (!options.out.endsWith('.png')) throw new Error('--out must end with .png');
+  if (architectureOnly && options.target !== 'architecture') throw new Error('--variant and --view need --target architecture');
   if (options.prod && options.target !== 'app') throw new Error('--prod only supports --target app (the town harness is dev-only)');
   if (options.prod && options.screen !== 'home') throw new Error('--prod supports only --screen home (the UI harness is dev-only)');
   return { ...options, out: options.out };
@@ -118,6 +137,12 @@ export function harnessPath(options: CaptureOptions): string {
     query.set('timeMs', String(options.timeMs));
     query.set('count', String(options.count));
     query.set('seed', String(options.seed));
+    return `/visual-test/index.html?${query.toString()}`;
+  }
+  if (options.target === 'architecture') {
+    const query = new URLSearchParams({
+      scene: 'architecture', variant: options.variant, view: options.view, palette: options.palette, seed: String(options.seed),
+    });
     return `/visual-test/index.html?${query.toString()}`;
   }
   if (options.target === 'app' && LIVE_SCREENS.includes(options.screen)) return '/';

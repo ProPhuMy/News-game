@@ -1,10 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import * as THREE from 'three';
 import { createTownBuildings } from '../../src/client/town/buildings.ts';
 import { PAPER_COLOR_HEX } from '../../src/client/town/citizens.ts';
 import { createTownEnvironment } from '../../src/client/town/environment.ts';
 import { createTownLayout } from '../../src/client/town/layout.ts';
 import { LOCATIONS } from '../../src/shared/ids.ts';
+import { fakeContext } from './architecture/fake-context.ts';
 
 describe('Town Environment and Buildings', () => {
   it('creates town environment with ground plane and road segments', () => {
@@ -64,5 +65,38 @@ describe('Town Environment and Buildings', () => {
 
     expect(() => buildings.setOfficeHighlight(1, true)).not.toThrow();
     expect(() => buildings.setOfficeHighlight(1, false)).not.toThrow();
+  });
+});
+
+describe('createTownBuildings with an ArchitectureContext', () => {
+  it('without context, ready resolves clean', async () => {
+    const buildings = createTownBuildings(createTownLayout());
+    await expect(buildings.ready).resolves.toEqual({ degraded: [] });
+  });
+
+  it('with context, the bakery is the sample piece at its node', async () => {
+    const layout = createTownLayout();
+    const buildings = createTownBuildings(layout, fakeContext());
+    await expect(buildings.ready).resolves.toEqual({ degraded: [] });
+    const bakery = buildings.group.getObjectByName('bakery');
+    expect(bakery?.getObjectByName('bakery-door')).toBeDefined();
+    const node = layout.getNodeWorldPos(layout.getLocationNode('bakery'));
+    expect(bakery!.position.x).toBeCloseTo(node.x, 5);
+    expect(bakery!.position.z).toBeCloseTo(node.z, 5);
+    const anchor = buildings.getLocationAnchor('bakery');
+    expect(anchor.x).toBeCloseTo(node.x, 5);
+    expect(anchor.z).toBeCloseTo(node.z, 5);
+  });
+
+  it('dispose removes every building and frees primitive resources', () => {
+    const buildings = createTownBuildings(createTownLayout());
+    const bank = buildings.group.getObjectByName('building-bank') as THREE.Group;
+    const mesh = bank.children[0] as THREE.Mesh;
+    const geometry = vi.spyOn(mesh.geometry, 'dispose');
+    const material = vi.spyOn(mesh.material as THREE.Material, 'dispose');
+    buildings.dispose();
+    expect(buildings.group.children).toHaveLength(0);
+    expect(geometry).toHaveBeenCalled();
+    expect(material).toHaveBeenCalled();
   });
 });

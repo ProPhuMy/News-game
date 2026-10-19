@@ -4,6 +4,7 @@ import { createClientStore } from '../net/store.ts';
 import { createVirtualClock } from './clock.ts';
 import { parseFixture, parseScenario, selectFrameIndex } from './scenario.ts';
 import { mountAndSettleTown } from './town-mount.ts';
+import { runArchitecture } from './architecture.ts';
 import { runInspection } from './inspect.ts';
 import { sceneKind } from './inspection-scenario.ts';
 import { publish } from './state.ts';
@@ -12,10 +13,12 @@ const fixtureLoaders = import.meta.glob<unknown>('../../sim/fixtures/*.json', { 
 
 async function run(): Promise<void> {
   publish({ status: 'loading' });
-  if (sceneKind(window.location.search) === 'inspect-character') {
+  const kind = sceneKind(window.location.search);
+  if (kind === 'inspect-character' || kind === 'architecture') {
     const container = document.getElementById('town');
     if (!container) throw new Error('missing #town container');
-    publish(await runInspection(window.location.search, container));
+    const runScene = kind === 'architecture' ? runArchitecture : runInspection;
+    publish(await runScene(window.location.search, container));
     return;
   }
   const scenario = parseScenario(window.location.search);

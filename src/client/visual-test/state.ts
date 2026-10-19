@@ -1,4 +1,5 @@
 import type { AppScenario, HarnessScreen } from './app-scenario.ts';
+import type { ArchitectureScenario } from './architecture-scenario.ts';
 import type { InspectionScenario } from './inspection-scenario.ts';
 import type { VisualScenario } from './scenario.ts';
 
@@ -25,6 +26,7 @@ export type VisualState =
       height: number;
       distinctColors: number;
     }
+  | { status: 'ready'; scene: 'architecture'; scenario: ArchitectureScenario; width: number; height: number; distinctColors: number }
   | { status: 'error'; error: string };
 
 declare global {
