@@ -22,10 +22,12 @@ export function createOffice(ctx: ArchitectureContext, bannerHex: number): Offic
   const root = new THREE.Group();
   root.name = 'office';
 
-  root.add(at(parts.mesh(new THREE.BoxGeometry(width - 0.2, WALL_TOP, FRONT * 2), wood), 0, WALL_TOP / 2, 0));
+  const wall = at(parts.mesh(new THREE.BoxGeometry(width - 0.2, WALL_TOP, FRONT * 2), wood), 0, WALL_TOP / 2, 0);
+  wall.name = 'office-wall';
+  root.add(wall);
   root.add(at(parts.mesh(new THREE.BoxGeometry(width, 0.3, depth - 0.2), roof), 0, WALL_TOP + 0.15, 0));
 
-  const door = at(parts.mesh(new THREE.BoxGeometry(1.3, 4.2, 0.12), wood), 0, 2.1, FRONT + 0.06);
+  const door = at(parts.mesh(new THREE.BoxGeometry(1.3, 4.2, 0.12), trim), 0, 2.1, FRONT + 0.06);
   door.name = 'office-door';
   root.add(door);
   root.add(at(parts.mesh(new THREE.BoxGeometry(1.7, 0.2, 0.2), trim), 0, 4.3, FRONT + 0.1));

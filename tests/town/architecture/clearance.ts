@@ -60,3 +60,16 @@ export function propFootprintRect(p: DressingPlacement): GroundRect {
   const d = turned ? footprint.width : footprint.depth;
   return { name: `${p.kind}@${p.x},${p.z}`, minX: p.x - w / 2, maxX: p.x + w / 2, minZ: p.z - d / 2, maxZ: p.z + d / 2 };
 }
+
+/** Road strips a circle (for example the fountain basin) overlaps: center-to-strip distance below the radius. */
+export function circleRoadViolations(name: string, cx: number, cz: number, radius: number): string[] {
+  const out: string[] = [];
+  for (const [a, b] of STREET_EDGES) {
+    const p = node(a);
+    const q = node(b);
+    const dx = Math.max(Math.min(p.x, q.x) - ROAD_CLEAR - cx, 0, cx - (Math.max(p.x, q.x) + ROAD_CLEAR));
+    const dz = Math.max(Math.min(p.z, q.z) - ROAD_CLEAR - cz, 0, cz - (Math.max(p.z, q.z) + ROAD_CLEAR));
+    if (Math.hypot(dx, dz) < radius) out.push(`${name} overlaps road ${a}-${b}`);
+  }
+  return out;
+}

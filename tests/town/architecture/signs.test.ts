@@ -15,6 +15,8 @@ describe('pixel signboard', () => {
     const src = ctx.preserved[0] as THREE.MeshStandardMaterial;
     const tex = src.map as THREE.DataTexture;
     expect(tex.magFilter).toBe(THREE.NearestFilter);
+    expect(tex.minFilter).toBe(THREE.LinearMipmapLinearFilter);
+    expect(tex.generateMipmaps).toBe(true);
     expect(tex.colorSpace).toBe(THREE.SRGBColorSpace);
     const px = tex.image.data as Uint8Array;
     const has = (hex: number) => {

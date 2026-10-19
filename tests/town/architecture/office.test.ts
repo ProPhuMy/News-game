@@ -73,9 +73,10 @@ describe('code-built newspaper office', () => {
       for (const swatch of Object.values(palette.paper)) {
         const ctx = fakeContext(id);
         const piece = createOffice(ctx, swatch.hex);
-        const wall = meshes(piece.object).find((m) => m.geometry.boundingBox === null && m.position.y === 2.5)!;
+        const wall = meshes(piece.object).find((m) => m.name === 'office-wall')!;
         expect(wall.material, id).toBe(ctx.materials.surface(palette.town.wood));
         expect(palette.town.wood, id).not.toBe(swatch.hex);
+        for (const b of bannerMeshes(piece.object)) expect(b.material, id).not.toBe(wall.material);
       }
     }
   });

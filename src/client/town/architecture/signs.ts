@@ -56,7 +56,8 @@ function glyphTexture(ctx: ArchitectureContext, text: string): { texture: THREE.
   });
   const texture = new THREE.DataTexture(data, w, h, THREE.RGBAFormat);
   texture.magFilter = THREE.NearestFilter;
-  texture.minFilter = THREE.NearestFilter;
+  texture.minFilter = THREE.LinearMipmapLinearFilter;
+  texture.generateMipmaps = true;
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.needsUpdate = true;
   return { texture, w, h };

@@ -14,11 +14,11 @@ const MIDPOINTS = [-18, -6, 6, 18] as const;
 
 // Building fronts face the street to their south, so lamps line the north curb of each east-west street. Where a
 // building door, a crowd disk or the fountain rules the north-curb midpoint out, the lamp moves along the curb or
-// across to the south curb (null drops it: a newsstand stands there instead).
+// across to the south curb (null drops it: a newsstand stands there, or the lamp would hide a door in the game view).
 const LAMP_MOVES: Readonly<Record<string, readonly [number, number] | null>> = {
   '-24:-18': [-18, -21.6], '-24:18': [18, -21.6], '24:-18': [-18, 26.4], '24:18': [18, 26.4],
   '-12:-6': [-6, -9.6], '-12:6': [3.2, -9.6], '-12:-18': null, '-12:18': null,
-  '12:-18': [-17, 9.6], '12:18': [20.5, 14.4], '0:6': [6, 2.4],
+  '12:-18': null, '12:18': [20.5, 14.4], '0:6': [6, 2.4],
 };
 const frontLamps = GRID_LINES.flatMap((line) =>
   MIDPOINTS.flatMap((x) => {

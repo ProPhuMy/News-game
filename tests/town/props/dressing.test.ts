@@ -109,7 +109,7 @@ describe('placement rules', () => {
     }
   });
 
-  it('keeps every door approach clear (flower boxes excepted)', () => {
+  it('keeps every door approach clear (flower boxes excepted) and no lamp in front of a door', () => {
     const ctx = fakeContext();
     const doors = [
       ...(['bakery', 'bank', 'town_hall', 'clinic'] as const).map((loc) => {
@@ -128,8 +128,11 @@ describe('placement rules', () => {
       const x = (box.min.x + box.max.x) / 2;
       const front = center.z + piece.footprint.depth / 2;
       const approach: GroundRect = { name: `${name} door approach`, minX: x - 1.5, maxX: x + 1.5, minZ: front, maxZ: front + 3 };
+      // Lamps are tall and the game camera looks down from +Z: keep them out of 2.5 either side of the door, 5 in front of it.
+      const lampZone: GroundRect = { ...approach, minX: x - 2.5, maxX: x + 2.5, maxZ: front + 5 };
       for (const p of TOWN_DRESSING) {
         if (p.kind !== 'flower-box' && overlaps(footprintRect(p), approach)) problems.push(`${p.kind}@${p.x},${p.z} blocks ${approach.name}`);
+        if (p.kind === 'gas-lamp' && overlaps(footprintRect(p), lampZone)) problems.push(`${p.kind}@${p.x},${p.z} hides ${approach.name}`);
       }
     }
     expect(problems).toEqual([]);

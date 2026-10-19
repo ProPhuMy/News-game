@@ -10,7 +10,7 @@ import { getPalette } from '../../../src/client/visuals/palette.ts';
 import type { AssetSource } from '../../../src/client/visuals/town-types.ts';
 import { COLORS, LOCATIONS } from '../../../src/shared/ids.ts';
 import type { PaperPublic } from '../../../src/shared/snapshots.ts';
-import { clearanceViolations, groundRects, propFootprintRect } from './clearance.ts';
+import { circleRoadViolations, clearanceViolations, groundRects, propFootprintRect } from './clearance.ts';
 import { fakeContext } from './fake-context.ts';
 
 // One box per call, sized to the kind's declared height and footprint so fitting keeps it inside that footprint.
@@ -45,6 +45,7 @@ describe('createTownBuildings with the full architecture town', () => {
     const rects = [...groundRects(town.group).filter((r) => r.name !== 'fountain'), ...nature.map(propFootprintRect)];
     expect(clearanceViolations(rects)).toEqual([]);
     const fountain = town.group.getObjectByName('fountain')!.getWorldPosition(new THREE.Vector3());
+    expect(circleRoadViolations('fountain', fountain.x, fountain.z, FOUNTAIN_RADIUS)).toEqual([]);
     for (const n of layout.getStreetNodes()) {
       const gather = LOCATIONS.some((l) => layout.getLocationNode(l) === n.id) || [0, 1, 2, 3].some((s) => layout.getOfficeNode(s as 0) === n.id);
       expect(Math.hypot(fountain.x - n.x, fountain.z - n.z) - FOUNTAIN_RADIUS).toBeGreaterThanOrEqual(gather ? GATHER_CLEARANCE : NODE_CLEARANCE);
@@ -54,6 +55,11 @@ describe('createTownBuildings with the full architecture town', () => {
       const node = layout.getNodeWorldPos(layout.getOfficeNode(seat as 0));
       expect(Math.hypot(office.position.x - node.x, office.position.z - node.z)).toBeGreaterThanOrEqual(5);
     }
+  });
+
+  it('flags a fountain circle that sits on a road', () => {
+    expect(circleRoadViolations('fountain', 0, 0, FOUNTAIN_RADIUS).length).toBeGreaterThan(0);
+    expect(circleRoadViolations('fountain', 6, -6, FOUNTAIN_RADIUS)).toEqual([]);
   });
 
   it('places every location building away from its node, named after its factory', () => {
@@ -104,6 +110,15 @@ describe('createTownBuildings with the full architecture town', () => {
     await late.ready;
     expect(late.group.children).toHaveLength(0);
     expect(late.group.getObjectByProperty('isMesh', true)).toBeUndefined();
+  });
+
+  it('ignores office calls after dispose', () => {
+    const ctx = fakeContext('b');
+    const town = createTownBuildings(layout, ctx);
+    town.dispose();
+    const before = ctx.surfaces.length;
+    expect(() => { town.setOfficeHighlight(0, true); town.syncOffices([paper(0, 'blue')]); }).not.toThrow();
+    expect(ctx.surfaces).toHaveLength(before);
   });
 
   it('disposes twice without throwing and leaves the group empty', () => {

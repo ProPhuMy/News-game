@@ -65,6 +65,7 @@ export function createArchitectureTown(layout: TownLayout, ctx: ArchitectureCont
     dispose() {
       for (const piece of pieces) piece.dispose();
       pieces.length = 0;
+      offices.clear();
       group.clear();
     },
     getLocationAnchor: (location) => lookup(locationAnchors, location, 'location').clone(),
