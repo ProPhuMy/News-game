@@ -22,7 +22,7 @@ export interface PaperSwatch {
 export interface PresentationPalette {
   id: PaletteId;
   ui: { paper: string; ink: string; panel: string; border: string; accent: string; danger: string; focus: string };
-  town: { ground: number; road: number; plaza: number; foliage: number; brick: number; trim: number; roof: number; outline: number; sky: number; fog: number; lampGlow: number };
+  town: { ground: number; road: number; plaza: number; foliage: number; brick: number; trim: number; roof: number; wood: number; outline: number; sky: number; fog: number; lampGlow: number };
   paper: Readonly<Record<Color, PaperSwatch>>;
   unsubscribed: PaperSwatch;
 }
@@ -35,6 +35,7 @@ export function applyPaletteCssVariables(root: HTMLElement, palette: Presentatio
 
 - Rule: themed colors live only in `palette.ts`. `PAPER_COLOR_HEX` and `PAPER_GREY_HEX` in `src/client/town/citizens.ts` (Codex) move to `palette.paper[color].hex` and `palette.unsubscribed.hex` during D1/D2.
 - **C1 (implemented):** `palette.ts` exists with the shapes above, plus one additive export, `paletteCssVariables(palette): Readonly<Record<string, string>>`. It is the pure map of `--nt-*` names to values that `applyPaletteCssVariables` uses, so the capture command can apply a palette outside the browser. The UI applies palette `a` at startup (`src/client/main.tsx`). Variants are previews; variant `a` keeps today's paper hexes, so UI and town agree until D1/D2. The `town` values are first proposals for D1.
+- **D1 (Claude delivery, `claude/d1-requests`):** `town.wood` added to all variants (a `0x8a5a3c`, b `0x7a5236`, c `0x9a6a42`). C2 bark, doors, bench legs, newsstand posts and the stand-in trunk use `wood`; gas-lamp parts stay on `roof` (painted iron).
 - The screenshot command has `--palette a|b|c` (C1). On `--target app` it is applied to the page. On `--target town` it is only added to the harness URL (`&palette=`) and the sidecar; the town harness does not use it yet. Wiring it into the renderer is a D1 step through the entry point Codex defines.
 
 ## 2. Materials on imported meshes
@@ -52,10 +53,16 @@ export interface MaterialKit {
   surface(hex: number, options?: { emissive?: number }): THREE.Material;
   /** Adds the outline treatment to every mesh under object (Codex decides the technique). */
   outline(object: THREE.Object3D): void;
+  /**
+   * Toon version of a loaded material that keeps its base-color map, alpha, side and vertex colors.
+   * Cached per source; the kit owns and disposes the result, the AssetSource keeps owning the source.
+   * Throws an Error naming the class for unsupported materials; never flattens silently.
+   */
+  preserve(source: THREE.Material): THREE.Material;
 }
 ```
 
-- If D1 keeps atlas textures on kit models, the note is reopened to add a textured variant. Nothing is assumed now.
+- **D1 (reopened, `claude/d1-requests`):** `preserve` added for atlas-keeping toon materials. No C2 piece calls it yet; `createBakeryHybrid(ctx, 'original')` keeps the raw kit material for faithful comparison. The harness preview kit's `preserve` throws (it is a C2 stand-in).
 - Ownership: Codex's `MaterialKit` owns and disposes every material it returns (when the town view is disposed). Codex's `AssetSource` owns and disposes cached geometries and textures. Building and prop pieces never dispose either.
 
 ## 3. Building and prop factories
@@ -109,7 +116,7 @@ export type PropFactory = (kind: string, ctx: ArchitectureContext) => PlacedPiec
 ```
 
 - Integration entry point stays `createTownBuildings` in `src/client/town/buildings.ts` (Claude). In C2 it becomes `createTownBuildings(layout: TownLayout, ctx?: ArchitectureContext): TownBuildings` and `TownBuildings` gains `ready: Promise<SceneReadiness>` (all pieces, `degraded` lists merged) and `dispose(): void` (disposes every piece). Its existing members stay unchanged: `group`, `getLocationAnchor`, `getOfficeAnchor`, `setOfficeHighlight`, `syncOffices`, `getOfficeBannerColor`.
-- **C2 (implemented, shapes unchanged):** the types above are in `src/client/visuals/town-types.ts`, `createTownBuildings(layout, ctx?)` has `ready` and `dispose`, the sample factories are `createBakery`, `createBakeryHybrid` (comparison only) and `createProp`. Proposed D1 extensions (a textured `MaterialKit.preserve`, a palette wood role, open-geometry outlines) are in `requests/C2-codex-assets-materialkit.md`; none is adopted.
+- **C2 (implemented, shapes unchanged):** the types above are in `src/client/visuals/town-types.ts`, `createTownBuildings(layout, ctx?)` has `ready` and `dispose`, the sample factories are `createBakery`, `createBakeryHybrid` (comparison only) and `createProp`. D1 adopted `MaterialKit.preserve` and `town.wood` (§1, §2); open-geometry outlines remain inside Codex's `outline`.
 - World units: the shared grid spacing is `GRID.spacing = 12` between street nodes (`src/shared/town-map.ts`). Current citizen height is measured by Codex in D0 and recorded here.
 
 ## 4. Anchors (one representation)
@@ -138,6 +145,7 @@ export type PropFactory = (kind: string, ctx: ArchitectureContext) => PlacedPiec
 - Capture order (implemented in `src/client/visual-test/settle.ts`): apply the fixture frame, mount, await `whenReady()` if present, then advance the virtual clock by exactly `reactionMs` (a value of 0 still draws one frame), then measure and publish `window.__NEWS_TOWN_VISUAL__`.
 - Browser: `playwright-core` 1.63.0 with its Chromium build 1243 (software WebGL through SwiftShader). The command starts the browser without `DISPLAY` / `WAYLAND_DISPLAY`, because an inherited desktop display this account cannot open disables WebGL.
 - Architecture sample (C2, additive): `npm run capture -- --target architecture [--variant code|hybrid-original|hybrid-palette] [--view street|awning] [--palette a|b|c] --out <file.png>`. It renders the sample bakery and props with a harness-only preview `MaterialKit`/`AssetSource` (`src/client/visual-test/preview-kit.ts`), awaits every piece's `ready`, and fails on any `degraded` entry.
+  - **D1 wiring:** adds `--reaction-ms` and `--reduced-motion` to the architecture target. When Codex's `src/client/town/sample.ts` exists (found with `import.meta.glob`), the harness calls `createRenderingSample({ container, renderer, palette, variant, view, reducedMotion })`, awaits `whenReady()` (a rejection fails the capture with its message; nonempty `degraded` fails with `degraded-assets: ...`), calls `setTime(reactionMs)` once (0 included), then measures and publishes. The caller owns the renderer. Without that file the C2 preview scene renders. The sidecar's `state.renderer` is `'sample'` or `'preview'`; a preview capture is never D1 evidence. The preview path is removed once the sample is merged.
 - Viewing: Claude opens PNGs with its Read tool. Codex opens PNGs with its own image viewer. Each agent looks at its own captures directly.
 
 ## 5a. Character inspection scenario (D0 support)
@@ -156,3 +164,6 @@ export type PropFactory = (kind: string, ctx: ArchitectureContext) => PlacedPiec
 |---|---|---|---|---|
 | Claude | `b238bdb` on `claude/c0-foundation` | `town-r1-reveal.png` (solo-honest, round 1 reveal, 6000 ms, 1280×720): grid town with the fountain in the center, bakery with red roof, grey bank, orange town hall, green clinic, two office roofs at the top corners, about 30 dark citizen capsules, no bubbles yet. | 2026-10-15 | author |
 | Codex | `f8edb0a` (reviewed on its isolated branch `codex/c0-proof`) | `/tmp/news-town-codex-c0-f8edb0a/codex-town.png`, 1280×720, ready, 344 distinct colors, 0 console errors: "An elevated grid town with a central blue fountain, red-roofed bakery, grey bank, orange town hall, green clinic, scattered small citizens, and partially cropped offices along the top edge." | 2026-10-15 | Names, file ownership, semantic colors, and shared-map anchors compatible. Asked for three clarifications: (1) await assets before advancing to the exact timestamp, (2) `whenReady` covers all assets, rejects unrecoverable failures, records degraded fallbacks, (3) `loadGltf` instance and disposal ownership. Applied in `e1e20f7` (harness) and `1e697ac` (§2, §3, §5). Codex confirmed at `1e697ac`: all three addressed, names and ownership compatible, no further wording changes (wording/source review; capture not rerun). |
+| Claude | `codex/visual-d1` `b7810b4` (`plans/D1.md`, Claude requests 1–4) | `wood-b.png`: palette b preview capture, bark and door brown, lamps teal | 2026-10-19 | Accepted requests 1–4 with the decisions in `plans/D1-claude-requests.md`; delivered on `claude/d1-requests` (§1 `wood`, §2 `preserve`, §5 D1 wiring). Will record the user's final art decisions after D1's rendered choice. |
+
+Codex: pending acknowledgment of the D1 delivery on `claude/d1-requests` (§1 `wood`, §2 `preserve`, §5 D1 wiring). Dependent D1 code waits for it.
