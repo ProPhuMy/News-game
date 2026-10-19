@@ -170,7 +170,7 @@ User approvals relayed 2026-10-19 after viewing Codex's D1 rendering-sample capt
 
 | Decision | Recorded value |
 |---|---|
-| Palette | **B** (`PALETTES.b` in `src/client/visuals/palette.ts`; brick red and teal lead). `PaletteId` stays `'a' \| 'b' \| 'c'` until a rename is requested. Production passes `getPalette('b')` to the town in D2. The UI still applies `'a'` at startup (`src/client/main.tsx:8`); switching it to `'b'` is a Claude follow-up, so UI and town paper colors agree. |
+| Palette | **B** (`PALETTES.b` in `src/client/visuals/palette.ts`; brick red and teal lead). `PaletteId` stays `'a' \| 'b' \| 'c'` until a rename is requested. Production passes `getPalette('b')` to the town in D2. `APPROVED_PALETTE = 'b'` in `palette.ts` is the one place this choice lives. The UI applies it at startup (`src/client/main.tsx`), and the capture command uses it as its `--palette` default. Merge this together with D2's town palette wiring, so UI and town paper colors change together. |
 | Building source | **Code-built** bodies and signature details through the C2 factories (`createBakery`, `createProp`; C3 extends them). Kit buildings are not used. |
 | Foliage | **Kenney Nature Kit 2.1** under `public/models/props/kenney-nature/` (`tree_oak`, `tree_default`, `plant_bush`, `flower_redA`), recolored by material name (`NATURE_MATERIAL_ROLES`: `leafsGreen` and `grass` use `foliage`, `woodBark` uses `wood`, `colorRed` uses `brick`). |
 | Kit awning | **Not adopted.** `public/models/buildings/kenney-commercial/` and `createBakeryHybrid` stay as the recorded comparison only (`--variant hybrid-original\|hybrid-palette`). The town never places them. |

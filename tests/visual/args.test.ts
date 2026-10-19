@@ -7,7 +7,7 @@ describe('parseCaptureArgs', () => {
       target: 'town', fixture: 'solo-honest', round: 1, phase: 'reveal', reactionMs: 6000,
       reducedMotion: false, seed: 1, width: 1280, height: 720, out: 'shots/town.png', prod: false, timeoutMs: 60000,
       model: 'characters/kenney-mini/character-male-a.glb', clip: null, timeMs: 0, count: 1,
-      screen: 'home', palette: 'a', stressText: false, tab: 0, scroll: null, blockFonts: false,
+      screen: 'home', palette: 'b', stressText: false, tab: 0, scroll: null, blockFonts: false,
       variant: 'code', view: 'street',
     });
   });
@@ -41,7 +41,7 @@ describe('harnessPath', () => {
   it('encodes the scenario into the harness URL', () => {
     const options = parseCaptureArgs(['--out', 'a.png', '--round', '3', '--reduced-motion']);
     expect(harnessPath(options)).toBe(
-      '/visual-test/index.html?fixture=solo-honest&round=3&phase=reveal&reactionMs=6000&reducedMotion=true&seed=1&palette=a',
+      '/visual-test/index.html?fixture=solo-honest&round=3&phase=reveal&reactionMs=6000&reducedMotion=true&seed=1&palette=b',
     );
   });
 });
@@ -99,8 +99,8 @@ describe('app screens', () => {
 describe('architecture target', () => {
   it('builds the harness path with variant, view and palette', () => {
     const options = parseCaptureArgs(['--target', 'architecture', '--variant', 'hybrid-original', '--out', 'x.png']);
-    expect(options).toMatchObject({ target: 'architecture', variant: 'hybrid-original', view: 'street', palette: 'a' });
-    expect(harnessPath(options)).toBe('/visual-test/index.html?scene=architecture&variant=hybrid-original&view=street&palette=a&seed=1&reactionMs=6000&reducedMotion=false');
+    expect(options).toMatchObject({ target: 'architecture', variant: 'hybrid-original', view: 'street', palette: 'b' });
+    expect(harnessPath(options)).toBe('/visual-test/index.html?scene=architecture&variant=hybrid-original&view=street&palette=b&seed=1&reactionMs=6000&reducedMotion=false');
     expect(parseCaptureArgs(['--target', 'architecture', '--view', 'town', '--out', 'x.png']).view).toBe('town');
     const close = parseCaptureArgs(['--target', 'architecture', '--view', 'awning', '--palette', 'b', '--out', 'x.png']);
     expect(harnessPath(close)).toContain('variant=code&view=awning&palette=b');

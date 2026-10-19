@@ -50,6 +50,9 @@ export const PALETTES: Readonly<Record<PaletteId, PresentationPalette>> = {
   },
 };
 
+/** The palette the user approved at the D1 art decision (presentation-interface note §5b). */
+export const APPROVED_PALETTE: PaletteId = 'b';
+
 export function getPalette(id: PaletteId): PresentationPalette {
   return PALETTES[id];
 }

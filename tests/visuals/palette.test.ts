@@ -2,7 +2,7 @@
 import { describe, it, expect } from 'vitest';
 import { COLORS } from '../../src/shared/ids.ts';
 import {
-  PALETTES, getPalette, paletteCssVariables, applyPaletteCssVariables, type PaletteId, type PaperSwatch,
+  APPROVED_PALETTE, PALETTES, getPalette, paletteCssVariables, applyPaletteCssVariables, type PaletteId, type PaperSwatch,
 } from '../../src/client/visuals/palette.ts';
 
 const IDS: PaletteId[] = ['a', 'b', 'c'];
@@ -53,6 +53,10 @@ describe('presentation palette', () => {
       expect(town.wood).not.toBe(town.roof);
     },
   );
+
+  it('the user-approved palette is b (D1 art decision)', () => {
+    expect(APPROVED_PALETTE).toBe('b');
+  });
 
   it('paletteCssVariables names every --nt-* variable', () => {
     expect(Object.keys(paletteCssVariables(getPalette('b'))).sort()).toEqual([...VARIABLES].sort());
