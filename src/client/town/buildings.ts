@@ -2,8 +2,8 @@ import * as THREE from 'three';
 import type { Location, SeatId } from '../../shared/ids.ts';
 import { COLORS, LOCATIONS } from '../../shared/ids.ts';
 import type { PaperPublic } from '../../shared/snapshots.ts';
-import type { ArchitectureContext, PlacedPiece, SceneReadiness } from '../visuals/town-types.ts';
-import { createBakery } from './architecture/bakery.ts';
+import type { ArchitectureContext, SceneReadiness } from '../visuals/town-types.ts';
+import { createArchitectureTown } from './architecture/town.ts';
 import { PAPER_COLOR_HEX } from './citizens.ts';
 import type { TownLayout } from './types.ts';
 
@@ -176,17 +176,17 @@ function disposePrimitives(root: THREE.Object3D): void {
 }
 
 /**
- * Without `ctx`, every building is today's primitive. With `ctx` (presentation-interface note §3), the sample
- * pieces delivered so far replace their primitives: in C2 only the bakery. C3 adds the rest.
+ * Without `ctx`, every building is today's primitive. With `ctx` (presentation-interface note §3), the whole
+ * code-built architecture town replaces them (architecture/town.ts).
  */
 export function createTownBuildings(layout: TownLayout, ctx?: ArchitectureContext): TownBuildings {
+  if (ctx) return createArchitectureTown(layout, ctx);
   const group = new THREE.Group();
   group.name = 'town-buildings';
 
   const locationAnchors = new Map<Location, THREE.Vector3>();
   const officeAnchors = new Map<SeatId, THREE.Vector3>();
   const officeBanners: THREE.MeshLambertMaterial[] = [];
-  const pieces: PlacedPiece[] = [];
   const primitives: THREE.Object3D[] = [];
 
   const builders: Record<Location, () => THREE.Group> = {
@@ -199,15 +199,8 @@ export function createTownBuildings(layout: TownLayout, ctx?: ArchitectureContex
 
   LOCATIONS.forEach((loc) => {
     const nodePos = layout.getNodeWorldPos(layout.getLocationNode(loc));
-    let mesh: THREE.Object3D;
-    if (ctx && loc === 'bakery') {
-      const piece = createBakery(ctx);
-      pieces.push(piece);
-      mesh = piece.object;
-    } else {
-      mesh = builders[loc]();
-      primitives.push(mesh);
-    }
+    const mesh = builders[loc]();
+    primitives.push(mesh);
     mesh.position.set(nodePos.x, 0, nodePos.z);
     group.add(mesh);
 
@@ -232,16 +225,13 @@ export function createTownBuildings(layout: TownLayout, ctx?: ArchitectureContex
     );
   }
 
-  const ready = Promise.all(pieces.map((piece) => piece.ready)).then((all) => ({
-    degraded: all.flatMap((readiness) => readiness.degraded),
-  }));
+  const ready: Promise<SceneReadiness> = Promise.resolve({ degraded: [] });
 
   return {
     group,
     ready,
 
     dispose(): void {
-      for (const piece of pieces) piece.dispose();
       for (const primitive of primitives) disposePrimitives(primitive);
       group.clear();
     },

@@ -15,7 +15,7 @@ import { TOWN_HALL_FOOTPRINT } from '../../../src/client/town/architecture/town-
 import { PAPERBOY_SPOTS, TOWN_DRESSING } from '../../../src/client/town/props/dressing.ts';
 import { PROP_KINDS, createProp } from '../../../src/client/town/props/index.ts';
 import { LOCATION_NODES, OFFICE_NODES, STREET_NODES } from '../../../src/shared/town-map.ts';
-import { clearanceViolations, groundRects, type GroundRect } from '../architecture/clearance.ts';
+import { clearanceViolations, groundRects, propFootprintRect as footprintRect, type GroundRect } from '../architecture/clearance.ts';
 import { fakeContext, meshes } from '../architecture/fake-context.ts';
 
 const nodeOf = (id: string) => STREET_NODES.find((n) => n.id === id)!;
@@ -38,12 +38,6 @@ const fountain = { x: plaza.x + FOUNTAIN_OFFSET.x, z: plaza.z + FOUNTAIN_OFFSET.
 const overlaps = (a: GroundRect, b: GroundRect) => a.minX < b.maxX && a.maxX > b.minX && a.minZ < b.maxZ && a.maxZ > b.minZ;
 const hitsFountain = (r: GroundRect) =>
   Math.hypot(Math.max(r.minX - fountain.x, 0, fountain.x - r.maxX), Math.max(r.minZ - fountain.z, 0, fountain.z - r.maxZ)) < FOUNTAIN_RADIUS;
-
-function footprintRect(p: (typeof TOWN_DRESSING)[number]): GroundRect {
-  const { footprint } = createProp(p.kind, fakeContext());
-  const turned = Math.round((p.rotationY ?? 0) / (Math.PI / 2)) % 2 !== 0;
-  return rect(`${p.kind}@${p.x},${p.z}`, p.x, p.z, turned ? footprint.depth : footprint.width, turned ? footprint.width : footprint.depth);
-}
 
 describe('town dressing', () => {
   it('has 50-110 placements of known kinds, within +-46, with rotation in quarter turns', () => {

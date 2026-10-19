@@ -1,6 +1,9 @@
 // Test helper: ground-level clearance checks against map nodes and road strips (not product code).
 import * as THREE from 'three';
 import { LOCATION_NODES, OFFICE_NODES, STREET_EDGES, STREET_NODES } from '../../../src/shared/town-map.ts';
+import { createProp } from '../../../src/client/town/props/index.ts';
+import type { DressingPlacement } from '../../../src/client/town/props/dressing.ts';
+import { fakeContext } from './fake-context.ts';
 import { GATHER_CLEARANCE, HEADROOM, NODE_CLEARANCE, ROAD_CLEAR } from '../../../src/client/town/architecture/lots.ts';
 
 export interface GroundRect { name: string; minX: number; maxX: number; minZ: number; maxZ: number }
@@ -47,4 +50,13 @@ export function clearanceViolations(rects: readonly GroundRect[]): string[] {
     }
   }
   return out;
+}
+
+/** World XZ rect of a dressing placement's declared footprint, swapping width and depth on odd quarter-turns. */
+export function propFootprintRect(p: DressingPlacement): GroundRect {
+  const { footprint } = createProp(p.kind, fakeContext());
+  const turned = Math.round((p.rotationY ?? 0) / (Math.PI / 2)) % 2 !== 0;
+  const w = turned ? footprint.depth : footprint.width;
+  const d = turned ? footprint.width : footprint.depth;
+  return { name: `${p.kind}@${p.x},${p.z}`, minX: p.x - w / 2, maxX: p.x + w / 2, minZ: p.z - d / 2, maxZ: p.z + d / 2 };
 }
