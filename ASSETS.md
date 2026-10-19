@@ -1,6 +1,6 @@
 # Asset Attribution Log
 
-All assets listed below are dedicated to the Public Domain under Creative Commons 0 (CC0) 1.0 Universal.
+Models and sounds listed below are dedicated to the Public Domain under Creative Commons 0 (CC0) 1.0 Universal. Fonts use the separately approved SIL OFL exception documented in "Fonts (SIL OFL)".
 
 | Asset | Source URL | Author / Creator | License | Covered Files |
 |---|---|---|---|---|
@@ -20,3 +20,11 @@ All assets listed below are dedicated to the Public Domain under Creative Common
 | Mini Characters 1 (1.0), all 12 character variants and shared atlas | https://opengameart.org/content/mini-character-1 (archive: https://opengameart.org/sites/default/files/kenney_mini-characters.zip) | Kenney | CC0 1.0; original archive `License.txt` retained at `public/models/characters/kenney-mini/License.txt` | `public/models/characters/kenney-mini/character-{female,male}-{a,b,c,d,e,f}.glb`, `public/models/characters/kenney-mini/Textures/colormap.png`, accompanying license |
 
 These are validation candidates, not yet the active town renderer or a user-approved D1 art sample. Downloaded 2026-10-15; archive SHA-256: `a95a02b556735246570549d0c4a1fcd13ea46ede18187c63d463575a56fd6e1d`. GLB files retain their original bytes and local atlas reference; no third-party runtime URL is used.
+
+## Fonts (SIL OFL)
+
+| Family | Source | License | Files |
+|---|---|---|---|
+| Playfair Display (variable, weights 400–900, roman) | https://github.com/google/fonts/tree/8b0a1d0f5983c89bc2b93f1b5fb55f9e252744b5/ofl/playfairdisplay (upstream https://github.com/clauseggers/Playfair-Display) | SIL OFL 1.1, Reserved Font Name "Playfair Display"; unmodified; `public/fonts/playfair-display/OFL.txt` | `public/fonts/playfair-display/PlayfairDisplay[wght].ttf` |
+
+Delivered by Claude's C1 branch for local heading-font loading through `src/client/styles/theme.css`; no font CDN request. The font and its license remain in Claude's delivery until integration. Verified against the pinned upstream files: font 300,724 bytes, SHA-256 `c40f2293766a503bc70cce9e512ef844a4ccb7cbcde792fe2ea31d191917d8d6`; license SHA-256 `566be814f8e96e93dfa16101331557eb6b5467e9e03f627c0910fe93ca12300e`.
