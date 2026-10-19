@@ -101,6 +101,7 @@ describe('architecture target', () => {
     const options = parseCaptureArgs(['--target', 'architecture', '--variant', 'hybrid-original', '--out', 'x.png']);
     expect(options).toMatchObject({ target: 'architecture', variant: 'hybrid-original', view: 'street', palette: 'a' });
     expect(harnessPath(options)).toBe('/visual-test/index.html?scene=architecture&variant=hybrid-original&view=street&palette=a&seed=1&reactionMs=6000&reducedMotion=false');
+    expect(parseCaptureArgs(['--target', 'architecture', '--view', 'town', '--out', 'x.png']).view).toBe('town');
     const close = parseCaptureArgs(['--target', 'architecture', '--view', 'awning', '--palette', 'b', '--out', 'x.png']);
     expect(harnessPath(close)).toContain('variant=code&view=awning&palette=b');
     const timed = parseCaptureArgs(['--target', 'architecture', '--reaction-ms', '1000', '--reduced-motion', '--out', 'x.png']);

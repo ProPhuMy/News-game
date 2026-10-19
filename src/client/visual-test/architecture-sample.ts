@@ -17,7 +17,7 @@ export interface RenderingSampleModule {
     renderer: THREE.WebGLRenderer;
     palette: PresentationPalette;
     variant: ArchitectureScenario['variant'];
-    view: ArchitectureScenario['view'];
+    view: 'street' | 'awning';
     reducedMotion?: boolean;
   }): { whenReady(): Promise<SceneReadiness>; setTime(ms: number): void; dispose(): void };
 }
@@ -29,12 +29,14 @@ export async function runRenderingSample(
   container: HTMLElement,
   renderer: THREE.WebGLRenderer,
 ): Promise<VisualState> {
+  const view = scenario.view;
+  if (view !== 'street' && view !== 'awning') return { status: 'error', error: `rendering sample has no ${view} view` };
   const sample = module.createRenderingSample({
     container,
     renderer,
     palette: getPalette(scenario.palette),
     variant: scenario.variant,
-    view: scenario.view,
+    view,
     reducedMotion: scenario.reducedMotion,
   });
   let readiness: SceneReadiness;
