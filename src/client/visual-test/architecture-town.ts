@@ -102,7 +102,7 @@ export async function runArchitectureTown(
     } else {
       const at = closeTarget(buildings.group, view, layout);
       camera = new THREE.PerspectiveCamera(35, aspect, 0.1, 400);
-      camera.position.copy(at).add(new THREE.Vector3(0, 9, 20));
+      camera.position.copy(at).add(new THREE.Vector3(0, 13, 13));
       camera.lookAt(at.x, at.y + 3, at.z);
     }
     camera.aspect = aspect;

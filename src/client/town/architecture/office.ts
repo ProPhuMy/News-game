@@ -1,4 +1,4 @@
-// Code-built newspaper office (owner: Claude). Brick body, tall +Z door, printing-press chimneys and two banners
+// Code-built newspaper office (owner: Claude). Wood body (brick walls swallowed the red banner), tall +Z door, printing-press chimneys and two banners
 // in the paper color. No sign text: paper names are player data. Banners swap kit materials, never mutate them.
 import * as THREE from 'three';
 import type { ArchitectureContext, PlacedPiece } from '../../visuals/town-types.ts';
@@ -16,13 +16,13 @@ const WALL_TOP = 5;
 const FRONT = 2.0; // wall face; door and banners sit just in front
 
 export function createOffice(ctx: ArchitectureContext, bannerHex: number): OfficePiece {
-  const { brick, trim, roof, wood } = ctx.palette.town;
+  const { trim, roof, wood } = ctx.palette.town;
   const parts = createPieceParts(ctx);
   const { width, depth } = OFFICE_FOOTPRINT;
   const root = new THREE.Group();
   root.name = 'office';
 
-  root.add(at(parts.mesh(new THREE.BoxGeometry(width - 0.2, WALL_TOP, FRONT * 2), brick), 0, WALL_TOP / 2, 0));
+  root.add(at(parts.mesh(new THREE.BoxGeometry(width - 0.2, WALL_TOP, FRONT * 2), wood), 0, WALL_TOP / 2, 0));
   root.add(at(parts.mesh(new THREE.BoxGeometry(width, 0.3, depth - 0.2), roof), 0, WALL_TOP + 0.15, 0));
 
   const door = at(parts.mesh(new THREE.BoxGeometry(1.3, 4.2, 0.12), wood), 0, 2.1, FRONT + 0.06);

@@ -4,6 +4,7 @@ import { OFFICE_FOOTPRINT, createOffice } from '../../../src/client/town/archite
 import { CITIZEN_REFERENCE_HEIGHT } from '../../../src/client/town/architecture/piece.ts';
 import { groundRects } from './clearance.ts';
 import { fakeContext, meshes } from './fake-context.ts';
+import { PALETTES, type PaletteId } from '../../../src/client/visuals/palette.ts';
 
 const PAPER = 0x336699;
 const bannerMeshes = (root: THREE.Object3D) => meshes(root).filter((m) => m.name === 'office-banner');
@@ -64,5 +65,18 @@ describe('code-built newspaper office', () => {
     expect(ctx.outlined).toContain(piece.object);
     piece.dispose();
     expect(() => piece.dispose()).not.toThrow();
+  });
+
+  it('walls are wood, never a paper color, so banners read in every palette', () => {
+    for (const id of Object.keys(PALETTES) as PaletteId[]) {
+      const palette = PALETTES[id];
+      for (const swatch of Object.values(palette.paper)) {
+        const ctx = fakeContext(id);
+        const piece = createOffice(ctx, swatch.hex);
+        const wall = meshes(piece.object).find((m) => m.geometry.boundingBox === null && m.position.y === 2.5)!;
+        expect(wall.material, id).toBe(ctx.materials.surface(palette.town.wood));
+        expect(palette.town.wood, id).not.toBe(swatch.hex);
+      }
+    }
   });
 });
