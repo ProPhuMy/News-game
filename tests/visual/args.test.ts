@@ -8,6 +8,7 @@ describe('parseCaptureArgs', () => {
       reducedMotion: false, seed: 1, width: 1280, height: 720, out: 'shots/town.png', prod: false, timeoutMs: 60000,
       model: 'characters/kenney-mini/character-male-a.glb', clip: null, timeMs: 0, count: 1,
       screen: 'home', palette: 'a', stressText: false, tab: 0, scroll: null, blockFonts: false,
+      variant: 'code', view: 'street',
     });
   });
 
@@ -28,7 +29,7 @@ describe('parseCaptureArgs', () => {
   it('rejects unknown flags and bad numbers', () => {
     expect(() => parseCaptureArgs(['--out', 'a.png', '--zoom', '2'])).toThrow(/unknown flag --zoom/);
     expect(() => parseCaptureArgs(['--out', 'a.png', '--width', 'wide'])).toThrow(/--width must be a whole number/);
-    expect(() => parseCaptureArgs(['--out', 'a.png', '--target', 'ui'])).toThrow(/--target must be town, app or character/);
+    expect(() => parseCaptureArgs(['--out', 'a.png', '--target', 'ui'])).toThrow(/--target must be town, app, character or architecture/);
   });
 
   it('rejects the town target in --prod mode because the harness is dev-only', () => {
@@ -92,5 +93,22 @@ describe('app screens', () => {
 
   it('passes the palette to the town harness for D1', () => {
     expect(harnessPath(parseCaptureArgs(['--palette', 'b', '--out', 't.png']))).toContain('&palette=b');
+  });
+});
+
+describe('architecture target', () => {
+  it('builds the harness path with variant, view and palette', () => {
+    const options = parseCaptureArgs(['--target', 'architecture', '--variant', 'hybrid-original', '--out', 'x.png']);
+    expect(options).toMatchObject({ target: 'architecture', variant: 'hybrid-original', view: 'street', palette: 'a' });
+    expect(harnessPath(options)).toBe('/visual-test/index.html?scene=architecture&variant=hybrid-original&view=street&palette=a&seed=1');
+    const close = parseCaptureArgs(['--target', 'architecture', '--view', 'awning', '--palette', 'b', '--out', 'x.png']);
+    expect(harnessPath(close)).toContain('variant=code&view=awning&palette=b');
+  });
+
+  it('rejects bad values and use outside the architecture target', () => {
+    expect(() => parseCaptureArgs(['--target', 'architecture', '--variant', 'kit', '--out', 'x.png'])).toThrow(/--variant must be one of/);
+    expect(() => parseCaptureArgs(['--target', 'architecture', '--view', 'top', '--out', 'x.png'])).toThrow(/--view must be one of/);
+    expect(() => parseCaptureArgs(['--variant', 'code', '--out', 'x.png'])).toThrow(/--variant and --view need --target architecture/);
+    expect(() => parseCaptureArgs(['--target', 'architecture', '--prod', '--out', 'x.png'])).toThrow(/--prod only supports --target app/);
   });
 });
