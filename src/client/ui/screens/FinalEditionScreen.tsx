@@ -44,72 +44,81 @@ export const FinalEditionScreen: React.FC<FinalEditionScreenProps> = ({
 
   return (
     <div className="screen-container final-edition-screen" data-testid="final-edition-screen">
-      <div className="final-card">
-        <h1>Final Edition Scoreboard</h1>
-        <div className="winner-announcement" role="status">
-          {winnerText}
-        </div>
-        <p className="formula-explanation">
-          {`Score = Total readers × Trust ÷ ${TUNING.scoreTrustDivisor}, rounded`}
-        </p>
+      <section className="final-card results-card" aria-labelledby="results-title">
+        <header className="results-header">
+          <h1 id="results-title">Final Edition Scoreboard</h1>
+          <p className="winner-announcement" role="status">
+            {winners.length > 0 && <span className="winner-icon" aria-hidden="true">🏆 </span>}
+            {winnerText}
+          </p>
+        </header>
 
-        <ScoreboardTable scores={scoreboard} />
+        <div className="results-body" tabIndex={0} aria-label="Results, scores and headline history">
+          <p className="formula-explanation">
+            {`Score = Total readers × Trust ÷ ${TUNING.scoreTrustDivisor}, rounded`}
+          </p>
+          <div className="scoreboard-scroll">
+            <ScoreboardTable scores={scoreboard} />
+          </div>
 
-        {finalExposures.length > 0 && (
-          <div className="final-exposures-section" data-testid="final-exposures">
-            <h2>🚨 Final Edition Scandals</h2>
-            {finalExposures.map((e, idx) => (
-              <div key={idx} className="final-exposure-item">
-                <strong>{e.paperName}:</strong> {e.reason}
+          <section className="headline-truth-archive" data-testid="headline-truth-archive" aria-labelledby="truth-title">
+            <h2 id="truth-title">The truth comes out</h2>
+            {headlines.length === 0 ? (
+              <p className="results-empty">No headlines were printed this match.</p>
+            ) : (
+              <ol className="archive-list">
+                {headlines.map((h) => (
+                  <li key={h.id} className="archive-item">
+                    <span className="archive-round">Round {h.round}</span>
+                    <span className="archive-paper">{h.paperName}</span>
+                    <span className="archive-text">"{h.text}"</span>
+                    <span className={`archive-truth truth-${h.truth}`}>
+                      {h.truth === 'true'
+                        ? '✓ TRUE'
+                        : h.exposed
+                        ? '✗ EXPOSED LIE'
+                        : '⚠ UNCAUGHT LIE'}
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </section>
+
+          {finalExposures.length > 0 && (
+            <details className="final-exposures-section results-details" data-testid="final-exposures">
+              <summary>Final edition scandals ({finalExposures.length})</summary>
+              {finalExposures.map((e, idx) => (
+                <div key={idx} className="final-exposure-item">
+                  <strong>{e.paperName}:</strong> {e.reason}
+                </div>
+              ))}
+            </details>
+          )}
+
+          {truthRecords.length > 0 && (
+            <details className="truth-records-section results-details" data-testid="truth-records">
+              <summary>Integrity records</summary>
+              <div className="truth-records-grid">
+                {truthRecords.map((rec) => (
+                  <div key={rec.paperName} className="truth-record-card">
+                    <h3>{rec.paperName}</h3>
+                    <p>Lies Told: {rec.liesTold}</p>
+                    <p>Caught &amp; Exposed: {rec.liesCaught}</p>
+                    <p>Escaped Uncaught: {rec.liesEscaped}</p>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        )}
+            </details>
+          )}
+        </div>
 
-        {truthRecords.length > 0 && (
-          <div className="truth-records-section" data-testid="truth-records">
-            <h2>📜 Newspaper Integrity Records</h2>
-            <div className="truth-records-grid">
-              {truthRecords.map((rec) => (
-                <div key={rec.paperName} className="truth-record-card">
-                  <h3>{rec.paperName}</h3>
-                  <p>Lies Told: {rec.liesTold}</p>
-                  <p>Caught &amp; Exposed: {rec.liesCaught}</p>
-                  <p>Escaped Uncaught: {rec.liesEscaped}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {headlines.length > 0 && (
-          <div className="headline-truth-archive" data-testid="headline-truth-archive">
-            <h2>📰 Match Headlines &amp; Truths</h2>
-            <div className="archive-list">
-              {headlines.map((h) => (
-                <div key={h.id} className="archive-item">
-                  <span className="archive-round">Round {h.round}</span>
-                  <span className="archive-paper">{h.paperName}</span>
-                  <span className="archive-text">"{h.text}"</span>
-                  <span className={`archive-truth truth-${h.truth}`}>
-                    {h.truth === 'true'
-                      ? '✓ TRUE'
-                      : h.exposed
-                      ? '✗ EXPOSED LIE'
-                      : '⚠ UNCAUGHT LIE'}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div className="final-actions">
+        <footer className="final-actions results-footer">
           <Button variant="primary" onClick={onPlayAgain} className="btn-large">
             Play Again
           </Button>
-        </div>
-      </div>
+        </footer>
+      </section>
     </div>
   );
 };
