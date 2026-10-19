@@ -1,6 +1,7 @@
 /**
  * Prohibited terms and phrases for the lock-time profanity filter.
- * Normalization, punctuation preservation, and matching logic are implemented in Codex's AI module (src/ai/).
+ * Matching lives in createWordFilter (src/ai/text.ts). The same list governs headlines and,
+ * from D2, display and paper names; see docs/visual-overhaul/name-filter-policy.md.
  * Every entry must be lowercase and conform to /^[a-z][a-z' -]*$/ per ContentSchema.
  *
  * Policy note: Certain ambiguous entries (such as 'dick' or 'chink') are intentionally
@@ -66,3 +67,9 @@ export const WORD_LIST: string[] = [
 
 export const BLOCKED_WORDS = WORD_LIST;
 export const PROFANITY_WORD_LIST = WORD_LIST;
+
+/** Names the policy must accept or reject; server tests reuse these (see the policy note). */
+export const NAME_FILTER_EXAMPLES: { accepted: readonly string[]; rejected: readonly string[] } = {
+  accepted: ['Scunthorpe Herald', 'Shitake Times', 'Grapevine Gazette', 'Dickens Daily', 'Kill Your Darlings', 'Ana Nazario'],
+  rejected: ['Daily Shit', 'SHIT!', 'ｓｈｉｔ news', 'kill yourself', 'KYS Post', 'Dick'],
+};
