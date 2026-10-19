@@ -4,6 +4,7 @@ import { dirname } from 'node:path';
 import { chromium, type Response } from 'playwright-core';
 import { harnessPath, LIVE_SCREENS, parseCaptureArgs, type CaptureOptions } from './args.ts';
 import { applyPalette, focusAndScroll, measureLayout, openLiveScreen, type LayoutReport } from './app-screens.ts';
+import { waitForHarnessState } from './harness-state.ts';
 import { withBrowserAndServer } from './lifecycle.ts';
 import { freePort, startGameServer, waitForServer } from './server.ts';
 
@@ -67,11 +68,7 @@ async function capture(options: CaptureOptions): Promise<void> {
     let layout: LayoutReport | null = null;
     const live = options.target === 'app' && LIVE_SCREENS.includes(options.screen);
     if (!live) {
-      await page.waitForFunction(() => {
-        const visual = (globalThis as { __NEWS_TOWN_VISUAL__?: { status: string } }).__NEWS_TOWN_VISUAL__;
-        return visual !== undefined && visual.status !== 'loading';
-      }, undefined, { timeout: options.timeoutMs });
-      state = await page.evaluate(() => (globalThis as { __NEWS_TOWN_VISUAL__?: unknown }).__NEWS_TOWN_VISUAL__);
+      state = await waitForHarnessState(page, options.timeoutMs);
       const status = state as { status: string; error?: string };
       if (status.status !== 'ready') throw new Error(`harness reported ${status.status}: ${status.error ?? 'unknown error'}`);
     } else {
