@@ -1,6 +1,5 @@
 // Full-town and close-up architecture captures (C3): our assembled buildings on a ground slab and road strips.
 import * as THREE from 'three';
-import { LOCATIONS } from '../../shared/ids.ts';
 import { GRID, STREET_EDGES } from '../../shared/town-map.ts';
 import { FOUNTAIN_OFFSET } from '../town/architecture/fountain.ts';
 import { createAssetSource } from '../town/assets/source.ts';
@@ -20,14 +19,15 @@ const SLAB = 96;
 type Close = Exclude<ArchitectureScenario['view'], 'street' | 'awning' | 'town'>;
 
 /** World position a close-up frames: a building's root, the fountain plaza midpoint, or office seat 0. */
-function closeTarget(group: THREE.Group, view: Close, layout: ReturnType<typeof createTownLayout>): THREE.Vector3 {
+export function closeTarget(group: THREE.Group, view: Close, layout: ReturnType<typeof createTownLayout>): THREE.Vector3 {
   if (view === 'office') {
-    const office = group.children.find((child) => child.userData.seat === 0);
-    if (!office) throw new Error('office seat 0 missing');
+    const office = group.children.find((child) => child.name === 'office' && child.userData.seat === 0);
+    if (!office) throw new Error('no office root with seat 0');
     return office.position.clone();
   }
-  const root = group.children[LOCATIONS.indexOf(view)];
-  if (!root) throw new Error(`no building root for ${view}`);
+  const name = view.replace('_', '-'); // factory roots: bakery, bank, town-hall, clinic, fountain-square
+  const root = group.children.find((child) => child.name === name);
+  if (!root) throw new Error(`no building root named "${name}" for view ${view}`);
   const at = root.position.clone();
   if (view === 'fountain_square') {
     const node = layout.getNodeWorldPos(layout.getLocationNode(view));

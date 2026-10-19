@@ -4,8 +4,6 @@ import { readInt } from './scenario.ts';
 
 export const ARCHITECTURE_VARIANTS = ['code', 'hybrid-original', 'hybrid-palette'] as const;
 export const ARCHITECTURE_VIEWS = ['street', 'awning', 'town', 'bakery', 'bank', 'town_hall', 'clinic', 'fountain_square', 'office'] as const;
-/** Views rendered by Codex's rendering sample; the rest are our assembled town. */
-export const SAMPLE_VIEWS = ['street', 'awning'] as const;
 const PALETTE_IDS: readonly PaletteId[] = ['a', 'b', 'c'];
 
 export interface ArchitectureScenario {
