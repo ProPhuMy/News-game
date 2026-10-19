@@ -21,6 +21,15 @@ Models and sounds listed below are dedicated to the Public Domain under Creative
 
 These are validation candidates, not yet the active town renderer or a user-approved D1 art sample. Downloaded 2026-10-15; archive SHA-256: `a95a02b556735246570549d0c4a1fcd13ea46ede18187c63d463575a56fd6e1d`. GLB files retain their original bytes and local atlas reference; no third-party runtime URL is used.
 
+## Building and prop sample assets delivered in C2 (Claude)
+
+| Asset | Source URL | Creator | License evidence | Covered files |
+|---|---|---|---|---|
+| City Kit Commercial (2.1), wide awning and its atlas | https://opengameart.org/content/city-kit-commercial (archive: https://opengameart.org/sites/default/files/kenney_city-kit-commercial_2.1.zip) | Kenney | CC0 1.0; original archive `License.txt` retained at `public/models/buildings/kenney-commercial/License.txt` | `public/models/buildings/kenney-commercial/detail-awning-wide.glb`, `public/models/buildings/kenney-commercial/Textures/colormap.png`, accompanying license |
+| Nature Kit (2.1), two trees, a bush and flowers | https://opengameart.org/content/nature-kit (archive: https://opengameart.org/sites/default/files/Nature%20Kit%20%282.1%29.zip) | Kenney | CC0 1.0; original archive `License.txt` retained at `public/models/props/kenney-nature/License.txt` | `public/models/props/kenney-nature/{tree_oak,tree_default,plant_bush,flower_redA}.glb`, accompanying license |
+
+Sample assets for the D1 art decision, not yet the active town renderer. Archive SHA-256: City Kit Commercial 2.1 `f8b09b081c2bb88bcc126e2dec1cb40fd0dad7e7e591b6c26aaefe96fb35276b`; Nature Kit 2.1 `fa7974a0d342bfe63c38664ba9f8ec1a4aab8ea25f099bdc56870e33588c4d9d`. GLB files keep their original bytes; the awning references its local atlas. No third-party runtime URL is used.
+
 ## Fonts (SIL OFL)
 
 | Family | Source | License | Files |
