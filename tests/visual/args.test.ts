@@ -7,6 +7,7 @@ describe('parseCaptureArgs', () => {
       target: 'town', fixture: 'solo-honest', round: 1, phase: 'reveal', reactionMs: 6000,
       reducedMotion: false, seed: 1, width: 1280, height: 720, out: 'shots/town.png', prod: false, timeoutMs: 60000,
       model: 'characters/kenney-mini/character-male-a.glb', clip: null, timeMs: 0, count: 1,
+      screen: 'home', palette: 'a', stressText: false, tab: 0, scroll: null, blockFonts: false,
     });
   });
 
@@ -39,7 +40,7 @@ describe('harnessPath', () => {
   it('encodes the scenario into the harness URL', () => {
     const options = parseCaptureArgs(['--out', 'a.png', '--round', '3', '--reduced-motion']);
     expect(harnessPath(options)).toBe(
-      '/visual-test/index.html?fixture=solo-honest&round=3&phase=reveal&reactionMs=6000&reducedMotion=true&seed=1',
+      '/visual-test/index.html?fixture=solo-honest&round=3&phase=reveal&reactionMs=6000&reducedMotion=true&seed=1&palette=a',
     );
   });
 });
@@ -63,5 +64,33 @@ describe('character target', () => {
     );
     const walk = parseCaptureArgs(['--target', 'character', '--clip', 'walk', '--time-ms', '500', '--out', 'c.png']);
     expect(harnessPath(walk)).toContain('&clip=walk&timeMs=500&');
+  });
+});
+
+describe('app screens', () => {
+  it('reads the UI flags', () => {
+    expect(parseCaptureArgs([
+      '--target', 'app', '--screen', 'match', '--palette', 'c', '--stress-text', '--tab', '3',
+      '--scroll', '.results-body', '--block-fonts', '--out', 'u.png',
+    ])).toMatchObject({ screen: 'match', palette: 'c', stressText: true, tab: 3, scroll: '.results-body', blockFonts: true });
+  });
+
+  it('rejects bad UI flag values', () => {
+    expect(() => parseCaptureArgs(['--target', 'app', '--screen', 'shop', '--out', 'u.png'])).toThrow(/--screen must be one of home, join, lobby, match, loading, disconnected, error/);
+    expect(() => parseCaptureArgs(['--palette', 'd', '--out', 'u.png'])).toThrow(/--palette must be a, b or c/);
+    expect(() => parseCaptureArgs(['--tab', '-1', '--out', 'u.png'])).toThrow(/--tab must be a whole number/);
+    expect(() => parseCaptureArgs(['--target', 'app', '--scroll', '', '--out', 'u.png'])).toThrow(/--scroll needs a CSS selector/);
+    expect(() => parseCaptureArgs(['--target', 'app', '--screen', 'match', '--prod', '--out', 'u.png'])).toThrow(/--prod supports only --screen home/);
+  });
+
+  it('sends live screens to the real app and fixture screens to the UI harness', () => {
+    expect(harnessPath(parseCaptureArgs(['--target', 'app', '--screen', 'lobby', '--out', 'u.png']))).toBe('/');
+    expect(harnessPath(parseCaptureArgs([
+      '--target', 'app', '--screen', 'match', '--round', '5', '--phase', 'final', '--palette', 'b', '--stress-text', '--out', 'u.png',
+    ]))).toBe('/visual-test/app.html?fixture=solo-honest&round=5&phase=final&reactionMs=6000&reducedMotion=false&seed=1&screen=match&palette=b&stressText=true');
+  });
+
+  it('passes the palette to the town harness for D1', () => {
+    expect(harnessPath(parseCaptureArgs(['--palette', 'b', '--out', 't.png']))).toContain('&palette=b');
   });
 });

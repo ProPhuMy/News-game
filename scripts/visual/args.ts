@@ -1,4 +1,9 @@
 export type CaptureTarget = 'town' | 'app' | 'character';
+export const APP_SCREENS = ['home', 'join', 'lobby', 'match', 'loading', 'disconnected', 'error'] as const;
+export type AppScreen = (typeof APP_SCREENS)[number];
+/** Screens driven on the real dev server; the rest come from the fixture-fed UI harness. */
+export const LIVE_SCREENS: readonly AppScreen[] = ['home', 'join', 'lobby'];
+const PALETTE_IDS = ['a', 'b', 'c'] as const;
 
 export interface CaptureOptions {
   target: CaptureTarget;
@@ -21,18 +26,31 @@ export interface CaptureOptions {
   timeMs: number;
   /** --target character only: number of characters the scene must draw. */
   count: number;
+  /** --target app only: which screen to capture. */
+  screen: AppScreen;
+  /** Presentation palette preview (app: applied; town: passed to the harness for D1). */
+  palette: (typeof PALETTE_IDS)[number];
+  /** Harness/capture only: replace names and headlines with schema-maximum text. */
+  stressText: boolean;
+  /** Tab presses before capture, to show keyboard focus. */
+  tab: number;
+  /** CSS selector scrolled to its end before capture. */
+  scroll: string | null;
+  /** Abort /fonts/ requests, to check the fallback fonts. */
+  blockFonts: boolean;
 }
 
 const DEFAULTS: Omit<CaptureOptions, 'out'> = {
   target: 'town', fixture: 'solo-honest', round: 1, phase: 'reveal', reactionMs: 6000,
   reducedMotion: false, seed: 1, width: 1280, height: 720, prod: false, timeoutMs: 60000,
   model: 'characters/kenney-mini/character-male-a.glb', clip: null, timeMs: 0, count: 1,
+  screen: 'home', palette: 'a', stressText: false, tab: 0, scroll: null, blockFonts: false,
 };
 
 const NUMBER_FLAGS = {
   '--round': 'round', '--reaction-ms': 'reactionMs', '--seed': 'seed',
   '--width': 'width', '--height': 'height', '--timeout-ms': 'timeoutMs',
-  '--time-ms': 'timeMs', '--count': 'count',
+  '--time-ms': 'timeMs', '--count': 'count', '--tab': 'tab',
 } as const;
 
 function wholeNumber(flag: string, raw: string | undefined): number {
@@ -46,6 +64,8 @@ export function parseCaptureArgs(argv: readonly string[]): CaptureOptions {
     const flag = argv[i]!;
     if (flag === '--reduced-motion') { options.reducedMotion = true; continue; }
     if (flag === '--prod') { options.prod = true; continue; }
+    if (flag === '--stress-text') { options.stressText = true; continue; }
+    if (flag === '--block-fonts') { options.blockFonts = true; continue; }
     const value = argv[i + 1];
     if (flag in NUMBER_FLAGS) {
       options[NUMBER_FLAGS[flag as keyof typeof NUMBER_FLAGS]] = wholeNumber(flag, value);
@@ -65,6 +85,17 @@ export function parseCaptureArgs(argv: readonly string[]): CaptureOptions {
       options.model = value ?? '';
     } else if (flag === '--clip') {
       options.clip = value ?? '';
+    } else if (flag === '--screen') {
+      const screen = APP_SCREENS.find((s) => s === value);
+      if (!screen) throw new Error(`--screen must be one of ${APP_SCREENS.join(', ')}, got "${value ?? ''}"`);
+      options.screen = screen;
+    } else if (flag === '--palette') {
+      const palette = PALETTE_IDS.find((p) => p === value);
+      if (!palette) throw new Error(`--palette must be a, b or c, got "${value ?? ''}"`);
+      options.palette = palette;
+    } else if (flag === '--scroll') {
+      if (!value) throw new Error('--scroll needs a CSS selector');
+      options.scroll = value;
     } else if (flag === '--out') {
       options.out = value;
     } else {
@@ -75,6 +106,7 @@ export function parseCaptureArgs(argv: readonly string[]): CaptureOptions {
   if (!options.out) throw new Error('--out <file.png> is required');
   if (!options.out.endsWith('.png')) throw new Error('--out must end with .png');
   if (options.prod && options.target !== 'app') throw new Error('--prod only supports --target app (the town harness is dev-only)');
+  if (options.prod && options.screen !== 'home') throw new Error('--prod supports only --screen home (the UI harness is dev-only)');
   return { ...options, out: options.out };
 }
 
@@ -88,6 +120,7 @@ export function harnessPath(options: CaptureOptions): string {
     query.set('seed', String(options.seed));
     return `/visual-test/index.html?${query.toString()}`;
   }
+  if (options.target === 'app' && LIVE_SCREENS.includes(options.screen)) return '/';
   const query = new URLSearchParams({
     fixture: options.fixture,
     round: String(options.round),
@@ -96,5 +129,12 @@ export function harnessPath(options: CaptureOptions): string {
     reducedMotion: String(options.reducedMotion),
     seed: String(options.seed),
   });
+  if (options.target === 'app') {
+    query.set('screen', options.screen);
+    query.set('palette', options.palette);
+    query.set('stressText', String(options.stressText));
+    return `/visual-test/app.html?${query.toString()}`;
+  }
+  query.set('palette', options.palette);
   return `/visual-test/index.html?${query.toString()}`;
 }
