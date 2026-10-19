@@ -100,9 +100,11 @@ describe('architecture target', () => {
   it('builds the harness path with variant, view and palette', () => {
     const options = parseCaptureArgs(['--target', 'architecture', '--variant', 'hybrid-original', '--out', 'x.png']);
     expect(options).toMatchObject({ target: 'architecture', variant: 'hybrid-original', view: 'street', palette: 'a' });
-    expect(harnessPath(options)).toBe('/visual-test/index.html?scene=architecture&variant=hybrid-original&view=street&palette=a&seed=1');
+    expect(harnessPath(options)).toBe('/visual-test/index.html?scene=architecture&variant=hybrid-original&view=street&palette=a&seed=1&reactionMs=6000&reducedMotion=false');
     const close = parseCaptureArgs(['--target', 'architecture', '--view', 'awning', '--palette', 'b', '--out', 'x.png']);
     expect(harnessPath(close)).toContain('variant=code&view=awning&palette=b');
+    const timed = parseCaptureArgs(['--target', 'architecture', '--reaction-ms', '1000', '--reduced-motion', '--out', 'x.png']);
+    expect(harnessPath(timed)).toContain('reactionMs=1000&reducedMotion=true');
   });
 
   it('rejects bad values and use outside the architecture target', () => {
