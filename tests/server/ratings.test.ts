@@ -1,3 +1,5 @@
+import { content as nameFilterContent } from '../../src/content/index.ts';
+import { createWordFilter } from '../../src/ai/text.ts';
 import { describe, expect, it, vi } from 'vitest';
 import { createHeadlineRater } from '../../src/server/ratings.ts';
 import { createRoomManager } from '../../src/server/rooms.ts';
@@ -10,7 +12,7 @@ import { createAiAdapter } from '../../src/ai/adapter.ts';
 import { fallbackRating } from '../../src/engine/rating.ts';
 
 const ratingSetup = (investigate = false) => {
-  const rooms = createRoomManager();
+  const rooms = createRoomManager(createWordFilter(nameFilterContent.wordList));
   const profile = { displayName: 'Editor', paperName: 'Daily', color: COLORS[0] };
   const session = rooms.create(profile, 'a', 'ip', 0);
   rooms.join(session.code, { ...profile, color: COLORS[1] }, 'b', 0);
@@ -39,7 +41,7 @@ const rated = { juiciness: 5, onTopic: true, inappropriate: false, bubbles: ['Ru
 
 describe('asynchronous rating lifecycle', () => {
   it('writes bot text and preserves each engine-owned personality fallback', async () => {
-    const rooms = createRoomManager();
+    const rooms = createRoomManager(createWordFilter(nameFilterContent.wordList));
     const session = rooms.create({ displayName: 'Editor', paperName: 'Daily', color: COLORS[0] }, 'a', 'ip', 0);
     const room = rooms.require(session.code);
     const adapter = createAiAdapter({ provider: 'none', content: SAMPLE_CONTENT });
@@ -60,7 +62,7 @@ describe('asynchronous rating lifecycle', () => {
   });
 
   it.each(['none', 'http'])('keeps every engine-selected bot text with provider %s', async (provider) => {
-    const rooms = createRoomManager();
+    const rooms = createRoomManager(createWordFilter(nameFilterContent.wordList));
     const session = rooms.create({ displayName: 'Editor', paperName: 'Daily', color: COLORS[0] }, 'a', 'ip', 0);
     const room = rooms.require(session.code);
     const adapter = createAiAdapter({ provider: provider === 'none' ? 'none' : 'openai', model: 'test', apiKey: 'test',
@@ -127,7 +129,7 @@ describe('asynchronous rating lifecycle', () => {
   });
 
   it('never delays reveal for bot writing and ignores text completed after reveal', async () => {
-    const rooms = createRoomManager();
+    const rooms = createRoomManager(createWordFilter(nameFilterContent.wordList));
     const session = rooms.create({ displayName: 'Editor', paperName: 'Daily', color: COLORS[0] }, 'a', 'ip', 0);
     const room = rooms.require(session.code);
     const writers: ((text: string) => void)[] = [];
@@ -192,7 +194,7 @@ describe('asynchronous rating lifecycle', () => {
     expect(room.state!.headlines.find((headline) => headline.id === 'h1-0')).toEqual(original);
   });
   it('ignores a provider result after room deletion without reviving state', async () => {
-    const rooms = createRoomManager();
+    const rooms = createRoomManager(createWordFilter(nameFilterContent.wordList));
     const session = rooms.create({ displayName: 'Editor', paperName: 'Daily', color: COLORS[0] }, 'a', 'ip', 0);
     const room = rooms.require(session.code);
     const runner = createMatchRunner(rooms, SAMPLE_CONTENT, () => {});
@@ -215,7 +217,7 @@ describe('asynchronous rating lifecycle', () => {
   });
 
   it('rejects filtered locks without marking the seat acted', () => {
-    const rooms = createRoomManager();
+    const rooms = createRoomManager(createWordFilter(nameFilterContent.wordList));
     const session = rooms.create({ displayName: 'Editor', paperName: 'Daily', color: COLORS[0] }, 'a', 'ip', 0);
     const room = rooms.require(session.code);
     const runner = createMatchRunner(rooms, SAMPLE_CONTENT, () => {});

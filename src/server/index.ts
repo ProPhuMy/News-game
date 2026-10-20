@@ -1,3 +1,4 @@
+import { createWordFilter } from '../ai/text.ts';
 import { createServer } from 'node:http';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { Server } from 'socket.io';
@@ -17,7 +18,7 @@ export async function createGameServer(options: { content: GameContent; distDire
   if (vite) http.on('request', vite.middlewares);
   else http.on('request', createStaticHandler(options.distDirectory ?? fileURLToPath(new URL('../../dist/client/', import.meta.url))));
   const io = new Server(http, { maxHttpBufferSize: 16_384 });
-  const rooms = createRoomManager();
+  const rooms = createRoomManager(createWordFilter(content.wordList));
   const runner = createMatchRunner(rooms, content, (socket, event, payload) => io.to(socket).emit(event, payload), ai,
     (socketId) => { queueMicrotask(() => io.sockets.sockets.get(socketId)?.disconnect(true)); });
   registerSocketHandlers(io, rooms, runner, options.trustRenderProxy);

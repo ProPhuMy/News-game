@@ -115,7 +115,7 @@ export function createClientStore(options: StoreOptions) {
             ? ack.serverNowMs - (action.startedMs + Date.now()) / 2 : state.serverOffsetMs;
           latestServerNowMs = Math.max(latestServerNowMs, ack.serverNowMs);
           update({ pending: [...pending.keys()], error: ack.ok ? null : ack.error ?? 'Action failed', serverOffsetMs });
-          if (ack.error === 'FILTERED') update({ error: "Our lawyers won't print that — try again" });
+          if (ack.error === 'FILTERED' && action.message.type === 'lockHeadline') update({ error: "Our lawyers won't print that — try again" });
           if (!ack.ok && action.message.type === 'reconnect') {
             for (const request of pending.values()) clearTimeout(request.timer);
             pending.clear();

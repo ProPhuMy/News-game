@@ -1,3 +1,6 @@
+import { content } from '../../src/content/index.ts';
+import { createWordFilter } from '../../src/ai/text.ts';
+import { TUNING } from '../../src/shared/tuning.ts';
 import { describe, expect, it } from 'vitest';
 import { createRoomManager } from '../../src/server/rooms.ts';
 import { COLORS, type Color } from '../../src/shared/ids.ts';
@@ -7,7 +10,7 @@ const profile = (color: Color = COLORS[0]) => ({ displayName: 'Editor', paperNam
 
 describe('rooms', () => {
   it('allocates colors and seats without exposing credentials in lobby views', () => {
-    const rooms = createRoomManager();
+    const rooms = createRoomManager(createWordFilter(content.wordList));
     const first = rooms.create(profile(), 'a', 'ip', 0);
     expect(SessionSchema.safeParse(first).success).toBe(true);
     expect(first.code).toMatch(/^[A-HJ-NP-Z2-9]{5}$/);
@@ -21,7 +24,7 @@ describe('rooms', () => {
   });
 
   it('authenticates reconnects and invalidates the old connection', () => {
-    const rooms = createRoomManager();
+    const rooms = createRoomManager(createWordFilter(content.wordList));
     const first = rooms.create(profile(), 'a', 'ip', 0);
     expect(() => rooms.reconnect(first.code, '0'.repeat(32), 'b', 1)).toThrow('BAD_TOKEN');
     expect(rooms.reconnect(first.code, first.token, 'b', 1)).toEqual(first);
@@ -30,7 +33,7 @@ describe('rooms', () => {
   });
 
   it('passes lobby hosting and starts no new seats mid-match', () => {
-    const rooms = createRoomManager();
+    const rooms = createRoomManager(createWordFilter(content.wordList));
     const first = rooms.create(profile(), 'a', 'ip', 0);
     rooms.join(first.code, profile(COLORS[1]), 'b', 0);
     rooms.disconnect('a', 1);
@@ -41,11 +44,26 @@ describe('rooms', () => {
   });
 
   it('enforces sliding creation limits and memory capacity', () => {
-    const rooms = createRoomManager();
+    const rooms = createRoomManager(createWordFilter(content.wordList));
     for (let i = 0; i < 10; i++) rooms.create(profile(), String(i), 'ip', i);
     expect(() => rooms.create(profile(), '11', 'ip', 59_999)).toThrow('RATE_LIMITED');
     expect(() => rooms.create(profile(), '12', 'ip', 60_010)).not.toThrow();
     for (let i = 11; i < 200; i++) rooms.create(profile(), `many${i}`, `ip${i}`, 60_010);
     expect(() => rooms.create(profile(), 'overflow', 'new', 60_010)).toThrow('SERVER_FULL');
   });
+});
+
+it('rejects blocked profiles before room, quota or seat allocation', () => {
+  const rooms = createRoomManager(createWordFilter(content.wordList));
+  for (let i = 0; i <= TUNING.limits.createRoomPerMinute; i++) {
+    expect(() => rooms.create({ ...profile(), displayName: 'SHIT!' }, `bad${i}`, 'same-ip', 0)).toThrow('FILTERED');
+  }
+  expect(rooms.rooms.size).toBe(0);
+  const first = rooms.create(profile(), 'host', 'same-ip', 0);
+  const room = rooms.require(first.code); const before = JSON.stringify(room.seats);
+  expect(() => rooms.join(first.code, { ...profile(COLORS[1]), paperName: 'Daily Shit' }, 'bad-join', 0)).toThrow('FILTERED');
+  expect(JSON.stringify(room.seats)).toBe(before);
+  expect(rooms.authorized('bad-join')).toBeUndefined();
+  expect(rooms.join(first.code, profile(COLORS[1]), 'corrected', 0).seatId).toBe(1);
+  for (let i = 1; i < TUNING.limits.createRoomPerMinute; i++) rooms.create(profile(), `good${i}`, 'same-ip', 0);
 });

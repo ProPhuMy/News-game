@@ -25,10 +25,13 @@ export class RoomError extends Error {
   constructor(code: ErrorCode) { super(code); this.code = code; }
 }
 
-export function createRoomManager() {
+export function createRoomManager(acceptName: (text: string) => boolean) {
   const rooms = new Map<string, Room>();
   const creations = new Map<string, number[]>();
   const fail = (code: ErrorCode): never => { throw new RoomError(code); };
+  const validateNames = (profile: Profile) => {
+    if (!acceptName(profile.displayName) || !acceptName(profile.paperName)) fail('FILTERED');
+  };
   const requireRoom = (code: string): Room => rooms.get(code) ?? fail('ROOM_NOT_FOUND');
   const authorized = (socketId: string) => {
     for (const room of rooms.values()) {
@@ -61,6 +64,7 @@ export function createRoomManager() {
     require: requireRoom,
     authorized,
     create(profile: Profile, socketId: string, ip: string, nowMs: number) {
+      validateNames(profile);
       if (authorized(socketId)) fail('NOT_ALLOWED');
       for (const [address, times] of creations) if (!times.some((time) => time > nowMs - 60_000)) creations.delete(address);
       const times = (creations.get(ip) ?? []).filter((time) => time > nowMs - 60_000);
@@ -81,6 +85,7 @@ export function createRoomManager() {
       return add(room, profile, socketId, nowMs);
     },
     join(code: string, profile: Profile, socketId: string, nowMs: number) {
+      validateNames(profile);
       return add(requireRoom(code), profile, socketId, nowMs);
     },
     reconnect(code: string, token: string, socketId: string, _nowMs: number) {

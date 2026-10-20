@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createClientStore } from '../../src/client/net/store.ts';
 import { createMatch, privateView, publicView } from '../../src/engine/index.ts';
 import { SAMPLE_CONTENT } from '../../src/sim/sample-content.ts';
-import { COLORS } from '../../src/shared/ids.ts';
+import { COLORS, LOCATIONS, EVENT_CLAIMS } from '../../src/shared/ids.ts';
 import { SERVER_EVENTS, type ClientMessage } from '../../src/shared/protocol.ts';
 
 const profile = { displayName: 'Editor', paperName: 'Daily', color: COLORS[0] };
@@ -121,4 +121,21 @@ describe('client store', () => {
     expect(store.getState().publicSnapshot?.phase).toBe('intro');
     store.dispose();
   });
+});
+
+it.each(['createRoom', 'playSolo', 'joinRoom'] as const)('preserves FILTERED for %s setup errors', (type) => {
+  const { store } = setup();
+  const id = type === 'joinRoom' ? store.actions.joinRoom({ ...profile, code: session.code })! : store.actions[type](profile)!;
+  store.receive(SERVER_EVENTS.ack, { actionId: id, ok: false, error: 'FILTERED', serverNowMs: Date.now() });
+  expect(store.getState().error).toBe('FILTERED');
+  expect(store.getState().session).toBeNull(); store.dispose();
+});
+
+it('keeps the existing headline-specific FILTERED copy', () => {
+  const { store } = setup(); const state = snapshots();
+  store.receive(SERVER_EVENTS.public, { ...state.public, phase: 'write' });
+  const id = store.actions.lockHeadline({ text: 'Filtered headline', story: { kind: 'claim', location: LOCATIONS[0], claim: EVENT_CLAIMS[0], attachEvidence: false } });
+  expect(id).not.toBeNull();
+  store.receive(SERVER_EVENTS.ack, { actionId: id, ok: false, error: 'FILTERED', serverNowMs: Date.now() });
+  expect(store.getState().error).toBe("Our lawyers won't print that — try again"); store.dispose();
 });

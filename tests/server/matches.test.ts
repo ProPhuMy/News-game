@@ -1,3 +1,5 @@
+import { content as nameFilterContent } from '../../src/content/index.ts';
+import { createWordFilter } from '../../src/ai/text.ts';
 import { describe, expect, it, vi } from 'vitest';
 import { createRoomManager } from '../../src/server/rooms.ts';
 import { createMatchRunner } from '../../src/server/matches.ts';
@@ -6,7 +8,7 @@ import { COLORS, LOCATIONS, EVENT_CLAIMS } from '../../src/shared/ids.ts';
 import { SERVER_EVENTS } from '../../src/shared/protocol.ts';
 
 const setup = () => {
-  const rooms = createRoomManager();
+  const rooms = createRoomManager(createWordFilter(nameFilterContent.wordList));
   const session = rooms.create({ displayName: 'Editor', paperName: 'Daily', color: COLORS[0] }, 'human', 'ip', 0);
   const messages: { socket: string; event: string; value: unknown }[] = [];
   const runner = createMatchRunner(rooms, SAMPLE_CONTENT, (socket, event, value) => messages.push({ socket, event, value }));
@@ -17,7 +19,7 @@ describe('match runner', () => {
   it('removes only a room whose publication throws and keeps ticking healthy rooms', () => {
     const log = vi.spyOn(console, 'error').mockImplementation(() => {});
     try {
-      const rooms = createRoomManager();
+      const rooms = createRoomManager(createWordFilter(nameFilterContent.wordList));
       const profile = { displayName: 'Editor', paperName: 'Daily', color: COLORS[0] };
       const bad = rooms.require(rooms.create(profile, 'bad', 'bad-ip', 0).code);
       const good = rooms.require(rooms.create(profile, 'good', 'good-ip', 0).code);

@@ -1,3 +1,5 @@
+import { content as nameFilterContent } from '../../src/content/index.ts';
+import { createWordFilter } from '../../src/ai/text.ts';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createFixturePlayer } from '../../src/client/net/fixtures.ts';
 import { createClientStore } from '../../src/client/net/store.ts';
@@ -12,7 +14,7 @@ import caretaker from '../../src/sim/fixtures/caretaker-pulled.json';
 // Generate test frames from the real M0 engine; do not hand-edit Claude's recordings.
 const recording = () => {
   const profile = { displayName: 'Editor', paperName: 'Daily', color: COLORS[0] };
-  const rooms = createRoomManager();
+  const rooms = createRoomManager(createWordFilter(nameFilterContent.wordList));
   const session = rooms.create(profile, 'a', 'ip', 0);
   let match = createMatch({ content: SAMPLE_CONTENT, startMs: 0 }, 1,
     [{ kind: 'human', ...profile }, { kind: 'bot' }, { kind: 'bot' }, { kind: 'bot' }]);

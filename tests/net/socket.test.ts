@@ -1,3 +1,5 @@
+import { content as nameFilterContent } from '../../src/content/index.ts';
+import { createWordFilter } from '../../src/ai/text.ts';
 import { createServer } from 'node:http';
 import { Server, type Socket as ServerSocket } from 'socket.io';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -31,7 +33,7 @@ describe('socket-store reconnect ordering', () => {
       setItem: (key: string, value: string) => { saved.set(key, value); } });
     const http = createServer();
     server = new Server(http);
-    rooms = createRoomManager();
+    rooms = createRoomManager(createWordFilter(nameFilterContent.wordList));
     dropType = null;
     received.length = 0;
     server.on('connection', (socket) => {

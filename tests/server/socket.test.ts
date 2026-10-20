@@ -1,3 +1,5 @@
+import { content as nameFilterContent } from '../../src/content/index.ts';
+import { createWordFilter } from '../../src/ai/text.ts';
 import { createServer } from 'node:http';
 import { once } from 'node:events';
 import { Server } from 'socket.io';
@@ -18,7 +20,7 @@ describe('socket boundary', () => {
   beforeEach(async () => {
     const http = createServer();
     server = new Server(http);
-    rooms = createRoomManager();
+    rooms = createRoomManager(createWordFilter(nameFilterContent.wordList));
     handlers = { handle: () => 'NOT_ALLOWED', connection: () => {} };
     registerSocketHandlers(server, rooms, { handle: (...args) => handlers.handle(...args), connection: (...args) => handlers.connection(...args) });
     http.listen(0, '127.0.0.1');
