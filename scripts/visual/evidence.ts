@@ -28,6 +28,9 @@ const withoutQuery = (url: string): string => {
   return `${parsed.origin}${parsed.pathname}`;
 };
 
+// Browser error text can quote request URLs (socket.io session ids, room paths with queries): keep origin + path only.
+const scrubUrls = (text: string): string => text.replace(/\b(?:https?|wss?):\/\/[^\s'"<>]+/g, (url) => url.split(/[?#]/)[0] ?? url);
+
 async function recordStylesheet(response: Response): Promise<StylesheetRecord | null> {
   const contentType = response.headers()['content-type'] ?? '';
   const type = response.request().resourceType();
@@ -42,8 +45,8 @@ export function watchPage(page: Page): PageWatch {
   const pending: Promise<StylesheetRecord | null>[] = [];
   const consoleErrors: string[] = [];
   page.on('response', (response) => pending.push(recordStylesheet(response)));
-  page.on('console', (message) => { if (message.type() === 'error') consoleErrors.push(message.text()); });
-  page.on('pageerror', (error) => consoleErrors.push(`pageerror: ${error.message}`));
+  page.on('console', (message) => { if (message.type() === 'error') consoleErrors.push(scrubUrls(message.text())); });
+  page.on('pageerror', (error) => consoleErrors.push(`pageerror: ${scrubUrls(error.message)}`));
   return {
     snapshot: async () => ({
       stylesheets: (await Promise.all(pending)).filter((entry): entry is StylesheetRecord => entry !== null),
@@ -66,9 +69,12 @@ export async function checkAppLayout(page: Page): Promise<{ viewport: AppEvidenc
 /** Waits for fonts, checks layout, writes out (PNG) and out.json. The caller asserts consoleErrors is empty. */
 export async function captureAppEvidence(page: Page, watch: PageWatch, opts: { out: string; label: string; timeoutMs: number }): Promise<AppEvidence> {
   if (!opts.out.endsWith('.png')) throw new Error(`out must end with .png, got "${opts.out}"`);
-  const { viewport, layout } = await checkAppLayout(page);
-  await mkdir(dirname(opts.out), { recursive: true });
+  // A failed run must never leave an earlier run's evidence looking current.
+  const clear = () => Promise.all([rm(opts.out, { force: true }), rm(`${opts.out}.json`, { force: true })]);
+  await clear();
   try {
+    const { viewport, layout } = await checkAppLayout(page);
+    await mkdir(dirname(opts.out), { recursive: true });
     await page.screenshot({ path: opts.out, timeout: opts.timeoutMs });
     const evidence: AppEvidence = {
       label: opts.label,
@@ -82,7 +88,7 @@ export async function captureAppEvidence(page: Page, watch: PageWatch, opts: { o
     await writeFile(`${opts.out}.json`, `${JSON.stringify(evidence, null, 2)}\n`);
     return evidence;
   } catch (error) {
-    await rm(opts.out, { force: true });
+    await clear();
     throw error;
   }
 }

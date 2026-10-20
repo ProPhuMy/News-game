@@ -88,4 +88,27 @@ describe('captureAppEvidence', () => {
     const { page } = fakePage();
     await expect(captureAppEvidence(page, watchPage(page), { out: 'x.jpg', label: 'x', timeoutMs: 1000 })).rejects.toThrow(/\.png/);
   });
+  it('strips queries and fragments from URLs inside console errors before writing the sidecar', async () => {
+    const { page, events } = fakePage();
+    const watch = watchPage(page);
+    events.emit('console', { type: () => 'error', text: () => "WebSocket connection to 'wss://town.example/socket.io/?EIO=4&sid=abc#x' failed" });
+    events.emit('pageerror', new Error('fetch https://town.example/r/ABCDE?token=secret failed'));
+    const out = join(await outDir(), 'errors.png');
+    const evidence = await captureAppEvidence(page, watch, { out, label: 'errors', timeoutMs: 1000 });
+    expect(evidence.consoleErrors).toEqual([
+      "WebSocket connection to 'wss://town.example/socket.io/' failed",
+      'pageerror: fetch https://town.example/r/ABCDE failed',
+    ]);
+    expect(await readFile(`${out}.json`, 'utf8')).not.toMatch(/sid=|token|secret|EIO/);
+  });
+
+  it('removes evidence from an earlier run when this run fails', async () => {
+    const out = join(await outDir(), 'stale.png');
+    await writeFile(out, 'old png');
+    await writeFile(`${out}.json`, '{}');
+    const { page } = fakePage({ overflowX: true });
+    await expect(captureAppEvidence(page, watchPage(page), { out, label: 'stale', timeoutMs: 1000 })).rejects.toThrow(/layout/);
+    await expect(stat(out)).rejects.toThrow();
+    await expect(stat(`${out}.json`)).rejects.toThrow();
+  });
 });
