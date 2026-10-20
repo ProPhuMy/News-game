@@ -19,6 +19,8 @@ describe('server startup', () => {
   it.each([
     [{ AI_PROVIDER: 'SECRET-invalid-provider' }, 'Invalid AI_PROVIDER'],
     [{ TRUST_RENDER_PROXY: 'SECRET-invalid-proxy' }, 'Invalid TRUST_RENDER_PROXY'],
+    [{ TRUSTED_PROXY_ADDRESS: 'SECRET-invalid-address' }, 'Invalid TRUSTED_PROXY_ADDRESS'],
+    [{ TRUSTED_PROXY_ADDRESS: '127.0.0.1', TRUST_RENDER_PROXY: 'true' }, 'Proxy trust modes must not be combined'],
     [{ AI_PROVIDER: 'openai', AI_MODEL: '', OPENAI_API_KEY: 'SECRET-test-key' }, 'AI_MODEL and provider API key are required'],
     [{ AI_PROVIDER: 'anthropic', AI_MODEL: 'test-model', ANTHROPIC_API_KEY: '' }, 'AI_MODEL and provider API key are required'],
   ] as const)('fails closed for invalid startup configuration %j', (environment, expected) => {

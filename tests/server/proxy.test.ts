@@ -6,6 +6,18 @@ import { createRoomManager } from '../../src/server/rooms.ts';
 import { COLORS } from '../../src/shared/ids.ts';
 
 describe('trusted Render proxy address', () => {
+  it('uses a single client address only from the configured proxy peer', () => {
+    const headers = { 'x-real-ip': '192.0.2.1', 'cf-connecting-ip': '192.0.2.99' };
+    expect(clientAddress('::ffff:172.17.0.1', headers, false, '172.17.0.1')).toBe('192.0.2.1');
+    expect(clientAddress('172.17.0.2', headers, false, '172.17.0.1')).toBe('172.17.0.2');
+    expect(clientAddress('172.17.0.1', headers)).toBe('172.17.0.1');
+    expect(clientAddress('172.17.0.1', { 'x-real-ip': '2001:db8::1' }, false, '172.17.0.1')).toBe('2001:db8::1');
+  });
+
+  it.each(['not-an-ip', '192.0.2.1, 192.0.2.2', ['192.0.2.1', '192.0.2.2'], undefined])(
+    'ignores invalid or ambiguous local-proxy headers: %j', value => {
+      expect(clientAddress('172.17.0.1', { 'x-real-ip': value }, false, '172.17.0.1')).toBe('172.17.0.1');
+    });
   it('ignores spoofed forwarding headers on direct hosts', () => {
     expect(clientAddress('127.0.0.1', { 'x-forwarded-for': '1.2.3.4', 'cf-connecting-ip': '5.6.7.8' }, false)).toBe('127.0.0.1');
   });

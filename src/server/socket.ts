@@ -16,7 +16,7 @@ export function broadcastRoom(io: Server, rooms: RoomManager, room: Room): void 
   }
 }
 
-export function registerSocketHandlers(io: Server, rooms: RoomManager, matches?: MatchHandlers, trustRenderProxy = false): void {
+export function registerSocketHandlers(io: Server, rooms: RoomManager, matches?: MatchHandlers, trustRenderProxy = false, trustedProxyAddress?: string): void {
   io.on('connection', (socket) => {
     const receipts = new Map<string, Ack>();
     let windowStartMs = Date.now();
@@ -44,7 +44,7 @@ export function registerSocketHandlers(io: Server, rooms: RoomManager, matches?:
               case 'createRoom':
               case 'playSolo': {
                 ack.session = rooms.create(message, socket.id,
-                  clientAddress(socket.handshake.address, socket.handshake.headers, trustRenderProxy), nowMs);
+                  clientAddress(socket.handshake.address, socket.handshake.headers, trustRenderProxy, trustedProxyAddress), nowMs);
                 if (message.type === 'playSolo') {
                   const error = matches?.handle(rooms.require(ack.session.code), ack.session.seatId,
                     { type: 'startMatch', actionId: message.actionId }, nowMs);

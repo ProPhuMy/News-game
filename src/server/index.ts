@@ -1,5 +1,6 @@
 import { createWordFilter } from '../ai/text.ts';
 import { createServer } from 'node:http';
+import { isIP } from 'node:net';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { Server } from 'socket.io';
 import { ContentSchema, type GameContent } from '../shared/content-schema.ts';
@@ -10,7 +11,9 @@ import { createStaticHandler } from './static.ts';
 import { createAiAdapter } from '../ai/adapter.ts';
 import type { ProviderOptions } from '../ai/providers.ts';
 
-export async function createGameServer(options: { content: GameContent; distDirectory?: string; dev?: boolean; ai?: ProviderOptions; trustRenderProxy?: boolean }) {
+export async function createGameServer(options: { content: GameContent; distDirectory?: string; dev?: boolean; ai?: ProviderOptions; trustRenderProxy?: boolean; trustedProxyAddress?: string }) {
+  if (options.trustedProxyAddress !== undefined && !isIP(options.trustedProxyAddress)) throw new Error('Invalid TRUSTED_PROXY_ADDRESS');
+  if (options.trustRenderProxy && options.trustedProxyAddress) throw new Error('Proxy trust modes must not be combined');
   const content = ContentSchema.parse(options.content);
   const ai = createAiAdapter({ ...(options.ai ?? { provider: 'none' }), content });
   const http = createServer();
@@ -21,7 +24,7 @@ export async function createGameServer(options: { content: GameContent; distDire
   const rooms = createRoomManager(createWordFilter(content.wordList));
   const runner = createMatchRunner(rooms, content, (socket, event, payload) => io.to(socket).emit(event, payload), ai,
     (socketId) => { queueMicrotask(() => io.sockets.sockets.get(socketId)?.disconnect(true)); });
-  registerSocketHandlers(io, rooms, runner, options.trustRenderProxy);
+  registerSocketHandlers(io, rooms, runner, options.trustRenderProxy, options.trustedProxyAddress);
   const timer = setInterval(() => {
     try { runner.tick(Date.now()); }
     catch { console.error('News Town scheduler failed.'); }
@@ -54,6 +57,7 @@ async function main() {
   if (process.env.TRUST_RENDER_PROXY && !['true', 'false'].includes(process.env.TRUST_RENDER_PROXY)) throw new Error('Invalid TRUST_RENDER_PROXY');
   const game = await createGameServer({ content: ContentSchema.parse(module.content), dev: process.env.NODE_ENV !== 'production',
     trustRenderProxy: process.env.TRUST_RENDER_PROXY === 'true',
+    ...(process.env.TRUSTED_PROXY_ADDRESS ? { trustedProxyAddress: process.env.TRUSTED_PROXY_ADDRESS } : {}),
     ai: { provider, ...(process.env.AI_MODEL ? { model: process.env.AI_MODEL } : {}), ...(key ? { apiKey: key } : {}) } });
   try { await game.listen(port); }
   catch (error) {
@@ -69,7 +73,8 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   void main().catch((error: unknown) => {
     const safeMessages = [
       'Validated src/content/index.ts is required', 'PORT must be between 1 and 65535',
-      'Invalid AI_PROVIDER', 'Invalid TRUST_RENDER_PROXY', 'AI_MODEL and provider API key are required',
+      'Invalid AI_PROVIDER', 'Invalid TRUST_RENDER_PROXY', 'Invalid TRUSTED_PROXY_ADDRESS',
+      'Proxy trust modes must not be combined', 'AI_MODEL and provider API key are required',
       'Content must provide safe headline and bubble fallbacks',
     ];
     const detail = error instanceof Error && safeMessages.includes(error.message) ? error.message
