@@ -53,3 +53,7 @@ Independent reviewer identified one Important failure-path issue: raw console/pa
 Reviewer independently passed the earlier 14 options tests and syntax check, and declined to certify public deployment/SHA, container runtime, proxy controls, live AI outage, rollback or hardware performance. These remain external D4 requirements. No deferred code minors or contract requests.
 
 Viewed PNG SHA-256: home `bb6f126fe2da777091b2807edeafd54c3861795fc42f8e7a28c9728486339eb1`; final `e691056f0e874096b5209c1744391c4ae8b35d9ad025705c1a2a66ac392a69af`.
+
+## Credit-only EC2 proposal
+
+User requested evaluation, not provisioning, of one EC2 instance using eligible Free Plan credits, with no Paid Plan upgrade. See `deployment/D4-ec2-credit-proposal.md` for exact conditional resources, compute/storage/IPv4/transfer arithmetic, account checks, HTTPS/proxy prerequisites and retained Render Free fallback. User's expired domain is unconfirmed. No host selection/resource launch is approved by this proposal; no AWS/Render/DNS change occurred.
