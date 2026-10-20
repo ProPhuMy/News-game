@@ -1,3 +1,5 @@
+import { APPROVED_PALETTE, getPalette } from '../visuals/palette.ts';
+
 export function isWebGL2Supported(
   canvasOrDoc?: HTMLCanvasElement | Document,
 ): boolean {
@@ -34,24 +36,26 @@ export function createFallbackView(
   container: HTMLElement,
   onRetry?: () => void,
 ): FallbackView {
+  const palette = getPalette(APPROVED_PALETTE).ui;
   const root = document.createElement('div');
   root.setAttribute('role', 'status');
   root.className = 'town-fallback-container';
   root.style.cssText =
-    'display: flex; flex-direction: column; align-items: center; justify-content: center; ' +
-    'height: 100%; width: 100%; padding: 24px; text-align: center; ' +
-    'background-color: #f7f3ea; color: #2b2b2b; font-family: sans-serif;';
+    'box-sizing: border-box; display: flex; flex-direction: column; align-items: center; ' +
+    'height: auto; width: 100%; padding: 12px 16px; text-align: center; ' +
+    `background-color: var(--nt-paper, ${palette.paper}); color: var(--nt-ink, ${palette.ink}); ` +
+    'font-family: var(--font-body, sans-serif);';
 
   const heading = document.createElement('h3');
   heading.textContent = '3D town view unavailable in this browser';
-  heading.style.cssText = 'margin-bottom: 8px; font-size: 1.25rem; font-weight: 600;';
+  heading.style.cssText = 'margin: 0 0 8px; font-size: 1.25rem; font-weight: 600;';
   root.appendChild(heading);
 
   const desc = document.createElement('p');
   desc.textContent =
     'The 3D view could not be initialized, but the match is fully playable via the game panels. ' +
     'All headlines, investigations, and scores update normally.';
-  desc.style.cssText = 'max-width: 480px; margin-bottom: 16px; line-height: 1.4; color: #4a4a4a;';
+  desc.style.cssText = 'max-width: 48rem; margin: 0; line-height: 1.4;';
   root.appendChild(desc);
 
   if (onRetry) {
@@ -59,17 +63,36 @@ export function createFallbackView(
     button.type = 'button';
     button.textContent = 'Retry 3D Town';
     button.style.cssText =
-      'padding: 8px 16px; border-radius: 4px; border: 1px solid #c2b8a3; ' +
-      'background-color: #ffffff; cursor: pointer; font-weight: 500;';
+      `margin-top: 12px; min-height: 44px; padding: 8px 16px; border-radius: 4px; border: 1px solid ${palette.border}; ` +
+      `background-color: var(--nt-panel, ${palette.panel}); color: inherit; cursor: pointer; font-weight: 500;`;
     button.addEventListener('click', onRetry);
     root.appendChild(button);
   }
 
   container.appendChild(root);
 
+  const property = '--nt-town-fallback-height';
+  const style = document.documentElement.style;
+  const previous = style.getPropertyValue(property);
+  const priority = style.getPropertyPriority(property);
+  let disposed = false;
+  const publishHeight = () => {
+    if (!disposed) style.setProperty(property, `${Math.ceil(root.getBoundingClientRect().height)}px`);
+  };
+  publishHeight();
+  const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(publishHeight);
+  if (observer) observer.observe(root);
+  else window.addEventListener('resize', publishHeight);
+
   return {
     element: root,
     dispose: () => {
+      if (disposed) return;
+      disposed = true;
+      observer?.disconnect();
+      window.removeEventListener('resize', publishHeight);
+      if (previous) style.setProperty(property, previous, priority);
+      else style.removeProperty(property);
       if (root.parentElement === container) {
         container.removeChild(root);
       }
