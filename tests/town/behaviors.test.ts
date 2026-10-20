@@ -35,3 +35,13 @@ describe('Citizen Behaviors', () => {
     expect(mobY).not.toBe(routineY);
   });
 });
+
+it('keeps whole-rig tilt inside the measured full-character footprint margin', () => {
+  const manager = createCitizenManager(); const citizen = manager.getCitizen(0);
+  for (const behavior of BEHAVIORS) for (const time of [0.1, 0.25, 0.6, 1.2]) {
+    applyCitizenBehaviorPose(citizen, behavior, time);
+    expect(Math.abs(citizen.mesh.rotation.x)).toBeLessThanOrEqual(0.02);
+    expect(Math.abs(citizen.mesh.rotation.z)).toBeLessThanOrEqual(0.02);
+  }
+  manager.dispose();
+});

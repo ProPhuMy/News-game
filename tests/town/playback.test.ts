@@ -1,3 +1,4 @@
+import { allocateCrowdSlots } from '../../src/client/town/slots.ts';
 import { APPROVED_PALETTE, getPalette } from '../../src/client/visuals/palette.ts';
 import { fakeContext } from './architecture/fake-context.ts';
 import { describe, expect, it, vi } from 'vitest';
@@ -148,10 +149,12 @@ describe('Playback Coordinator', () => {
     await coordinator.startPlan(plan, 0.3);
     coordinator.update(0.3);
 
-    for (const entry of plan.citizens) {
+    const offsets = allocateCrowdSlots(layout, plan.citizens.map(entry => entry.route.at(-1)!));
+    for (const [index, entry] of plan.citizens.entries()) {
       const pos = citizenMgr.getCitizenPosition(entry.citizenId);
       const dest = layout.getNodeWorldPosition(entry.route[entry.route.length - 1]!);
-      expect(Math.hypot(pos.x - dest.x, pos.z - dest.z)).toBeLessThan(3.0); // within slot radius
+      expect(pos.x).toBeCloseTo(dest.x + offsets[index]!.x);
+      expect(pos.z).toBeCloseTo(dest.z + offsets[index]!.z);
       expect(citizenMgr.getCitizenHatColor(entry.citizenId)).not.toBe(palette.unsubscribed.hex); // not grey
     }
   });
@@ -284,4 +287,20 @@ describe('playback boundaries', () => {
     coordinator.stop(); await done;
     citizens.dispose(); buildings.dispose(); poof.dispose();
   });
+});
+
+it('preserves every route node before moving into its allocated gathering slot', () => {
+  const layout = createTownLayout(); const buildings = createTownBuildings(layout, fakeContext());
+  const citizens = createCitizenManager(); const interpolator = createRouteInterpolator(layout);
+  const setRoute = vi.spyOn(interpolator, 'setRoute');
+  const coordinator = createPlaybackCoordinator({ layout, buildings, citizens, interpolator,
+    bubbles: { showBubble: vi.fn(), update: vi.fn(), clear: vi.fn() }, poof: createPoofEffect() });
+  const route = ['r0c0', 'r0c1', 'r0c2'];
+  const plan: ReactionPlan = { round: 1, exposures: [],
+    recap: { headlineId: null, location: null, behavior: 'routine', reactors: 0, gainSeatId: null, gained: 0 },
+    citizens: Array.from({ length: 30 }, (_, citizenId) => ({ citizenId, route, behavior: 'routine', fromPaper: null, toPaper: null, bubble: null })) };
+  void coordinator.startPlan(plan, 20);
+  expect(setRoute).toHaveBeenCalledWith(route);
+  expect(setRoute.mock.calls.every(call => call[1] === undefined)).toBe(true);
+  coordinator.stop(); citizens.dispose(); buildings.dispose();
 });

@@ -18,6 +18,7 @@ export interface PoofSystem {
     colorHex?: number,
     reducedMotion?: boolean,
   ): void;
+  clear(): void;
   update(deltaSeconds: number): void;
   getActiveCount(): number;
   getSharedGeometry?(): THREE.BufferGeometry;
@@ -79,8 +80,21 @@ export function createPoofEffect(scene: THREE.Scene = new THREE.Scene()): Partic
     }
   }
 
+  function clear(): void {
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+        if (!p) continue;
+        scene.remove(p.mesh);
+        if (p.mesh.material instanceof THREE.Material) {
+          p.mesh.material.dispose();
+        }
+      }
+      particles.length = 0;
+  }
+
   return {
     triggerPoof,
+    clear,
     createBurst: triggerPoof,
 
     update(deltaSeconds: number): void {
@@ -123,15 +137,7 @@ export function createPoofEffect(scene: THREE.Scene = new THREE.Scene()): Partic
     },
 
     dispose(): void {
-      for (let i = 0; i < particles.length; i++) {
-        const p = particles[i];
-        if (!p) continue;
-        scene.remove(p.mesh);
-        if (p.mesh.material instanceof THREE.Material) {
-          p.mesh.material.dispose();
-        }
-      }
-      particles.length = 0;
+      clear();
       particleGeo.dispose();
     },
   };

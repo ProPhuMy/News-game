@@ -1,3 +1,5 @@
+import { LOCATION_NODES, OFFICE_NODES } from '../../shared/town-map.ts';
+import { GATHER_CLEARANCE, NODE_CLEARANCE, HEADROOM } from './architecture/lots.ts';
 import * as THREE from 'three';
 import { APPROVED_PALETTE, getPalette } from '../visuals/palette.ts';
 import { createAssetSource } from './assets/source.ts';
@@ -28,7 +30,13 @@ export function townFrameBounds(group: THREE.Group, layout: TownLayout): THREE.B
   for (const child of group.children) {
     if (targetNames.has(child.name) || child.name === 'office') frameBounds.expandByObject(child, true);
   }
-  for (const node of layout.getStreetNodes()) frameBounds.expandByPoint(new THREE.Vector3(node.x, 4, node.z));
+  const gathering = new Set<string>([...Object.values(LOCATION_NODES), ...OFFICE_NODES]);
+  for (const node of layout.getStreetNodes()) {
+    const radius = gathering.has(node.id) ? GATHER_CLEARANCE : NODE_CLEARANCE;
+    for (const x of [-radius, radius]) for (const z of [-radius, radius]) {
+      frameBounds.expandByPoint(new THREE.Vector3(node.x + x, HEADROOM, node.z + z));
+    }
+  }
   return frameBounds.expandByScalar(1);
 }
 
@@ -288,7 +296,7 @@ export function createTownView(
         currentReducedMotion = enabled;
         camera.setReducedMotion(enabled);
         activeCitizens.setReducedMotion(enabled);
-        if (enabled) activeCoordinator.update(0);
+        if (enabled) { activePoof.clear(); activeCoordinator.update(0); }
       },
 
       syncFromSnapshot(snapshot: PublicSnapshot): void {

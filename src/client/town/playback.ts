@@ -5,7 +5,7 @@ import type { TownBuildings } from './buildings.ts';
 import type { CitizenManager } from './citizens.ts';
 import type { PreparedRoute, RouteInterpolator } from './movement.ts';
 import type { PoofSystem } from './particles.ts';
-import { getGatheringSlotOffset } from './slots.ts';
+import { allocateCrowdSlots } from './slots.ts';
 import type { TownLayout, Vector3Coord } from './types.ts';
 
 export interface PlaybackDependencies {
@@ -37,7 +37,6 @@ export interface PlaybackCoordinator {
 
 interface CitizenPlanContext {
   destPos: THREE.Vector3;
-  slotOffset: { x: number; z: number };
   preparedRoute?: PreparedRoute;
 }
 
@@ -133,19 +132,11 @@ export function createPlaybackCoordinator(
       elapsed = 0;
       playing = true;
 
-      // Group citizens by destination node to allocate distinct slot offsets
-      const destSlotCounts = new Map<string, number>();
-      plan.citizens.forEach((entry) => {
-        const destNodeId = resolveDestNode(
-          deps.layout,
-          entry.route,
-          entry.citizenId,
-          deps.citizens,
-        );
-        const slotIndex = destSlotCounts.get(destNodeId) ?? 0;
-        destSlotCounts.set(destNodeId, slotIndex + 1);
-
-        const slotOffset = getGatheringSlotOffset(slotIndex);
+      const destinations = plan.citizens.map(entry => resolveDestNode(deps.layout, entry.route, entry.citizenId, deps.citizens));
+      const offsets = allocateCrowdSlots(deps.layout, destinations);
+      plan.citizens.forEach((entry, index) => {
+        const destNodeId = destinations[index]!;
+        const slotOffset = offsets[index]!;
         let basePos: Vector3Coord;
         try {
           basePos = deps.layout.getNodeWorldPos(destNodeId);
@@ -158,8 +149,8 @@ export function createPlaybackCoordinator(
           0,
           basePos.z + slotOffset.z,
         );
-        const preparedRoute = deps.interpolator.setRoute(entry.route, slotOffset);
-        citizenContexts.set(entry.citizenId, { destPos, slotOffset, preparedRoute });
+        const preparedRoute = deps.interpolator.setRoute(entry.route);
+        citizenContexts.set(entry.citizenId, { destPos, preparedRoute });
       });
 
       // Highlight exposed offices
@@ -181,6 +172,7 @@ export function createPlaybackCoordinator(
           const ctx = citizenContexts.get(entry.citizenId);
           if (ctx) {
             deps.citizens.setCitizenPosition(entry.citizenId, ctx.destPos);
+            deps.citizens.setCitizenRotation(entry.citizenId, 0);
           }
           deps.citizens.setCitizenPaper(entry.citizenId, entry.toPaper, {
             reducedMotion: deps.reducedMotion,
@@ -222,6 +214,7 @@ export function createPlaybackCoordinator(
           // Destination reached / snapped: place at end of route with slot offset
           if (ctx) {
             deps.citizens.setCitizenPosition(entry.citizenId, ctx.destPos);
+            deps.citizens.setCitizenRotation(entry.citizenId, 0);
           }
 
           if (!switchedPapers.has(entry.citizenId)) {
@@ -260,16 +253,17 @@ export function createPlaybackCoordinator(
         } else {
           // Walking along route with trajectory blending toward destination slot
           const transitT = (progress - transitStart) / (transitEnd - transitStart);
+          const routeT = Math.min(1, transitT / 0.8);
           const state = ctx?.preparedRoute
-            ? deps.interpolator.interpolatePreparedRoute(ctx.preparedRoute, transitT)
+            ? deps.interpolator.interpolatePreparedRoute(ctx.preparedRoute, routeT)
             : deps.interpolator.interpolateRoute(
                 entry.route,
-                transitT,
-                undefined,
-                ctx?.slotOffset,
+                routeT,
               );
+          // Reach the prescribed final node before entering a clear disk or straight street queue.
+          if (ctx && transitT > 0.8) state.position.lerp(ctx.destPos, (transitT - 0.8) / 0.2);
           deps.citizens.setCitizenPosition(entry.citizenId, state.position);
-          deps.citizens.setCitizenRotation(entry.citizenId, state.headingAngle);
+          deps.citizens.setCitizenRotation(entry.citizenId, transitT > 0.8 ? 0 : state.headingAngle);
 
           applyCitizenBehaviorPose(
             deps.citizens.getCitizen(entry.citizenId),

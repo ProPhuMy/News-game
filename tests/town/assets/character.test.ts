@@ -1,3 +1,4 @@
+import { CITIZEN_REFERENCE_HEIGHT } from '../../../src/client/town/architecture/piece.ts';
 import { describe, expect, it, vi } from 'vitest';
 import * as THREE from 'three';
 import { getPalette } from '../../../src/client/visuals/palette.ts';
@@ -23,13 +24,13 @@ function setup() {
     assets: { loadGltf: async () => model } };
   return { model, geometry, source, materials, ctx, head, left, right };
 }
-const options = { modelUrl: '/models/characters/kenney-mini/character-male-a.glb', height: 3.29, paper: 'red' as const };
+const options = { modelUrl: '/models/characters/kenney-mini/character-male-a.glb', height: CITIZEN_REFERENCE_HEIGHT, paper: 'red' as const };
 
 describe('sample character', () => {
   it('normalizes height and poses exact real clips reproducibly, mapping run to sprint', async () => {
     const { ctx, head, materials } = setup();
     const actor = await createSampleCharacter(ctx, options);
-    expect(actor.object.scale.y).toBeCloseTo(3.29);
+    expect(actor.object.scale.y).toBeCloseTo(CITIZEN_REFERENCE_HEIGHT);
     actor.setPose('walk', 0.25); expect(head.position.x).toBeCloseTo(0.5);
     actor.setPose('run', 0.25); expect(head.position.x).toBeCloseTo(0.75);
     actor.setPose('walk', 0.25); expect(head.position.x).toBeCloseTo(0.5);

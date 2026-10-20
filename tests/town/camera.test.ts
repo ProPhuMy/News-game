@@ -118,7 +118,7 @@ it('exports framing bounds that include office lots and ignore distant scenery',
   const far = new THREE.Mesh(new THREE.BoxGeometry(10, 20, 10)); far.position.set(1000, 0, 1000); tree.add(far); group.add(tree);
   const bounds = townFrameBounds(group, createTownLayout());
   expect(bounds.min.z).toBeCloseTo(-32.4);
-  expect(bounds.max.x).toBe(25); expect(bounds.max.z).toBe(25);
+  expect(bounds.max.x).toBe(30); expect(bounds.max.z).toBe(30);
   expect(bounds.max.y).toBe(8);
   body.geometry.dispose(); far.geometry.dispose();
 });

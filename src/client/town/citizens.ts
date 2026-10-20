@@ -7,6 +7,7 @@ import { APPROVED_PALETTE, getPalette } from '../visuals/palette.ts';
 import type { ArchitectureContext, SceneReadiness } from '../visuals/town-types.ts';
 import { CITIZEN_REFERENCE_HEIGHT } from './architecture/piece.ts';
 import { createSampleCharacter, type SampleCharacter, type SamplePose } from './assets/character.ts';
+import { allocateCrowdSlots } from './slots.ts';
 import { createTownLayout } from './layout.ts';
 import { createPoofEffect, type PoofSystem } from './particles.ts';
 import type { SeatColorMap } from './types.ts';
@@ -51,11 +52,13 @@ export function createCitizenManager(
   let time = 0;
   let seatColors: SeatColorMap = Object.fromEntries(COLORS.map((color, seat) => [seat, color]));
   const poses = new Map<number, { pose: SamplePose; seconds: number }>();
+  const homes = Array.from({ length: TUNING.citizens }, (_, id) => HOME_NODES[id % HOME_NODES.length]!);
+  const initialOffsets = allocateCrowdSlots(layout, homes);
   const citizens: CitizenInstance[] = Array.from({ length: TUNING.citizens }, (_, id) => {
-    const homeNodeId = HOME_NODES[id % HOME_NODES.length]!;
+    const homeNodeId = homes[id]!;
     const home = layout.getNodeWorldPos(homeNodeId);
     const mesh = new THREE.Group(); mesh.name = `citizen-${id}`;
-    mesh.position.set(home.x, 0, home.z); scene.add(mesh);
+    mesh.position.set(home.x + initialOffsets[id]!.x, 0, home.z + initialOffsets[id]!.z); scene.add(mesh);
     return { id, mesh, currentPaper: null, homeNodeId };
   });
   const colorOf = (citizen: CitizenInstance): Color | null => citizen.currentPaper === null
@@ -104,11 +107,12 @@ export function createCitizenManager(
     syncCitizens(snapshot, papers) {
       for (const paper of papers) seatColors[paper.seatId] = paper.color;
       poses.clear(); time = 0;
-      for (const state of snapshot) {
+      const offsets = allocateCrowdSlots(layout, snapshot.map(state => state.home));
+      for (const [index, state] of snapshot.entries()) {
         const citizen = citizens[state.id]; if (!citizen) continue;
         const pos = layout.getNodeWorldPos(state.home);
         citizen.homeNodeId = state.home; citizen.currentPaper = state.paper;
-        citizen.mesh.position.set(pos.x, 0, pos.z);
+        citizen.mesh.position.set(pos.x + offsets[index]!.x, 0, pos.z + offsets[index]!.z);
         citizen.mesh.rotation.set(0, 0, 0);
         citizen.actor?.setPaper(colorOf(citizen));
         citizen.actor?.setPose('idle', 0, reducedMotion);
@@ -143,7 +147,7 @@ export function createCitizenManager(
     },
     update(deltaSeconds) {
       time += deltaSeconds;
-      for (const citizen of citizens) if (!poses.has(citizen.id)) citizen.actor?.setPose('idle', time, reducedMotion);
+      for (const citizen of citizens) if (!poses.has(citizen.id) || poses.get(citizen.id)?.pose === 'idle') citizen.actor?.setPose('idle', time, reducedMotion);
     },
     dispose,
   };

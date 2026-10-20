@@ -1,3 +1,4 @@
+import { allocateCrowdSlots } from './slots.ts';
 import * as THREE from 'three';
 import { COLORS } from '../../shared/ids.ts';
 import { OFFICE_NODES } from '../../shared/town-map.ts';
@@ -59,7 +60,7 @@ function size(box: THREE.Box3): { width: number; height: number; depth: number }
   const v = box.getSize(new THREE.Vector3()); return { width: v.x, height: v.y, depth: v.z };
 }
 
-// Proposed comparison spacing only. Production keeps its existing scale and slots pending user review.
+// Preserve the approved comparison independently of production clearance spacing.
 const slots = Array.from({ length: 10 }, (_, row) => {
   const z = (row - 4.5) * 1.15;
   const alternatives = [0, 0.85].map(shift => Array.from({ length: 11 }, (_, column) => ({ x: (column - 5) * 1.7 + shift, z }))
@@ -70,7 +71,7 @@ const slots = Array.from({ length: 10 }, (_, row) => {
 
 /** Isolated static art comparison: no ReactionPlan, route, fixture or production-scale mutations. */
 export function createCrowdComparison(options: {
-  container: HTMLElement; renderer: THREE.WebGLRenderer; palette: PresentationPalette; height: number;
+  container: HTMLElement; renderer: THREE.WebGLRenderer; palette: PresentationPalette; height: number; layout?: 'comparison' | 'production';
 }): { whenReady(): Promise<SceneReadiness & { instances: number; metrics: CrowdMetrics }>; setTime(ms: number): void; dispose(): void } {
   if (!Number.isFinite(options.height) || options.height <= 0) throw new Error('comparison height must be positive');
   if (slots.length !== TUNING.citizens) throw new Error('comparison requires thirty slots');
@@ -78,6 +79,8 @@ export function createCrowdComparison(options: {
   const materials = createMaterialKit(palette); const assets = createAssetSource();
   const ctx = { palette, materials, assets }; const layout = createTownLayout();
   const nodeId = OFFICE_NODES[1]!; const node = layout.getNodeWorldPos(nodeId);
+  const production = options.layout === 'production';
+  const positions = production ? allocateCrowdSlots(layout, Array.from({ length: TUNING.citizens }, () => nodeId), height) : slots;
   const town = createTownScene(renderer.domElement, { renderer, palette });
   const buildings = createTownBuildings(layout, ctx); const environment = createTownEnvironment(layout, ctx);
   town.scene.add(buildings.group, environment);
@@ -124,7 +127,7 @@ export function createCrowdComparison(options: {
     const idleBodies = envelope(idleBody); const idleVisibleBodies = envelope(idleVisible);
     const pairs = (boxes: THREE.Box3[]): number => boxes.reduce((sum, box, i) =>
       sum + boxes.slice(i + 1).filter(other => area(box, other) > 1e-6).length, 0);
-    return { height, poseMs: ms, nodeId, layout: 'proposed fixed 1.7 x 1.15 rows; production unchanged',
+    return { height, poseMs: ms, nodeId, layout: production ? 'production clearance slots; disk plus incident street strips' : 'approved comparison: fixed 1.7 x 1.15 rows',
       bodySize: size(body[0]!), visibleSize: size(visible[0]!),
       idleBodyEnvelope: size(idleBody), idleVisibleEnvelope: size(idleVisible),
       bodyOverlapPairs, visibleOverlapPairs, maximumBodyIntersectionArea,
@@ -134,7 +137,7 @@ export function createCrowdComparison(options: {
       idleEnvelopeBodyOutsideClearance: idleBodies.filter(outside).length,
       idleEnvelopeVisibleOutsideClearance: idleVisibleBodies.filter(outside).length };
   }
-  const loads = slots.map(async (slot, index) => {
+  const loads = positions.map(async (slot, index) => {
     const actor = await createSampleCharacter(ctx, {
       modelUrl: '/models/characters/kenney-mini/character-male-a.glb', height, paper: COLORS[index % COLORS.length]!,
     });
@@ -157,6 +160,11 @@ export function createCrowdComparison(options: {
     }
     actors[0]!.setPaper(COLORS[0]!);
     for (const actor of actors) actor.setPose('idle', 0);
+    if (production) {
+      const bounds = new THREE.Box3();
+      for (const actor of actors) bounds.union(characterBounds(actor.object, false));
+      camera.frame(bounds.expandByScalar(1));
+    }
     report = { degraded: readiness.degraded, instances: actors.length, metrics: metrics(0) };
     return report;
   }).catch((error: unknown) => { dispose(); throw error; });

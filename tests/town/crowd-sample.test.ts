@@ -1,3 +1,7 @@
+import { BEHAVIORS } from '../../src/shared/ids.ts';
+import { applyCitizenBehaviorPose } from '../../src/client/town/behaviors.ts';
+import { createMaterialKit } from '../../src/client/town/materials.ts';
+import { crowdFootprint } from '../../src/client/town/slots.ts';
 import * as THREE from 'three';
 import { describe, expect, it, vi } from 'vitest';
 import { characterBounds, createCrowdComparison } from '../../src/client/town/crowd-sample.ts';
@@ -82,6 +86,22 @@ it('measures the actual GLTF body and thirty-citizen overlap for each proposed s
   gltf.scene.animations = gltf.animations;
   vi.mocked(createSampleCharacter).mockImplementation(actual.createSampleCharacter);
   vi.mocked(createAssetSource).mockImplementation(() => ({ loadGltf: async () => clone(gltf.scene) as THREE.Group, dispose: vi.fn() }));
+  const materials = createMaterialKit(getPalette('b'));
+  const actor = await actual.createSampleCharacter({ palette: getPalette('b'), materials,
+    assets: { loadGltf: async () => clone(gltf.scene) as THREE.Group } },
+    { modelUrl: '/models/characters/kenney-mini/character-male-a.glb', height: 1.8, paper: 'red' });
+  const root = new THREE.Group(); root.add(actor.object);
+  const citizen = { id: 0, mesh: root, currentPaper: null, homeNodeId: 'r0c0', actor };
+  const footprint = crowdFootprint(1.8);
+  for (const behavior of BEHAVIORS) for (let i = 0; i <= 24; i++) {
+    const time = i / 12;
+    actor.setPose('idle', time); applyCitizenBehaviorPose(citizen, behavior, time);
+    const envelope = characterBounds(root, false).getSize(new THREE.Vector3());
+    // Shader outlines expand each side slightly beyond the CPU vertices.
+    expect(envelope.x + 0.025).toBeLessThan(footprint.width);
+    expect(envelope.z + 0.025).toBeLessThan(footprint.depth);
+  }
+  actor.dispose(); materials.dispose();
   const rows = [];
   for (const height of [3.29, 2.4, 1.8, 1.5]) {
     const renderer = { domElement: {}, shadowMap: { enabled: false, type: 0 }, render: vi.fn(), dispose: vi.fn() } as unknown as THREE.WebGLRenderer;
@@ -91,6 +111,16 @@ it('measures the actual GLTF body and thirty-citizen overlap for each proposed s
     expect(ready.metrics.bodySize.height).toBeCloseTo(height, 4);
     expect(ready.metrics.idleBodyEnvelope.width).toBeLessThan(ready.metrics.bodySize.width * 1.2);
     expect(ready.metrics.idleBodyEnvelope.height).toBeLessThan(height * 1.1);
+    if (height === 1.8) {
+      const footprint = crowdFootprint(height);
+      expect(ready.metrics.idleVisibleEnvelope.width).toBeLessThan(footprint.width);
+      expect(ready.metrics.idleVisibleEnvelope.depth).toBeLessThan(footprint.depth);
+      const production = createCrowdComparison({ container: {} as HTMLElement, renderer, palette: getPalette('b'), height, layout: 'production' });
+      const packed = await production.whenReady();
+      expect(packed.metrics.idleEnvelopeVisibleOverlapPairs).toBe(0);
+      expect(packed.metrics.bodyOverlapPairs).toBe(0);
+      production.dispose();
+    }
     rows.push(ready.metrics); sample.dispose();
   }
   expect(rows[0]!.bodyOverlapPairs).toBeGreaterThan(0);

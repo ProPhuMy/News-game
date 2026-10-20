@@ -85,4 +85,9 @@ export function applyCitizenBehaviorPose(
       break;
     }
   }
+  // Whole-root gestures supplement full rigs; primitive-era tilts exceed their gathering footprints.
+  mesh.rotation.x *= 0.1;
+  mesh.rotation.z *= 0.1;
+  mesh.position.y *= 0.25;
+
 }

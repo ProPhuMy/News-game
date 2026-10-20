@@ -9,7 +9,7 @@ import { createTownLayout } from '../../src/client/town/layout.ts';
 import { createRouteInterpolator } from '../../src/client/town/movement.ts';
 import { createPoofEffect } from '../../src/client/town/particles.ts';
 import { createPlaybackCoordinator } from '../../src/client/town/playback.ts';
-import { getGatheringSlotOffset } from '../../src/client/town/slots.ts';
+import { allocateCrowdSlots } from '../../src/client/town/slots.ts';
 import { FixtureSchema } from '../../src/shared/fixture.ts';
 
 const createSpeechBubbleManager = (
@@ -130,7 +130,8 @@ describe('Town Fixture Playback Integration', () => {
           Array<{ citizenId: number; pos: THREE.Vector3; slotIndex: number }>
         >();
 
-        for (const citizenEntry of plan.citizens) {
+        const offsets = allocateCrowdSlots(layout, plan.citizens.map(entry => entry.route.at(-1)!));
+        for (const [index, citizenEntry] of plan.citizens.entries()) {
           const destNode = citizenEntry.route[citizenEntry.route.length - 1]!;
           const destBasePos = layout.getNodeWorldPos(destNode);
           const finalPos = citizens.getCitizenPosition(citizenEntry.citizenId);
@@ -141,15 +142,11 @@ describe('Town Fixture Playback Integration', () => {
 
           const group = citizensByDest.get(destNode) ?? [];
           const slotIndex = group.length;
-          const expectedOffset = getGatheringSlotOffset(slotIndex);
+          const expectedOffset = offsets[index]!;
 
           // Position exactly matches the slot offset of the destination node
           expect(finalPos.x).toBeCloseTo(destBasePos.x + expectedOffset.x, 3);
           expect(finalPos.z).toBeCloseTo(destBasePos.z + expectedOffset.z, 3);
-
-          // Distance from destination node is within the slot radius (<= 3.5m)
-          const dist = Math.hypot(finalPos.x - destBasePos.x, finalPos.z - destBasePos.z);
-          expect(dist).toBeLessThanOrEqual(3.5);
 
           group.push({ citizenId: citizenEntry.citizenId, pos: finalPos, slotIndex });
           citizensByDest.set(destNode, group);

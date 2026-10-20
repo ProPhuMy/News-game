@@ -70,3 +70,11 @@ describe('Citizen Manager', () => {
     expect(actor.dispose).toHaveBeenCalled();
   });
 });
+
+it('places all thirty home citizens on distinct, clearance-aware positions', () => {
+  const manager = createCitizenManager();
+  expect(new Set(manager.getAllCitizens().map(c => `${c.mesh.position.x}:${c.mesh.position.z}`)).size).toBe(30);
+  manager.syncCitizens(manager.getAllCitizens().map(c => ({ id: c.id, home: c.homeNodeId, paper: null })), []);
+  expect(new Set(manager.getAllCitizens().map(c => `${c.mesh.position.x}:${c.mesh.position.z}`)).size).toBe(30);
+  manager.dispose();
+});
