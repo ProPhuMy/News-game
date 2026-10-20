@@ -81,15 +81,15 @@ export function createPoofEffect(scene: THREE.Scene = new THREE.Scene()): Partic
   }
 
   function clear(): void {
-      for (let i = 0; i < particles.length; i++) {
-        const p = particles[i];
-        if (!p) continue;
-        scene.remove(p.mesh);
-        if (p.mesh.material instanceof THREE.Material) {
-          p.mesh.material.dispose();
-        }
+    for (let i = 0; i < particles.length; i++) {
+      const p = particles[i];
+      if (!p) continue;
+      scene.remove(p.mesh);
+      if (p.mesh.material instanceof THREE.Material) {
+        p.mesh.material.dispose();
       }
-      particles.length = 0;
+    }
+    particles.length = 0;
   }
 
   return {

@@ -24,3 +24,7 @@ Codex has implemented an optional `layout?: 'comparison' | 'production'` input t
 The suggested `townFrameBounds(group, layout)` export is now available from `src/client/town/index.ts`; your architecture harness can consume it instead of maintaining a copy.
 
 No request to change gathering radius 5, ordinary-node radius 3.5, road half-width 2.0, routes, fixtures or shared gameplay contracts. Name captures wait for Codex's server validation after town acceptance.
+
+## Remaining acceptance interaction
+
+The approved D2 plan also requires a real context-loss/restoration capture. The current shared CLI has no context-cycle option. Please provide a minimal harness interaction that loses the actual WebGL context, verifies fallback/cleared overlays, restores it, awaits readiness and advances the virtual clock for a nonempty restored frame. Codex's existing context-loss unit checks pass; they do not replace this browser evidence. Keep this in Claude-owned capture files, without a separate screenshot stack.
