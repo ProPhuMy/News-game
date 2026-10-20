@@ -60,4 +60,11 @@ describe('noWebgl scenario flag', () => {
     expect(parseAppScenario('?noWebgl=true').noWebgl).toBe(true);
     expect(() => parseTownScenario('?noWebgl=1')).toThrow(/noWebgl must be true or false/);
   });
+
+  it('the town scenario carries contextCycle', async () => {
+    const { parseTownScenario } = await import('../../src/client/visual-test/scenario.ts');
+    expect(parseTownScenario('?contextCycle=true').contextCycle).toBe(true);
+    expect(parseTownScenario('').contextCycle).toBe(false);
+    expect(() => parseTownScenario('?contextCycle=yes')).toThrow(/contextCycle must be true or false/);
+  });
 });

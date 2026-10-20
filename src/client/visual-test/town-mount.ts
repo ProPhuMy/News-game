@@ -4,12 +4,16 @@ import { createTownView, mountTown, type MountTownOptions, type TownView, type T
 import { getPalette, type PaletteId } from '../visuals/palette.ts';
 import type { VirtualClock } from './clock.ts';
 import { measureCanvas, readyVerdict } from './pixels.ts';
+import { cycleContext, type ContextCycleReport } from './context-cycle.ts';
 import { settleScene, type SceneReadiness } from './settle.ts';
 import type { TownFrame } from './state.ts';
 
 export type TownCapture =
   | ({ status: 'ready' } & TownFrame)
   | { status: 'error'; error: string };
+
+/** Virtual time after a context restore: a few frames, so the restored canvas is redrawn before measuring. */
+const CONTEXT_RESTORE_MS = 100;
 
 export interface FactoryRecord { view: TownView | null; palette: PaletteId | null }
 
@@ -51,7 +55,7 @@ export async function mountAndSettleTown(
   container: HTMLElement,
   store: ClientStore,
   clock: VirtualClock,
-  scenario: { reducedMotion: boolean; reactionMs: number; palette: PaletteId; noWebgl?: boolean },
+  scenario: { reducedMotion: boolean; reactionMs: number; palette: PaletteId; noWebgl?: boolean; contextCycle?: boolean },
 ): Promise<TownCapture> {
   if (scenario.noWebgl) return mountFallbackTown(container, store, clock, scenario);
   let renderer: THREE.WebGLRenderer;
@@ -80,9 +84,24 @@ export async function mountAndSettleTown(
   );
   if (readiness.degraded.length > 0) return { status: 'error', error: `degraded-assets: ${readiness.degraded.join('; ')}` };
 
+  let contextCycle: ContextCycleReport | undefined;
+  if (scenario.contextCycle) {
+    const loseContext = renderer.getContext().getExtension('WEBGL_lose_context');
+    if (!loseContext) return { status: 'error', error: 'context-cycle: WEBGL_lose_context is unavailable' };
+    try {
+      contextCycle = await cycleContext({
+        canvas: renderer.domElement, container, view,
+        lose: () => loseContext.loseContext(), restore: () => loseContext.restoreContext(), advance: (ms) => clock.advance(ms),
+      }, { restoreMs: CONTEXT_RESTORE_MS, eventTimeoutMs: 10_000 });
+    } catch (error) {
+      return { status: 'error', error: error instanceof Error ? error.message : String(error) };
+    }
+  }
+
   const stats = measureCanvas(renderer.domElement);
   const verdict = readyVerdict({ webgl: view.isWebGLSupported(), distinctColors: stats.distinctColors });
-  return verdict.status === 'ready' ? { status: 'ready', renderer: 'webgl', webgl: true, palette: holder.palette, ...stats } : verdict;
+  if (verdict.status !== 'ready') return verdict;
+  return { status: 'ready', renderer: 'webgl', webgl: true, palette: holder.palette, ...stats, ...(contextCycle ? { contextCycle } : {}) };
 }
 
 /** Same mount minus the renderer: the town must pick its own no-WebGL fallback. */

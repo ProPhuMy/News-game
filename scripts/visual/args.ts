@@ -1,4 +1,5 @@
 import { APPROVED_PALETTE } from '../../src/client/visuals/palette.ts';
+import type { CrowdLayout } from '../../src/client/visual-test/crowd.ts';
 import { ARCHITECTURE_VARIANTS, ARCHITECTURE_VIEWS, type ArchitectureScenario } from '../../src/client/visual-test/architecture-scenario.ts';
 
 export type CaptureTarget = 'town' | 'app' | 'character' | 'architecture' | 'crowd';
@@ -47,8 +48,12 @@ export interface CaptureOptions {
   view: ArchitectureScenario['view'];
   /** --target crowd only: requested citizen height (0.5 to 6). */
   citizenHeight: number | null;
+  /** --target crowd only: Codex's comparison rows (default, reproduces the approved screenshot) or its production allocator. */
+  crowdLayout: CrowdLayout;
   /** --target town or app only: launch Chromium without WebGL to capture the real fallback. */
   noWebgl: boolean;
+  /** --target town only: lose and restore the real WebGL context after readiness, then capture the restored frame. */
+  contextCycle: boolean;
   /** Live lobby only: test input for the create-room form (null keeps the default). Typed with page.fill, never as HTML. */
   playerName: string | null;
   paperName: string | null;
@@ -72,7 +77,7 @@ const DEFAULTS: Omit<CaptureOptions, 'out'> = {
   reducedMotion: false, seed: 1, width: 1280, height: 720, prod: false, timeoutMs: 60000,
   model: 'characters/kenney-mini/character-male-a.glb', clip: null, timeMs: 0, count: 1,
   screen: 'home', palette: APPROVED_PALETTE, stressText: false, tab: 0, scroll: null, blockFonts: false,
-  variant: 'code', view: 'street', citizenHeight: null, noWebgl: false,
+  variant: 'code', view: 'street', citizenHeight: null, crowdLayout: 'comparison', noWebgl: false, contextCycle: false,
   playerName: null, paperName: null, correctPlayerName: null,
   correctPaperName: null, expectError: null,
 };
@@ -94,6 +99,7 @@ function wholeNumber(flag: string, raw: string | undefined): number {
 export function parseCaptureArgs(argv: readonly string[]): CaptureOptions {
   const options: Omit<CaptureOptions, 'out'> & { out?: string } = { ...DEFAULTS };
   let architectureOnly = false;
+  let crowdLayoutGiven = false;
   for (let i = 0; i < argv.length; i++) {
     const flag = argv[i]!;
     if (flag === '--reduced-motion') { options.reducedMotion = true; continue; }
@@ -101,6 +107,7 @@ export function parseCaptureArgs(argv: readonly string[]): CaptureOptions {
     if (flag === '--stress-text') { options.stressText = true; continue; }
     if (flag === '--block-fonts') { options.blockFonts = true; continue; }
     if (flag === '--no-webgl') { options.noWebgl = true; continue; }
+    if (flag === '--context-cycle') { options.contextCycle = true; continue; }
     const value = argv[i + 1];
     if (flag in NUMBER_FLAGS) {
       options[NUMBER_FLAGS[flag as keyof typeof NUMBER_FLAGS]] = wholeNumber(flag, value);
@@ -115,6 +122,10 @@ export function parseCaptureArgs(argv: readonly string[]): CaptureOptions {
         throw new Error(`--target must be town, app, character, architecture or crowd, got "${value ?? ''}"`);
       }
       options.target = value;
+    } else if (flag === '--crowd-layout') {
+      if (value !== 'comparison' && value !== 'production') throw new Error(`--crowd-layout must be comparison or production, got "${value ?? ''}"`);
+      options.crowdLayout = value;
+      crowdLayoutGiven = true;
     } else if (flag === '--citizen-height') {
       const height = value !== undefined && /^\d+(\.\d+)?$/.test(value) ? Number(value) : NaN;
       if (!(height >= 0.5 && height <= 6)) throw new Error(`--citizen-height must be a number between 0.5 and 6, got "${value ?? ''}"`);
@@ -160,6 +171,9 @@ export function parseCaptureArgs(argv: readonly string[]): CaptureOptions {
   if (architectureOnly && options.target !== 'architecture') throw new Error('--variant and --view need --target architecture');
   if (options.target === 'crowd' && options.citizenHeight === null) throw new Error('--citizen-height is required with --target crowd');
   if (options.target !== 'crowd' && options.citizenHeight !== null) throw new Error('--citizen-height needs --target crowd');
+  if (crowdLayoutGiven && options.target !== 'crowd') throw new Error('--crowd-layout needs --target crowd');
+  if (options.contextCycle && options.target !== 'town') throw new Error('--context-cycle supports only --target town');
+  if (options.contextCycle && options.noWebgl) throw new Error('--context-cycle needs WebGL; drop --no-webgl');
   if (options.noWebgl && options.target !== 'town' && options.target !== 'app') throw new Error('--no-webgl supports only --target town or app');
   const live = options.target === 'app' && LIVE_SCREENS.includes(options.screen);
   if (options.noWebgl && live) throw new Error('--no-webgl does not apply to live screens (the real app URL never carries it); use a harness screen or --target town');
@@ -199,7 +213,7 @@ export function harnessPath(options: CaptureOptions): string {
   if (options.target === 'crowd') {
     const query = new URLSearchParams({
       scene: 'crowd', height: String(options.citizenHeight), palette: options.palette, reactionMs: String(options.reactionMs),
-      seed: String(options.seed),
+      seed: String(options.seed), layout: options.crowdLayout,
     });
     return `/visual-test/index.html?${query.toString()}`;
   }
@@ -213,6 +227,7 @@ export function harnessPath(options: CaptureOptions): string {
     seed: String(options.seed),
   });
   if (options.noWebgl) query.set('noWebgl', 'true');
+  if (options.contextCycle) query.set('contextCycle', 'true');
   if (options.target === 'app') {
     query.set('screen', options.screen);
     query.set('palette', options.palette);

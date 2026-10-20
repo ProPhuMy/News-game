@@ -1,11 +1,11 @@
 // Full-town and close-up architecture captures (C3): our assembled buildings on a ground slab and road strips.
 import * as THREE from 'three';
-import { LOCATIONS } from '../../shared/ids.ts';
 import { GRID, STREET_EDGES } from '../../shared/town-map.ts';
 import { FOUNTAIN_OFFSET } from '../town/architecture/fountain.ts';
 import { createAssetSource } from '../town/assets/source.ts';
 import { createTownBuildings } from '../town/buildings.ts';
 import { createTownCamera } from '../town/camera.ts';
+import { townFrameBounds } from '../town/index.ts';
 import { createTownLayout } from '../town/layout.ts';
 import { createMaterialKit } from '../town/materials.ts';
 import { getPalette } from '../visuals/palette.ts';
@@ -35,20 +35,6 @@ export function closeTarget(group: THREE.Group, view: Close, layout: ReturnType<
     at.set(node.x + FOUNTAIN_OFFSET.x / 2, 0, node.z + FOUNTAIN_OFFSET.z / 2);
   }
   return at;
-}
-
-/**
- * Camera framing bounds for the assembled town. Mirrors production (src/client/town/index.ts): every
- * target-building root named by LOCATIONS plus every office root, each street node at y 4, expanded by 1.
- */
-export function townFrameBounds(group: THREE.Group, layout: ReturnType<typeof createTownLayout>): THREE.Box3 {
-  const bounds = new THREE.Box3();
-  const targets = new Set<string>(LOCATIONS.map((location) => location.replaceAll('_', '-')));
-  for (const child of group.children) {
-    if (targets.has(child.name) || child.name === 'office') bounds.expandByObject(child, true);
-  }
-  for (const node of layout.getStreetNodes()) bounds.expandByPoint(new THREE.Vector3(node.x, 4, node.z));
-  return bounds.expandByScalar(1);
 }
 
 export async function runArchitectureTown(

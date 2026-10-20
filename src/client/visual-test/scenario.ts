@@ -73,9 +73,18 @@ export function parseNoWebgl(search: string): boolean {
   return raw === 'true';
 }
 
-/** What the town harness page mounts: the parsed scenario plus its palette. */
-export function parseTownScenario(search: string): VisualScenario & { palette: PaletteId; noWebgl: boolean } {
-  return { ...parseScenario(search), palette: parsePalette(search), noWebgl: parseNoWebgl(search) };
+/** The ?contextCycle= flag: lose and restore the real WebGL context after readiness (town page only). */
+export function parseContextCycle(search: string): boolean {
+  const raw = new URLSearchParams(search).get('contextCycle');
+  if (raw !== null && raw !== 'true' && raw !== 'false') throw new Error(`contextCycle must be true or false, got "${raw}"`);
+  return raw === 'true';
+}
+
+/** What the town harness page mounts: the parsed scenario plus its palette and capture flags. */
+export function parseTownScenario(search: string): VisualScenario & { palette: PaletteId; noWebgl: boolean; contextCycle: boolean } {
+  return {
+    ...parseScenario(search), palette: parsePalette(search), noWebgl: parseNoWebgl(search), contextCycle: parseContextCycle(search),
+  };
 }
 
 export function parseFixture(raw: unknown): Fixture {
