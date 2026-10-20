@@ -1,5 +1,7 @@
 # D4 production verification — incomplete
 
+Current infrastructure status: user reports instance `i-0c1806a94a0ac352f` Running in the planned Ohio workflow. This is not independent AWS verification. Public IP, actual instance/volume/CPU configuration, host access and deployed application remain unverified. User performed the launch; Codex has not changed AWS resources. No Paid upgrade or out-of-pocket authority. Render Free remains unchanged.
+
 ## Candidate and authorization
 
 Codex branch: `codex/visual-d4`, starting from D3 `70d7d83`. User approved C4 integration ("merge it"); merge `a1c277b` includes reviewed C4 `e3600e6`, screenshot helper `b3b2513` and civic-sign fix `599c543`. Main and C4 branch/worktree were not changed. No shared gameplay contract or dependency changed.
@@ -65,3 +67,7 @@ Credit-only hosting assessment is now complete: user confirms EC2/VPC/Data Trans
 ## Local EC2 preparation evidence
 
 Added exact-peer TRUSTED_PROXY_ADDRESS with default disabled; Caddy overwrites X-Real-IP and backend is loopback-published per deployment/ec2/README.md. Current direct-mode collapse reproduced (11clients,1budget). Test-first proxy/startup/WebSocket/polling regressions fail9cases before fix, then focused21/21pass; full suite121files/839tests, typecheck/lint/build exit0. Independent review reports no Critical/Important/Minor findings and reruns21focused tests. Claude counterpart request: docs/visual-overhaul/requests/D4-claude-ec2.md. No actual host/proxy/cloud execution or new browser smoke was performed for this slice. Host/Docker/Caddy validation and full exact-revision public evidence remain required; no Paid upgrade/out-of-pocket authority.
+
+## User-reported EC2 launch
+
+User reports instance i-0c1806a94a0ac352f state Running after reviewing the credit-only estimate. Expected target is Ohio t3.micro/AL2023/20GiB gp3, CPU Standard; actual dashboard configuration and status checks have not been independently inspected. Check existing public IPv4 before allocating anything, then attach exactly one Elastic IP in the same region/border group only if needed. No IP/DNS/proxy/application action was performed by Codex. Record console Launch time to anchor seven-day review and teardown planning. Current launch does not establish D4 production readiness.
