@@ -5,6 +5,7 @@ import type { PaperPublic } from '../../../shared/snapshots.ts';
 import type { ArchitectureContext, PlacedPiece, SceneReadiness } from '../../visuals/town-types.ts';
 import { TOWN_DRESSING } from '../props/dressing.ts';
 import { createProp } from '../props/index.ts';
+import { createGasLamp, type GasLampPiece } from '../props/street.ts';
 import type { TownBuildings } from '../buildings.ts';
 import type { TownLayout } from '../types.ts';
 import { createLocationBuilding } from './index.ts';
@@ -18,6 +19,7 @@ export function createArchitectureTown(layout: TownLayout, ctx: ArchitectureCont
   const locationAnchors = new Map<Location, THREE.Vector3>();
   const officeAnchors = new Map<SeatId, THREE.Vector3>();
   const offices = new Map<SeatId, OfficePiece>();
+  const lamps: GasLampPiece[] = [];
 
   const place = (piece: PlacedPiece, x: number, z: number, rotationY = 0): PlacedPiece => {
     piece.object.position.set(x, 0, z);
@@ -47,7 +49,15 @@ export function createArchitectureTown(layout: TownLayout, ctx: ArchitectureCont
     officeAnchors.set(seat, anchor(node));
   });
 
-  for (const p of TOWN_DRESSING) place(createProp(p.kind, ctx), p.x, p.z, p.rotationY);
+  for (const p of TOWN_DRESSING) {
+    if (p.kind === 'gas-lamp') {
+      const lamp = createGasLamp(ctx);
+      lamps.push(lamp);
+      place(lamp, p.x, p.z, p.rotationY);
+    } else {
+      place(createProp(p.kind, ctx), p.x, p.z, p.rotationY);
+    }
+  }
 
   const ready: Promise<SceneReadiness> = Promise.all(pieces.map((piece) => piece.ready)).then((all) => ({
     degraded: all.flatMap((readiness) => readiness.degraded),
@@ -65,6 +75,7 @@ export function createArchitectureTown(layout: TownLayout, ctx: ArchitectureCont
     dispose() {
       for (const piece of pieces) piece.dispose();
       pieces.length = 0;
+      lamps.length = 0;
       offices.clear();
       group.clear();
     },
@@ -77,5 +88,8 @@ export function createArchitectureTown(layout: TownLayout, ctx: ArchitectureCont
       for (const paper of papers) offices.get(paper.seatId)?.setBannerColor(ctx.palette.paper[paper.color].hex);
     },
     getOfficeBannerColor: (seatId) => offices.get(seatId)?.bannerColor() ?? 0,
+    setLampLevel(level) {
+      for (const lamp of lamps) lamp.setLevel(level);
+    },
   };
 }

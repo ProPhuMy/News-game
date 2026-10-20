@@ -4,7 +4,15 @@ import * as THREE from 'three';
 import type { ArchitectureContext, PlacedPiece } from '../../visuals/town-types.ts';
 import { at, createPieceParts, placedPiece } from '../architecture/piece.ts';
 
-export function createGasLamp(ctx: ArchitectureContext): PlacedPiece {
+/** Opacity of a lamp's ground pool at full lamp level (interface §5c). */
+export const LAMP_POOL_MAX_OPACITY = 0.45;
+
+export interface GasLampPiece extends PlacedPiece {
+  /** 0..1 (clamped): only the pool's opacity changes, never transforms, visibility or outlines (D2 batching). */
+  setLevel(level: number): void;
+}
+
+export function createGasLamp(ctx: ArchitectureContext): GasLampPiece {
   const { roof, lampGlow } = ctx.palette.town; // painted iron takes the roof accent, not wood
   const parts = createPieceParts(ctx);
   const root = new THREE.Group();
@@ -15,7 +23,27 @@ export function createGasLamp(ctx: ArchitectureContext): PlacedPiece {
   root.add(at(parts.mesh(new THREE.ConeGeometry(0.5, 0.45, 4), roof), 0, 5.32, 0));
   root.children.at(-1)!.rotation.y = Math.PI / 4;
   ctx.materials.outline(root);
-  return placedPiece(root, parts, { width: 0.7, depth: 0.7 });
+  // Added after outline(): the pool is a flat light patch, not a solid, so it gets no outline and casts no shadow.
+  const poolMaterial = parts.own(new THREE.MeshBasicMaterial({
+    color: lampGlow, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false,
+    polygonOffset: true, polygonOffsetFactor: -2,
+  }));
+  const pool = at(new THREE.Mesh(parts.own(new THREE.CircleGeometry(2.6, 24)), poolMaterial), 0, 0.004, 0);
+  pool.name = 'lamp-pool';
+  pool.rotation.x = -Math.PI / 2;
+  root.add(pool);
+  let disposed = false;
+  const piece = placedPiece(root, parts, { width: 0.7, depth: 0.7 });
+  return {
+    ...piece,
+    setLevel(level) {
+      if (!disposed) poolMaterial.opacity = LAMP_POOL_MAX_OPACITY * Math.min(Math.max(level, 0), 1);
+    },
+    dispose() {
+      disposed = true;
+      piece.dispose();
+    },
+  };
 }
 
 export function createNewsstand(ctx: ArchitectureContext): PlacedPiece {

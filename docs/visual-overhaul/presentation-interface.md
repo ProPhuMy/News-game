@@ -222,7 +222,7 @@ export function timeOfDayLook(palette: PresentationPalette, time: TimeOfDay): Ti
 
 ### Lamp glow (Claude: `props/street.ts`, `buildings.ts`)
 
-- New method `TownBuildings.setLampLevel(level: number): void`, with level clamped to 0..1. Each gas lamp gains a ground light pool: a flat, unoutlined, additive disc with a material the lamp owns. `setLampLevel` changes only material values (pool opacity and lantern emissive strength). It never changes transforms, visibility or outlines, so the D2 static-outline batch stays valid.
+- New method `TownBuildings.setLampLevel?(level: number): void` (optional, so existing hand-built test doubles stay valid; the real town always provides it), with level clamped to 0..1. Each gas lamp gains a ground light pool: a flat, unoutlined, additive disc with a material the lamp owns. `setLampLevel` changes only material values (pool opacity and lantern emissive strength). It never changes transforms, visibility or outlines, so the D2 static-outline batch stays valid.
 - No real point lights (performance).
 
 ### Emotes (Claude: `src/client/visuals/emotes.ts`; Codex: rendering)

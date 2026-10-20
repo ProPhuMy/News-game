@@ -12,6 +12,11 @@ export interface TownBuildings {
   setOfficeHighlight(seatId: SeatId, active: boolean): void;
   syncOffices(papers: readonly PaperPublic[]): void;
   getOfficeBannerColor(seatId: SeatId): number;
+  /**
+   * Gas-lamp glow, 0..1 (clamped), from timeOfDayLook(...).lampLevel; material values only (interface §5c).
+   * Optional so existing hand-built test doubles stay valid; the real town always provides it.
+   */
+  setLampLevel?(level: number): void;
   /** Resolves when every building's assets are in place; `degraded` merges every piece's list. */
   ready: Promise<SceneReadiness>;
   /** Disposes every piece. */
