@@ -3,6 +3,7 @@
 .hud-overlay {
   position: fixed;
   inset: 0;
+  top: var(--nt-town-fallback-height, 0px); /* no-WebGL notice strip (Codex webgl.ts), else 0 */
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
 }

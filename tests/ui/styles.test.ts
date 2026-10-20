@@ -33,6 +33,16 @@ describe('stylesheets', () => {
     expect(theme).toMatch(/--font-headline:\s*'Playfair Display',\s*Georgia/);
   });
 
+  // No-WebGL notice (Codex webgl.ts) publishes its height; full-screen UI layers start below it (interface §5d).
+  it('start the HUD and full-screen setup layers below the no-WebGL notice', () => {
+    const rule = (file: string, selector: string) => {
+      const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      return [...css(file).matchAll(new RegExp(`(?:^|[}\\n])\\s*${escaped}\\s*\\{([^}]*)\\}`, 'g'))].map((m) => m[1]).join(';');
+    };
+    expect(rule('hud.css', '.hud-overlay')).toMatch(/top:\s*var\(--nt-town-fallback-height,\s*0px\)/);
+    expect(rule('screens.css', '.app-layout > .screen-container')).toMatch(/top:\s*var\(--nt-town-fallback-height,\s*0px\)/);
+  });
+
   it('keep every pointer-events selector in globals.css', () => {
     const globals = css('globals.css');
     for (const selector of POINTER_SELECTORS) expect(globals, selector).toContain(selector);

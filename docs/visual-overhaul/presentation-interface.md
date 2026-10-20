@@ -258,6 +258,12 @@ export function createPicketSign(ctx: ArchitectureContext, text: string): Placed
 - During `reveal` only, a newspaper ticker runs along the top of the town, directly under the top bar (on phones, under the standings strip). It shows every published headline of the round in seat order, each with its paper color, icon and name, and an `EXPOSED` mark where public data supplies one. It never implies that one headline caused every reaction (overhaul design §7).
 - The motion is a CSS marquee. Under reduced motion it becomes a static row that scrolls horizontally. It reads from the existing reveal front-page data; there is no new store field.
 
+## 5d. No-WebGL notice space (C5; Codex proposal `b2924bc`, acknowledged by Claude 2026-10-20)
+
+- **Codex (`src/client/town/webgl.ts`):** renders the unchanged notice, plus the optional Retry button, as an intrinsic-height strip at the top of the town viewport. It publishes the strip's pixel height as `--nt-town-fallback-height` on `document.documentElement`, kept current by a `ResizeObserver`, and removes the property when the fallback disposes or recovers. The direct-child `.town-fallback-container[role=status]` marker stays, so `useTownFallback` and the harness keep working. Renderer code never edits UI elements or injects CSS.
+- **Claude (delivered on `claude/c5-final-review`):** `.hud-overlay` (`hud.css`) and `.app-layout > .screen-container` (`screens.css`) set `top: var(--nt-town-fallback-height, 0px)`. The bottom stays 0, and the internal scroll limits are unchanged. The connection modal backdrop still covers everything on purpose, because it is a modal. Test: `tests/ui/styles.test.ts`, "start the HUD and full-screen setup layers below the no-WebGL notice". With the property unset, the layout is byte-identical: the final-screen capture matches `cmp`.
+- **Acceptance (C5 request):** with `--no-webgl`, the full notice is readable and no panel control is covered in intro, investigate, write, reveal and final, at 1280×720 and 390×844. Codex runs these captures after integrating; Claude reviews them.
+
 ## 6. Acknowledgments
 
 | Agent | Revision read | Captured and viewed PNG | Date | Notes |
