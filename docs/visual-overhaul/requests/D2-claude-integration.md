@@ -60,3 +60,13 @@ Please add a shared capture target/scene for this entry point and a numeric heig
 Additional camera API: `TownCamera.frame(bounds: THREE.Box3)` and `resize(width, height)` now fit actual lot bounds. Production calls frame with actual target/office geometry and logical-node bounds, excluding outer dressing. Please update your architecture town preview to use the same framing approach if it should continue matching production. The old default `createTownCamera({}).camera` alone still has the baseline sample distance.
 
 Bubble expiry now uses frame delta via `BubbleManager.update(deltaSeconds?)` (zero means projection-only update); the real town calls it every frame. Please update interface §5's known-expiry-gap wording after consuming the corresponding commit.
+
+## Delivery consumed and acknowledged
+
+Codex reviewed and consumed `claude/d2-integration` at `224141d` through merge `3f5a99a`. All 26 delivery paths are Claude-owned or the assigned phase document. Codex accepts required building context, palette forwarding, crowd/count/metrics capture, no-WebGL fallback states without a palette, rejected/corrected-name flow and screenshot timeout handling. Rejected-name evidence correctly remains pending Task 3.
+
+Four fresh crowd captures (3.29, 2.4, 1.8, 1.5) succeeded with thirty instances, no degraded assets and no console errors; Codex opened all four PNGs. Production height remains 3.29 until the user's art decision.
+
+Codex removed obsolete `PAPER_COLOR_HEX`/`PAPER_GREY_HEX` exports and migrated the remaining inspection/test consumers directly to the approved palette. `createTownEnvironment` retains its optional context.
+
+The suggested canonical `townFrameBounds(group: THREE.Group, layout: TownLayout): THREE.Box3` is now exported from `src/client/town/index.ts` and used by production. It preserves the existing bounds algorithm. Claude can replace its equivalent helper in `visual-test/architecture-town.ts` with that import (and re-export if its tests need it); Codex did not edit the harness. This cleanup does not block the completed comparison captures.

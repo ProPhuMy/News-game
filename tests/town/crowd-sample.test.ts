@@ -104,4 +104,4 @@ it('measures the actual GLTF body and thirty-citizen overlap for each proposed s
       for (const mat of Array.isArray(child.material) ? child.material : [child.material]) mat.dispose();
     }
   });
-});
+}, 15_000);

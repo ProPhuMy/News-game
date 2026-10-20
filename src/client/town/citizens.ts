@@ -38,12 +38,7 @@ export interface CitizenManager {
   dispose(): void;
 }
 
-// Retained until Claude removes the primitive building consumer.
 const defaultPalette = getPalette(APPROVED_PALETTE);
-export const PAPER_COLOR_HEX: Readonly<Record<Color, number>> = Object.fromEntries(
-  COLORS.map(color => [color, defaultPalette.paper[color].hex]),
-) as Record<Color, number>;
-export const PAPER_GREY_HEX = defaultPalette.unsubscribed.hex;
 
 export function createCitizenManager(
   layout = createTownLayout(), scene = new THREE.Scene(), poofSystem?: PoofSystem,

@@ -1,8 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import * as THREE from 'three';
-import { createCitizenManager, PAPER_COLOR_HEX, PAPER_GREY_HEX } from '../../src/client/town/citizens.ts';
+import { createCitizenManager } from '../../src/client/town/citizens.ts';
 import { createSampleCharacter } from '../../src/client/town/assets/character.ts';
 import { createTownLayout } from '../../src/client/town/layout.ts';
+import { APPROVED_PALETTE, getPalette } from '../../src/client/visuals/palette.ts';
 import { fakeContext } from './architecture/fake-context.ts';
 
 vi.mock('../../src/client/town/assets/character.ts', () => ({ createSampleCharacter: vi.fn() }));
@@ -38,13 +39,13 @@ describe('Citizen Manager', () => {
 
   it('applies authoritative semantic paper changes immediately, including reduced motion', () => {
     const manager = createCitizenManager(undefined, undefined, undefined, { reducedMotion: true });
-    expect(manager.getCitizenHatColor(0)).toBe(PAPER_GREY_HEX);
+    expect(manager.getCitizenHatColor(0)).toBe(getPalette(APPROVED_PALETTE).unsubscribed.hex);
     manager.setCitizenPaper(0, 0);
-    expect(manager.getCitizenHatColor(0)).toBe(PAPER_COLOR_HEX.red);
+    expect(manager.getCitizenHatColor(0)).toBe(getPalette(APPROVED_PALETTE).paper.red.hex);
     manager.setSeatColors({ 0: 'green' });
-    expect(manager.getCitizenHatColor(0)).toBe(PAPER_COLOR_HEX.green);
+    expect(manager.getCitizenHatColor(0)).toBe(getPalette(APPROVED_PALETTE).paper.green.hex);
     manager.setCitizenPaper(0, null);
-    expect(manager.getCitizenHatColor(0)).toBe(PAPER_GREY_HEX);
+    expect(manager.getCitizenHatColor(0)).toBe(getPalette(APPROVED_PALETTE).unsubscribed.hex);
     manager.dispose();
   });
 

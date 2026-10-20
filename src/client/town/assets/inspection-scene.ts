@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import type { SceneReadiness } from '../../visual-test/settle.ts';
-import { PAPER_COLOR_HEX } from '../citizens.ts';
+import { APPROVED_PALETTE, getPalette } from '../../visuals/palette.ts';
 
 export interface InspectionSceneOptions {
   container: HTMLElement;
@@ -83,7 +83,7 @@ export function createInspectionScene(options: InspectionSceneOptions): Inspecti
     const columns = Math.ceil(Math.sqrt(count));
     const rows = Math.ceil(count / columns);
     const hatGeometry = new THREE.CylinderGeometry(0.17, 0.19, 0.08, 12);
-    const hatMaterial = new THREE.MeshStandardMaterial({ color: PAPER_COLOR_HEX.red });
+    const hatMaterial = new THREE.MeshStandardMaterial({ color: getPalette(APPROVED_PALETTE).paper.red.hex });
     let hats = 0;
     for (const [index, instance] of instances.entries()) {
       model.add(instance);

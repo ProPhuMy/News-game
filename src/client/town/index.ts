@@ -19,6 +19,18 @@ import { attachContextLossHandler, createFallbackView, isWebGL2Supported, type F
 import { attachTownControls } from './controls.ts';
 import { createFallbackTownView, type TownView, type TownViewOptions } from './view.ts';
 export type { TownView, TownViewOptions } from './view.ts';
+import type { TownLayout } from './types.ts';
+
+/** Production framing shared with screenshot consumers; decorative tree rings may be cropped. */
+export function townFrameBounds(group: THREE.Group, layout: TownLayout): THREE.Box3 {
+  const frameBounds = new THREE.Box3();
+  const targetNames = new Set<string>(LOCATIONS.map(location => location.replaceAll('_', '-')));
+  for (const child of group.children) {
+    if (targetNames.has(child.name) || child.name === 'office') frameBounds.expandByObject(child, true);
+  }
+  for (const node of layout.getStreetNodes()) frameBounds.expandByPoint(new THREE.Vector3(node.x, 4, node.z));
+  return frameBounds.expandByScalar(1);
+}
 
 export function createTownView(
   containerOrOptions: HTMLElement | (TownViewOptions & { container: HTMLElement }),
@@ -137,14 +149,7 @@ export function createTownView(
     activeScene.scene.add(townEnvironment);
     activeScene.scene.add(townPaperboys.group);
     activeScene.scene.add(townBuildings.group);
-    const frameBounds = new THREE.Box3();
-    const targetNames = new Set<string>(LOCATIONS.map(location => location.replaceAll('_', '-')));
-    for (const child of townBuildings.group.children) {
-      if (targetNames.has(child.name) || child.name === 'office') frameBounds.expandByObject(child, true);
-    }
-    for (const node of layout.getStreetNodes()) frameBounds.expandByPoint(new THREE.Vector3(node.x, 4, node.z));
-    frameBounds.expandByScalar(1);
-    camera.frame(frameBounds);
+    camera.frame(townFrameBounds(townBuildings.group, layout));
 
     const activeCoordinator = createPlaybackCoordinator({
       layout,

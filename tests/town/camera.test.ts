@@ -107,3 +107,18 @@ for (const [width, height] of [[1280, 720], [390, 844]]) {
     buildings.dispose();
   });
 }
+
+it('exports framing bounds that include office lots and ignore distant scenery', async () => {
+  const { townFrameBounds } = await import('../../src/client/town/index.ts');
+  const group = new THREE.Group();
+  const office = new THREE.Group(); office.name = 'office';
+  const body = new THREE.Mesh(new THREE.BoxGeometry(5, 7, 4.4));
+  body.position.set(17.5, 3.5, -29.2); office.add(body); group.add(office);
+  const tree = new THREE.Group(); tree.name = 'tree';
+  const far = new THREE.Mesh(new THREE.BoxGeometry(10, 20, 10)); far.position.set(1000, 0, 1000); tree.add(far); group.add(tree);
+  const bounds = townFrameBounds(group, createTownLayout());
+  expect(bounds.min.z).toBeCloseTo(-32.4);
+  expect(bounds.max.x).toBe(25); expect(bounds.max.z).toBe(25);
+  expect(bounds.max.y).toBe(8);
+  body.geometry.dispose(); far.geometry.dispose();
+});
