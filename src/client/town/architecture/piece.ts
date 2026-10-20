@@ -3,8 +3,8 @@
 import * as THREE from 'three';
 import type { ArchitectureContext, PlacedPiece, SceneReadiness } from '../../visuals/town-types.ts';
 
-/** D1 evaluation citizen height in world units: twice today's 1.6449 citizen (Codex D0). */
-export const CITIZEN_REFERENCE_HEIGHT = 3.29;
+/** Visible idle body height of a citizen in world units, before the cap (user decision in D2; interface note §5b). */
+export const CITIZEN_REFERENCE_HEIGHT = 1.8;
 
 export interface PieceParts {
   /** A shadow-casting mesh on a kit surface. The geometry is tracked and freed by dispose(). */
