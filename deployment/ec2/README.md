@@ -14,7 +14,7 @@ Record resource IDs, exact source SHA, image digest, current/previous release ta
 
 The initial topology is **Cloudflare DNS only**, browser HTTPS/WSS directly to Caddy on EC2, then private HTTP/WebSocket to the Node container. Cloudflare is the DNS provider, not a trusted HTTP proxy in this configuration. Do not turn the record orange/proxied without separately reviewing source-address handling and origin protection. Keep `TRUST_RENDER_PROXY=false`.
 
-User owns `prophumy.com`. Approved game hostname is `newstown.prophumy.com`; the user created its DNS-only A record to `3.20.0.241`. After the approved instance has its single stable IPv4, create one DNS-only A record for that name pointing to it. Do not add AAAA without verified IPv6 routing. No paid Cloudflare feature or Route 53 resource is needed. Caddy obtains a public certificate; preserve its `/data` volume for renewals. Domain registration alone is not HTTPS readiness.
+User owns `prophumy.com`. Approved game hostname is `newstown.prophumy.com`; the user created its DNS-only A record to `3.20.0.241`. Keep this existing record; do not create duplicate records or allocate another IP. Do not add AAAA without verified IPv6 routing. No paid Cloudflare feature or Route 53 resource is needed. Caddy obtains a public certificate; preserve its `/data` volume for renewals. Domain registration alone is not HTTPS readiness.
 
 AWS security group: inbound TCP 80/443 from internet; TCP 22 only from the user's current administrative IP. No inbound rule for 3000, including VPC/source-group rules. Require IMDSv2. Exactly one public address: if using an Elastic IP, avoid allocating a second automatic public IPv4. No open administrative port or private key is committed.
 
@@ -22,7 +22,7 @@ AWS security group: inbound TCP 80/443 from internet; TCP 22 only from the user'
 
 Use patched Docker Engine on Linux. Require Docker 28 or newer for the documented loopback-publishing behavior; older versions have a same-L2 exposure caveat. Keep default bridge NAT and direct routing disabled. Check actual bridge subnet does not overlap the VPC. Do not install paid tooling or create a separate builder. Retain bounded local logs and watch disk space.
 
-Local Docker daemon access is currently denied; Docker/Caddy/container commands below have not been validated here. Install and validate the approved host runtime before accepting production. A one-GiB host may need a bounded swap file inside the existing disk for build peaks; no extra volume is authorized. If build/runtime fails, diagnose or return to Render Free rather than silently resize or enable CPU Unlimited.
+Workspace Docker daemon access remains denied. The user supplied successful Ubuntu host build/start/validation results with Docker29.9.1 and Caddy2.11.7; see the verification record for exact evidence and limits. Do not mistake local daemon denial for an unexecuted remote deployment. A one-GiB host may need a bounded swap file inside the existing disk for build peaks; no extra volume is authorized. If build/runtime fails, diagnose or return to Render Free rather than silently resize or enable CPU Unlimited.
 
 ## Build and pin the exact candidate
 
@@ -88,6 +88,31 @@ docker run -d --name news-town-edge --restart unless-stopped --network host \
 Before replacing an accepted release, retain the previous exact image ID/tag, archive SHA, environment/proxy settings and Caddy digest/config outside the retiring release directory. Use a quiet window: stopping the app loses all in-memory matches. Build/check the next image before touching the running app. Replacement runs one app container, never a second EC2 instance or replica.
 
 If replacement fails, remove only the identified failed app container and recreate `news-town-app` using the recorded known-good image and the same private publication/proxy settings. Retain the edge and its certificate volume. Recheck actual SHA, assets, HTTPS/WSS and fresh match/reconnect. Do not call this an executed rollback until it has been exercised. Local images cannot survive host/disk loss; keep recoverable source/release metadata outside AWS before expiration.
+
+
+### Recorded first Ubuntu recovery baseline — procedure not executed
+
+Verified source is `744cc55f56ee24c10ed3a144d893fa03b4744f36` (includes proxy patch `913775e`). User verified retained tag `news-town:recovery-744cc55` points to app image `sha256:d499b0634fb437381ed36299487c4bf4bec9d610a629106696b3fc93884b0245`. Host archive `~/news-town-744cc55.tar.gz` SHA256 is `0f6b4b315babd452397a5cd8f8bbc333b09918b0c621ea820b0940e13b3168d3`; same source/archive exists outside AWS on Arch/origin. Full source/lock digest is in the verification record. No previous Ubuntu release exists. Preserve this image and release directory; do not prune them before a replacement has passed. Local image retention does not survive disk loss.
+
+The edge remains `news-town-edge`, Caddy2.11.7 at digest `sha256:685ae3d7c34d9b5f8caeddc5d14051db7bbd88ff1f5a2fa0c16bd8ca328fb7af`, host network, persistent `news-town-caddy-data` and `news-town-caddy-config`, read-only `~/news-town/releases/744cc55/deployment/ec2/Caddyfile`. Preserve those volumes/config and DNS-only topology.
+
+**Reference only: do not run during evidence collection.** If a later replacement fails, obtain the applicable quiet-window authorization and check no active rooms need preserving: all rooms/reconnect state in the stopped process will be lost. First verify this recovery image still exists, the gateway is still the recorded172.17.0.1 and edge/config/volumes are unchanged. If any check fails, diagnose rather than remove the app. Then stop/remove only the identified app container and recreate the baseline:
+
+```bash
+sudo docker image inspect sha256:d499b0634fb437381ed36299487c4bf4bec9d610a629106696b3fc93884b0245 --format '{{.Id}}'
+sudo docker network inspect bridge --format '{{(index .IPAM.Config 0).Gateway}}'
+# After checking those outputs and the quiet window, run separately:
+sudo docker stop news-town-app
+sudo docker rm news-town-app
+sudo docker run -d --name news-town-app --restart unless-stopped \
+  --network bridge -p 127.0.0.1:3000:3000 \
+  --log-driver local --log-opt max-size=10m --log-opt max-file=2 \
+  -e NODE_ENV=production -e PORT=3000 -e AI_PROVIDER=none \
+  -e TRUST_RENDER_PROXY=false -e TRUSTED_PROXY_ADDRESS=172.17.0.1 \
+  sha256:d499b0634fb437381ed36299487c4bf4bec9d610a629106696b3fc93884b0245
+```
+
+Recheck image/source identity, safe startup, localhost3000, external3000 blocking, actual bridge peer, HTTPS redirect/certificate and the public five-round assets/WSS/reconnect/results smoke against a local744cc55 build. A restored process accepts new rooms; it cannot restore lost matches. This is a documented recovery procedure with a verified retained artifact, **not an executed rollback**. No alternate host or extra instance is created.
 
 Render Free remains at its existing URL/configuration. No Render changes are part of this preparation. Before using it for the current release, deploy the reviewed candidate there under applicable staging authorization and run public smoke; its historical revision is not the D4 candidate. Render idle sleep and lost room state remain explicit limitations. Host switching cannot migrate live matches or reconnect credentials.
 
