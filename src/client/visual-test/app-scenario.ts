@@ -1,5 +1,5 @@
-import type { PaletteId } from '../visuals/palette.ts';
-import { parseScenario, type VisualScenario } from './scenario.ts';
+import { APPROVED_PALETTE, type PaletteId } from '../visuals/palette.ts';
+import { parseNoWebgl, parseScenario, type VisualScenario } from './scenario.ts';
 
 export const HARNESS_SCREENS = ['match', 'loading', 'disconnected', 'error'] as const;
 export type HarnessScreen = (typeof HARNESS_SCREENS)[number];
@@ -9,6 +9,7 @@ export interface AppScenario extends VisualScenario {
   screen: HarnessScreen;
   palette: PaletteId;
   stressText: boolean;
+  noWebgl: boolean;
 }
 
 function pick<T extends string>(raw: string | null, allowed: readonly T[], fallback: T, message: string): T {
@@ -25,7 +26,8 @@ export function parseAppScenario(search: string): AppScenario {
   return {
     ...parseScenario(search),
     screen: pick(params.get('screen'), HARNESS_SCREENS, 'match', `screen must be one of ${HARNESS_SCREENS.join(', ')}`),
-    palette: pick<PaletteId>(params.get('palette'), ['a', 'b', 'c'], 'a', 'palette must be a, b or c'),
+    palette: pick<PaletteId>(params.get('palette'), ['a', 'b', 'c'], APPROVED_PALETTE, 'palette must be a, b or c'),
     stressText: stress === 'true',
+    noWebgl: parseNoWebgl(search),
   };
 }

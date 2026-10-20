@@ -1,5 +1,5 @@
 // Architecture sample scenario (C2): which bakery variant, camera view and palette the harness renders.
-import type { PaletteId } from '../visuals/palette.ts';
+import { APPROVED_PALETTE, type PaletteId } from '../visuals/palette.ts';
 import { readInt } from './scenario.ts';
 
 export const ARCHITECTURE_VARIANTS = ['code', 'hybrid-original', 'hybrid-palette'] as const;
@@ -35,7 +35,7 @@ export function parseArchitectureScenario(search: string): ArchitectureScenario 
   return {
     variant: oneOf(params, 'variant', ARCHITECTURE_VARIANTS, 'code'),
     view: oneOf(params, 'view', ARCHITECTURE_VIEWS, 'street'),
-    palette: oneOf(params, 'palette', PALETTE_IDS, 'a'),
+    palette: oneOf(params, 'palette', PALETTE_IDS, APPROVED_PALETTE),
     seed: readInt(params, 'seed', 1, 0, 2 ** 31 - 1),
     reactionMs: readInt(params, 'reactionMs', 0, 0, 600_000),
     reducedMotion: readBoolean(params, 'reducedMotion'),

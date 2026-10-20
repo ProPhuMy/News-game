@@ -3,32 +3,49 @@
 import type { Page } from 'playwright-core';
 import { stressText } from '../../src/client/visual-test/stress-text.ts';
 import { TUNING } from '../../src/shared/tuning.ts';
-import { getPalette, paletteCssVariables } from '../../src/client/visuals/palette.ts';
 import type { CaptureOptions } from './args.ts';
+import { bannerOutcome, correctedJoinResult, firstJoinResult, joinPage, LOBBY, type JoinRecord } from './join-flow.ts';
 import { layoutProblems, type LayoutNode, type LayoutProblems } from './layout.ts';
 
 export type LayoutReport = LayoutProblems;
 
-/** Drives the real app to home, join or lobby. Lobby really creates a room on the local dev server. */
-export async function openLiveScreen(page: Page, options: CaptureOptions): Promise<void> {
+/**
+ * Drives the real app to home, join or lobby. Lobby really creates a room on the local dev server.
+ * Returns the join record when a name flag was given.
+ */
+export async function openLiveScreen(page: Page, options: CaptureOptions): Promise<JoinRecord | null> {
   const timeout = options.timeoutMs;
   await page.waitForSelector('[data-testid="home-screen"]', { timeout });
-  if (options.screen === 'home') return;
+  if (options.screen === 'home') return null;
   await page.getByRole('button', { name: options.screen === 'join' ? 'Play Solo' : 'Create Room' }).click();
   await page.waitForSelector('[data-testid="join-screen"]', { timeout });
-  if (options.screen === 'join') return;
+  if (options.screen === 'join') return null;
   const { displayNameChars, paperNameChars } = TUNING.limits;
-  await page.fill('#player-name', options.stressText ? stressText('Editor0', displayNameChars, true) : 'Ada');
-  await page.fill('#paper-name', options.stressText ? stressText('Paper0', paperNameChars, false) : 'The Morning Bell');
+  await page.fill('#player-name', options.stressText ? stressText('Editor0', displayNameChars, true) : (options.playerName ?? 'Ada'));
+  await page.fill('#paper-name', options.stressText ? stressText('Paper0', paperNameChars, false) : (options.paperName ?? 'The Morning Bell'));
   await page.getByRole('button', { name: 'Select Red' }).click();
   await page.getByRole('button', { name: 'Claim Printing Press' }).click();
-  await page.waitForSelector('[data-testid="lobby-screen"]', { timeout });
-}
-
-export async function applyPalette(page: Page, options: CaptureOptions): Promise<void> {
-  await page.evaluate((vars) => {
-    for (const [name, value] of Object.entries(vars)) document.documentElement.style.setProperty(name, value);
-  }, paletteCssVariables(getPalette(options.palette)));
+  const named = options.playerName !== null || options.paperName !== null;
+  if (!named) {
+    await page.waitForSelector(LOBBY, { timeout });
+    return null;
+  }
+  const jp = joinPage(page);
+  const first = await firstJoinResult(jp, timeout);
+  if (first.lobby) return { outcome: 'accepted', error: null, entry: 'createRoom' };
+  const error = first.error ?? '';
+  const outcome = bannerOutcome(error, options.expectError);
+  if (options.correctPlayerName === null && options.correctPaperName === null) return { outcome, error, entry: 'createRoom' };
+  if (options.correctPlayerName !== null) await page.fill('#player-name', options.correctPlayerName);
+  if (options.correctPaperName !== null) await page.fill('#paper-name', options.correctPaperName);
+  await page.getByRole('button', { name: 'Claim Printing Press' }).click();
+  const second = await correctedJoinResult(jp, timeout);
+  if (!second.lobby) {
+    const again = second.error ?? '';
+    bannerOutcome(again, options.expectError);
+    throw new Error(`corrected name was also rejected: ${again}`);
+  }
+  return { outcome: 'corrected', error, entry: 'createRoom' };
 }
 
 export async function focusAndScroll(page: Page, options: CaptureOptions): Promise<void> {

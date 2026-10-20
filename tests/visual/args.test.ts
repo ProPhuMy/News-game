@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { harnessPath, parseCaptureArgs } from '../../scripts/visual/args.ts';
+import { chromiumArgs, harnessPath, parseCaptureArgs } from '../../scripts/visual/args.ts';
 
 describe('parseCaptureArgs', () => {
   it('fills defaults and requires only --out', () => {
@@ -8,7 +8,8 @@ describe('parseCaptureArgs', () => {
       reducedMotion: false, seed: 1, width: 1280, height: 720, out: 'shots/town.png', prod: false, timeoutMs: 60000,
       model: 'characters/kenney-mini/character-male-a.glb', clip: null, timeMs: 0, count: 1,
       screen: 'home', palette: 'b', stressText: false, tab: 0, scroll: null, blockFonts: false,
-      variant: 'code', view: 'street',
+      variant: 'code', view: 'street', citizenHeight: null, noWebgl: false,
+      playerName: null, paperName: null, correctPlayerName: null, correctPaperName: null, expectError: null,
     });
   });
 
@@ -29,7 +30,7 @@ describe('parseCaptureArgs', () => {
   it('rejects unknown flags and bad numbers', () => {
     expect(() => parseCaptureArgs(['--out', 'a.png', '--zoom', '2'])).toThrow(/unknown flag --zoom/);
     expect(() => parseCaptureArgs(['--out', 'a.png', '--width', 'wide'])).toThrow(/--width must be a whole number/);
-    expect(() => parseCaptureArgs(['--out', 'a.png', '--target', 'ui'])).toThrow(/--target must be town, app, character or architecture/);
+    expect(() => parseCaptureArgs(['--out', 'a.png', '--target', 'ui'])).toThrow(/--target must be town, app, character, architecture or crowd/);
   });
 
   it('rejects the town target in --prod mode because the harness is dev-only', () => {
@@ -91,6 +92,13 @@ describe('app screens', () => {
     ]))).toBe('/visual-test/app.html?fixture=solo-honest&round=5&phase=final&reactionMs=6000&reducedMotion=false&seed=1&screen=match&palette=b&stressText=true');
   });
 
+  it('rejects a non-production palette on live screens only', () => {
+    const live = ['--target', 'app', '--screen', 'lobby', '--palette', 'a', '--out', 'u.png'];
+    expect(() => parseCaptureArgs(live)).toThrow('live screens render the production palette (b); --palette a applies only to harness screens');
+    expect(parseCaptureArgs(['--target', 'app', '--screen', 'lobby', '--palette', 'b', '--out', 'u.png']).palette).toBe('b');
+    expect(parseCaptureArgs(['--target', 'app', '--screen', 'match', '--palette', 'a', '--out', 'u.png']).palette).toBe('a');
+  });
+
   it('passes the palette to the town harness for D1', () => {
     expect(harnessPath(parseCaptureArgs(['--palette', 'b', '--out', 't.png']))).toContain('&palette=b');
   });
@@ -113,5 +121,82 @@ describe('architecture target', () => {
     expect(() => parseCaptureArgs(['--target', 'architecture', '--view', 'top', '--out', 'x.png'])).toThrow(/--view must be one of/);
     expect(() => parseCaptureArgs(['--variant', 'code', '--out', 'x.png'])).toThrow(/--variant and --view need --target architecture/);
     expect(() => parseCaptureArgs(['--target', 'architecture', '--prod', '--out', 'x.png'])).toThrow(/--prod only supports --target app/);
+  });
+});
+
+describe('crowd and no-webgl flags', () => {
+  it('parses a crowd capture into its harness URL', () => {
+    const options = parseCaptureArgs(['--target', 'crowd', '--citizen-height', '3.29', '--palette', 'b', '--reaction-ms', '0', '--out', 'c.png']);
+    expect(options.citizenHeight).toBe(3.29);
+    const query = new URLSearchParams(harnessPath(options).split('?')[1]);
+    expect(Object.fromEntries(query)).toEqual({ scene: 'crowd', height: '3.29', palette: 'b', reactionMs: '0', seed: '1' });
+  });
+
+  it('rejects missing, malformed and out-of-range citizen heights', () => {
+    const base = ['--target', 'crowd', '--out', 'c.png'];
+    expect(() => parseCaptureArgs(base)).toThrow(/--citizen-height is required/);
+    for (const bad of ['abc', '0.4', '6.1', '-1', 'Infinity', '']) {
+      expect(() => parseCaptureArgs([...base, '--citizen-height', bad])).toThrow(/--citizen-height must be a number between 0.5 and 6/);
+    }
+    expect(() => parseCaptureArgs(['--citizen-height', '3', '--out', 'c.png'])).toThrow(/--citizen-height needs --target crowd/);
+  });
+
+  it('adds noWebgl=true to town and app URLs and only those targets', () => {
+    expect(harnessPath(parseCaptureArgs(['--no-webgl', '--out', 't.png']))).toContain('noWebgl=true');
+    expect(harnessPath(parseCaptureArgs(['--target', 'app', '--screen', 'match', '--no-webgl', '--out', 'a.png']))).toContain('noWebgl=true');
+    expect(harnessPath(parseCaptureArgs(['--out', 't.png']))).not.toContain('noWebgl');
+    for (const target of ['character', 'architecture']) {
+      expect(() => parseCaptureArgs(['--target', target, '--no-webgl', '--out', 'x.png'])).toThrow(/--no-webgl supports only --target town or app/);
+    }
+    expect(() => parseCaptureArgs(['--target', 'crowd', '--citizen-height', '3', '--no-webgl', '--out', 'x.png'])).toThrow(/--no-webgl supports only/);
+  });
+
+  it('launches without ANGLE/SwiftShader and with webgl disabled for --no-webgl', () => {
+    expect(chromiumArgs(false)).toContain('--use-angle=swiftshader');
+    const off = chromiumArgs(true);
+    expect(off).toEqual(['--disable-webgl', '--disable-3d-apis']);
+  });
+});
+
+describe('join name flags and live --no-webgl', () => {
+  const live = ['--target', 'app', '--screen', 'lobby', '--out', 'j.png'];
+
+  it('parses the three name flags on the live lobby', () => {
+    expect(parseCaptureArgs([...live, '--player-name', 'Daily Shit', '--paper-name', 'P', '--correct-player-name', 'Ada']))
+      .toMatchObject({ playerName: 'Daily Shit', paperName: 'P', correctPlayerName: 'Ada' });
+  });
+
+  it('parses --expect-error and --correct-paper-name, which need a name flag and a value', () => {
+    expect(parseCaptureArgs([...live, '--paper-name', 'P', '--correct-paper-name', 'Q', '--expect-error', 'not allowed']))
+      .toMatchObject({ correctPaperName: 'Q', expectError: 'not allowed' });
+    expect(() => parseCaptureArgs([...live, '--correct-paper-name', 'Q'])).toThrow(/--correct-paper-name needs --paper-name/);
+    expect(() => parseCaptureArgs([...live, '--expect-error', 'x'])).toThrow(/--expect-error needs --player-name or --paper-name/);
+    for (const flag of ['--correct-paper-name', '--expect-error']) {
+      expect(() => parseCaptureArgs([...live, '--paper-name', 'P', flag, ' '])).toThrow(/needs a non-empty value/);
+      expect(() => parseCaptureArgs(['--target', 'app', '--screen', 'join', flag, 'x', '--out', 'j.png'])).toThrow(/need --target app --screen lobby/);
+    }
+  });
+
+  it('rejects name flags outside --target app --screen lobby', () => {
+    for (const flag of ['--player-name', '--paper-name', '--correct-player-name']) {
+      expect(() => parseCaptureArgs(['--target', 'app', '--screen', 'join', flag, 'x', '--out', 'j.png'])).toThrow(/need --target app --screen lobby/);
+      expect(() => parseCaptureArgs([flag, 'x', '--out', 'j.png'])).toThrow(/need --target app --screen lobby/);
+    }
+  });
+
+  it('needs --player-name before a correction, and a value for each flag', () => {
+    expect(() => parseCaptureArgs([...live, '--correct-player-name', 'Ada'])).toThrow(/--correct-player-name needs --player-name/);
+    expect(() => parseCaptureArgs([...live, '--player-name'])).toThrow(/--player-name needs a non-empty value/);
+    for (const flag of ['--player-name', '--paper-name', '--correct-player-name']) {
+      for (const bad of ['', '   ']) expect(() => parseCaptureArgs([...live, flag, bad])).toThrow(/needs a non-empty value/);
+    }
+    expect(() => parseCaptureArgs([...live, '--player-name', 'x', '--stress-text'])).toThrow(/--stress-text cannot be combined/);
+    expect(() => parseCaptureArgs([...live, '--paper-name', 'x', '--stress-text'])).toThrow(/--stress-text cannot be combined/);
+  });
+
+  it('rejects --no-webgl on live screens, which never carry it', () => {
+    for (const screen of ['home', 'join', 'lobby']) {
+      expect(() => parseCaptureArgs(['--target', 'app', '--screen', screen, '--no-webgl', '--out', 'x.png'])).toThrow(/--no-webgl does not apply to live screens/);
+    }
   });
 });

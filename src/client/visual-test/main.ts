@@ -2,9 +2,10 @@
 import { SERVER_EVENTS } from '../../shared/protocol.ts';
 import { createClientStore } from '../net/store.ts';
 import { createVirtualClock } from './clock.ts';
-import { parseFixture, parseScenario, selectFrameIndex } from './scenario.ts';
+import { parseFixture, parseTownScenario, selectFrameIndex } from './scenario.ts';
 import { mountAndSettleTown } from './town-mount.ts';
 import { runArchitecture } from './architecture.ts';
+import { runCrowd } from './crowd.ts';
 import { runInspection } from './inspect.ts';
 import { sceneKind } from './inspection-scenario.ts';
 import { publish } from './state.ts';
@@ -14,14 +15,14 @@ const fixtureLoaders = import.meta.glob<unknown>('../../sim/fixtures/*.json', { 
 async function run(): Promise<void> {
   publish({ status: 'loading' });
   const kind = sceneKind(window.location.search);
-  if (kind === 'inspect-character' || kind === 'architecture') {
+  if (kind === 'inspect-character' || kind === 'architecture' || kind === 'crowd') {
     const container = document.getElementById('town');
     if (!container) throw new Error('missing #town container');
-    const runScene = kind === 'architecture' ? runArchitecture : runInspection;
+    const runScene = { architecture: runArchitecture, crowd: runCrowd, 'inspect-character': runInspection }[kind];
     publish(await runScene(window.location.search, container));
     return;
   }
-  const scenario = parseScenario(window.location.search);
+  const scenario = parseTownScenario(window.location.search);
   const loader = fixtureLoaders[`../../sim/fixtures/${scenario.fixture}.json`];
   if (!loader) throw new Error(`unknown fixture "${scenario.fixture}"; known: ${Object.keys(fixtureLoaders).join(', ')}`);
   const fixture = parseFixture(await loader());
