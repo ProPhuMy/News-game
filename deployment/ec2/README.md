@@ -1,12 +1,12 @@
-# EC2 deployment preparation — do not launch yet
+# EC2 deployment and verification — D4 incomplete
 
-Owner: Codex. Scope: one credit-funded instance, no account upgrade, paid service or automatic resource creation. These are reviewable operator instructions, not an executed deployment. Resource launch and DNS changes require explicit user approval. Keep Render Free unchanged as fallback.
+Owner: Codex. Scope: one credit-funded instance, no account upgrade, paid service or automatic resource creation. The user has executed the initial deployment on the approved Ubuntu replacement; see `../D4-production-verification.md` for user-supplied evidence and pending gates. Commands below are reference procedures, not proof they ran. Further resource launches or destructive replacements require explicit user approval. Keep Render Free unchanged as fallback.
 
 ## Resource review before launch
 
-Use the accepted assessment in `deployment/D4-ec2-credit-proposal.md`: Ohio (`us-east-2`, the available project region), one first-party Amazon Linux 2023 x86_64 AMI, `t3.micro`, CPU **Standard**, 20 GiB encrypted gp3 at baseline performance, one public IPv4, one instance. No Marketplace software, NAT gateway, load balancer, extra instance, snapshot plan or paid monitoring. Expected base is approximately $2.96 for seven days / $12.84 per 730 hours. Retain $20 credit reserve and stop/review if actual or forecast usage would consume it.
+Use the accepted assessment in `deployment/D4-ec2-credit-proposal.md`: Ohio (`us-east-2`, the available project region), one Canonical Ubuntu Server 24.04 LTS x86_64 AMI (approved replacement for the initial Amazon Linux host), `t3.micro`, CPU **Standard**, 20 GiB encrypted gp3 at baseline performance, one public IPv4, one instance. No Marketplace software, NAT gateway, load balancer, extra instance, snapshot plan or paid monitoring. Expected base is approximately $2.96 for seven days / $12.84 per 730 hours. Retain $20 credit reserve and stop/review if actual or forecast usage would consume it.
 
-Record the account's concrete region/AMI/instance/volume/IP quote and exact Free Plan expiration before asking for launch approval. User confirms Free Plan, $100 and 183 days; credit expiry is 2027-10-20 15:09 UTC, with EC2/VPC/Data Transfer applicability. Do not ask again for these facts. Any upgrade prompt or non-credit-supported product stops this procedure. Nothing here authorizes a Paid Plan upgrade, subscription, domain renewal or out-of-pocket payment.
+Initial launch/replacement approvals were provided in the session. Record the account's concrete region/AMI/instance/volume/IP quote and exact Free Plan expiration for any future launch review. User confirms Free Plan, $100 and 183 days; credit expiry is 2027-10-20 15:09 UTC, with EC2/VPC/Data Transfer applicability. Do not ask again for these facts. Any upgrade prompt or non-credit-supported product stops this procedure. Nothing here authorizes a Paid Plan upgrade, subscription, domain renewal or out-of-pocket payment.
 
 Record resource IDs, exact source SHA, image digest, current/previous release tags and actual usage in `deployment/D4-production-verification.md` without credentials. No paid resource is created by recording a quote.
 
@@ -14,7 +14,7 @@ Record resource IDs, exact source SHA, image digest, current/previous release ta
 
 The initial topology is **Cloudflare DNS only**, browser HTTPS/WSS directly to Caddy on EC2, then private HTTP/WebSocket to the Node container. Cloudflare is the DNS provider, not a trusted HTTP proxy in this configuration. Do not turn the record orange/proxied without separately reviewing source-address handling and origin protection. Keep `TRUST_RENDER_PROXY=false`.
 
-User owns `prophumy.com`. Proposed game hostname is `newstown.prophumy.com`; confirm the hostname before creating its DNS record. After the approved instance has its single stable IPv4, create one DNS-only A record for that name pointing to it. Do not add AAAA without verified IPv6 routing. No paid Cloudflare feature or Route 53 resource is needed. Caddy obtains a public certificate; preserve its `/data` volume for renewals. Domain registration alone is not HTTPS readiness.
+User owns `prophumy.com`. Approved game hostname is `newstown.prophumy.com`; the user created its DNS-only A record to `3.20.0.241`. After the approved instance has its single stable IPv4, create one DNS-only A record for that name pointing to it. Do not add AAAA without verified IPv6 routing. No paid Cloudflare feature or Route 53 resource is needed. Caddy obtains a public certificate; preserve its `/data` volume for renewals. Domain registration alone is not HTTPS readiness.
 
 AWS security group: inbound TCP 80/443 from internet; TCP 22 only from the user's current administrative IP. No inbound rule for 3000, including VPC/source-group rules. Require IMDSv2. Exactly one public address: if using an Elastic IP, avoid allocating a second automatic public IPv4. No open administrative port or private key is committed.
 

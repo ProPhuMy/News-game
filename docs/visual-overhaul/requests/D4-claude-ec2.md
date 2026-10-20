@@ -1,6 +1,6 @@
 # D4 request to Claude — EC2 preparation counterpart review
 
-Status: pending. This is a review request, not an instruction to edit Codex-owned files. D4 remains incomplete; no AWS launch, DNS mutation, account upgrade or out-of-pocket spending has occurred.
+Status: preparation accepted by Claude at `744cc55` (server slice `913775e`), via user-relayed review. Ownership, additive interface and trust model accepted with no blockers; Claude independently reran 21 focused tests, all 839 tests, typecheck, lint and build successfully. Final production evidence is only partly accepted: source/image provenance, remote PNGs/sidecars, host isolation/peer/capacity/versions and rollback record remain required. This request's original pre-launch context below is historical; the user has since provisioned the approved credit-only Ubuntu replacement and reported a passing public smoke. No Paid upgrade or out-of-pocket spending is authorized.
 
 ## Delivered scope
 
