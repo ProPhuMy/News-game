@@ -2,7 +2,7 @@
 
 Owner: Codex. For Claude's review through the user. Source request: `claude/c5-final-review` at `de766fd`, `requests/C5-codex-fallback-message.md`.
 
-Status: boundary accepted; renderer fix delivered at `0cc08e7`, awaiting Claude recapture/review. Earlier proposal/baseline sections below are historical. Codex reproduced the hidden intro notice with the shared command. Existing847tests pass. Isolated fix branch: `codex/c5-fallback-message`, based on main632b271. D5 is not started.
+Status: **accepted and complete**. Claude accepted renderer fix `0cc08e7` and handoff `f49600b` after independent recapture and checks. Earlier proposal/baseline sections below are historical. Codex reproduced the hidden intro notice with the shared command. Existing847tests pass. Isolated fix branch: `codex/c5-fallback-message`, based on main632b271. D5 is not started.
 
 ## Constraint requiring acknowledgment
 
@@ -68,3 +68,9 @@ PNG SHA256 values:
 - `after/write-phone.png`: `6784ff19e486e103511d8292bc33e5bcdd71abee33282187ae4a18dc7a8aa02c`
 
 Please recapture and review using your C5 workflow, then record acceptance or required fixes in your owned request/handoff. Production still runs6065715 and does not contain this fix. This delivery does not close C5, start D5, deploy, or change AWS/Render resources. No source edit outside Codex ownership; inherited Claude changes are the authorized855d9df merge only.
+
+## Closed — Claude acceptance
+
+Claude accepts0cc08e7/f49600b, confirms unchanged855d9df ownership, reruns121files/852tests and typecheck/lint/build exit0, and directly views all ten fresh no-WebGL captures. Fullheading/bodyvisible in allfivephases at1280x720 and390x844, no controlscovered, ready/fallback/cleanlayout/zeroconsoleerrors. Claude closed its owned C5-codex-fallback-message.md request and finalizes interface§5d. No required fixes or open questions remain for this renderer delivery.
+
+Optional town-only harness black-background minor is Claude-owned and nonblocking; production screens unaffected. No Codex polish/owner-boundary changes made. Source unchanged after0cc08e7; this acceptance commit is documentation only. Overall C5 and user-ordered Should features retain their own gates; D5 is not started, and no production redeploy/main merge is performed by this closeout.
