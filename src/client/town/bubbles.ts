@@ -114,6 +114,7 @@ export function createBubbleManager(
       const width = container.clientWidth || 800;
       const height = container.clientHeight || 600;
 
+      const placed: { left: number; right: number; top: number; bottom: number }[] = [];
       for (let i = 0; i < activeBubbles.length; i++) {
         const bubble = activeBubbles[i];
         if (!bubble) {
@@ -128,12 +129,22 @@ export function createBubbleManager(
 
         scratchPos.project(camera);
 
-        if (scratchPos.z > 1.0) {
+        if (Math.abs(scratchPos.z) > 1 || Math.abs(scratchPos.x) > 1 || Math.abs(scratchPos.y) > 1) {
           bubble.element.style.display = 'none';
         } else {
           bubble.element.style.display = 'block';
-          const screenX = (scratchPos.x * 0.5 + 0.5) * width;
-          const screenY = (-(scratchPos.y * 0.5) + 0.5) * height;
+          bubble.element.style.maxWidth = `${Math.max(0, Math.min(220, width - 38))}px`;
+          const w = bubble.element.offsetWidth || Math.min(242, width - 16);
+          const h = bubble.element.offsetHeight || 28;
+          const screenX = Math.max(8 + w / 2, Math.min(width - 8 - w / 2, (scratchPos.x * 0.5 + 0.5) * width));
+          const anchorY = (-(scratchPos.y * 0.5) + 0.5) * height;
+          const initialY = Math.max(h + 8, Math.min(height - 8, anchorY));
+          const candidates = [initialY, ...placed.map(r => r.top - 6)];
+          candidates.sort((a, b) => Math.abs(a - anchorY) - Math.abs(b - anchorY) || a - b);
+          const screenY = candidates.find(y => y - h >= 8 && y <= Math.min(height - 8, anchorY) && !placed.some(r =>
+            screenX - w / 2 < r.right + 6 && screenX + w / 2 > r.left - 6 && y - h < r.bottom + 6 && y > r.top - 6));
+          if (screenY === undefined) { bubble.element.style.display = 'none'; continue; }
+          placed.push({ left: screenX - w / 2, right: screenX + w / 2, top: screenY - h, bottom: screenY });
           bubble.element.style.transform = `translate(-50%, -100%) translate(${screenX}px, ${screenY}px)`;
         }
       }

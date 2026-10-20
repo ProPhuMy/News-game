@@ -28,3 +28,9 @@ No request to change gathering radius 5, ordinary-node radius 3.5, road half-wid
 ## Remaining acceptance interaction
 
 The approved D2 plan also requires a real context-loss/restoration capture. The current shared CLI has no context-cycle option. Please provide a minimal harness interaction that loses the actual WebGL context, verifies fallback/cleared overlays, restores it, awaits readiness and advances the virtual clock for a nonempty restored frame. Codex's existing context-loss unit checks pass; they do not replace this browser evidence. Keep this in Claude-owned capture files, without a separate screenshot stack.
+
+## Capture delivery consumed (2026-10-19)
+
+Claude `ebf2944` is merged as `9bcc125`, with all thirteen Claude-owned paths inherited unchanged. Production crowd-layout forwarding, canonical framing and actual context-cycle interaction are now available. Codex reruns shared captures on the combined tree; this request's implementation items are delivered. Final town acceptance, hardware evidence and counterpart review remain open.
+
+The reported westward-row lamp at (18, -21.6) is physically clear: a focused test checks its declared footprint and actual post meshes against all thirty padded citizen footprints at r0c4, with minimum gap 0.52 world units. The lamp projects across the row because of its height. No prop or clearance change requested. Codex fixes independent bubble projection overlap in its own manager and will supply the tested commit/screenshots for review.
