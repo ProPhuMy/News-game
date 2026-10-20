@@ -42,6 +42,23 @@ describe('static serving', () => {
     }
   });
 
+  it('rejects malformed paths and forbidden methods without exposing data or breaking later asset requests', async () => {
+    await symlink('/etc/passwd', join(directory, 'assets', 'escape.js'));
+    for (const path of ['/%', '/%ff', '/assets/%00.js', '/assets/%5c..%5c.env', '/assets/escape.js', '/.git/config', '/r/INVALID']) {
+      const response = await fetch(`${url}${path}`);
+      expect(response.status).toBe(404);
+      expect(await response.text()).toBe('Not found');
+    }
+    const response = await fetch(url, { method: 'POST', body: 'SECRET-request-data' });
+    expect(response.status).toBe(405);
+    expect(response.headers.get('allow')).toBe('GET, HEAD');
+    expect(await response.text()).toBe('');
+    const asset = await fetch(`${url}/assets/app.js`);
+    expect(asset.status).toBe(200);
+    expect(asset.headers.get('x-content-type-options')).toBe('nosniff');
+    expect(await asset.text()).toBe('console.log("client");');
+  });
+
   it('serves percent-encoded TTF paths with the font MIME type for GET and HEAD', async () => {
     const fonts = join(directory, 'fonts', 'playfair-display');
     const font = Buffer.from('test font bytes');
