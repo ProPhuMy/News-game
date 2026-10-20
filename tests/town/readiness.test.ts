@@ -1,3 +1,7 @@
+import honest from '../../src/sim/fixtures/solo-honest.json';
+import { FixtureSchema } from '../../src/shared/fixture.ts';
+import { LOCATIONS } from '../../src/shared/ids.ts';
+import type { SceneReadiness } from '../../src/client/visuals/town-types.ts';
 // @vitest-environment jsdom
 import * as THREE from 'three';
 import { describe, expect, it, vi } from 'vitest';
@@ -10,21 +14,23 @@ import { getPalette } from '../../src/client/visuals/palette.ts';
 vi.mock('../../src/client/town/buildings.ts', () => ({ createTownBuildings: vi.fn() }));
 vi.mock('../../src/client/town/assets/character.ts', () => ({ createSampleCharacter: vi.fn() }));
 vi.mock('../../src/client/town/assets/source.ts', () => ({ createAssetSource: vi.fn() }));
-function setup() {
+function setup(architectureReady?: Promise<SceneReadiness>) {
   const assetDispose = vi.fn();
   vi.mocked(createAssetSource).mockReturnValue({ loadGltf: vi.fn(), dispose: assetDispose });
   const pieceDispose = vi.fn();
   let release!: () => void;
   const gate = new Promise<void>(resolve => { release = resolve; });
   vi.mocked(createTownBuildings).mockReturnValue({
-    group: new THREE.Group(), ready: gate.then(() => ({ degraded: ['tree: stand-in'] })), dispose: pieceDispose,
+    group: new THREE.Group(), ready: architectureReady ?? gate.then(() => ({ degraded: ['tree: stand-in'] })), dispose: pieceDispose,
     getLocationAnchor: () => new THREE.Vector3(), getOfficeAnchor: () => new THREE.Vector3(),
     getOfficeBannerColor: () => 0, setOfficeHighlight: vi.fn(), syncOffices: vi.fn(),
   });
   const actors: { object: THREE.Group; setPaper: ReturnType<typeof vi.fn>; setPose: ReturnType<typeof vi.fn>; dispose: ReturnType<typeof vi.fn> }[] = [];
   vi.mocked(createSampleCharacter).mockImplementation(async () => {
     await gate;
-    const actor = { object: new THREE.Group(), setPaper: vi.fn(), setPose: vi.fn(), dispose: vi.fn() };
+    let disposed = false;
+    const assertLive = () => { if (disposed) throw new Error('character disposed'); };
+    const actor = { object: new THREE.Group(), setPaper: vi.fn(assertLive), setPose: vi.fn(assertLive), dispose: vi.fn(() => { disposed = true; }) };
     actors.push(actor); return actor;
   });
   const renderer = { domElement: document.createElement('canvas'), shadowMap: { enabled: false, type: 0 },
@@ -62,4 +68,31 @@ describe('TownView readiness', () => {
     await expect(view.whenReady()).resolves.toEqual({ degraded: [] });
     view.dispose();
   });
+});
+
+
+it('keeps fallback callbacks inert after required initialization fails with attached actors', async () => {
+  let reject!: (error: Error) => void;
+  const architectureReady = new Promise<SceneReadiness>((_, fail) => { reject = fail; });
+  const { view, release, actors, container, renderer } = setup(architectureReady);
+  release();
+  await vi.waitFor(() => expect(actors).toHaveLength(34));
+  reject(new Error('required asset failed'));
+  await expect(view.whenReady()).rejects.toThrow('required asset failed');
+  expect(container.querySelector('.town-fallback-container')).not.toBeNull();
+  const calls = actors.map(actor => [actor.setPaper.mock.calls.length, actor.setPose.mock.calls.length]);
+  const snapshot = FixtureSchema.parse(honest).frames.find(frame => frame.public.reactionPlan)!.public;
+  expect(() => view.syncFromSnapshot(snapshot)).not.toThrow();
+  expect(() => view.setReducedMotion(true)).not.toThrow();
+  expect(() => view.setTargetLocation(LOCATIONS[0])).not.toThrow();
+  expect(() => view.setPhase('intro')).not.toThrow();
+  const resizes = vi.mocked(renderer.setSize).mock.calls.length;
+  expect(() => view.resize()).not.toThrow();
+  expect(vi.mocked(renderer.setSize).mock.calls.length).toBe(resizes);
+  await expect(view.playReactionPlan(snapshot.reactionPlan!, 20)).resolves.toBeUndefined();
+  expect(actors.map(actor => [actor.setPaper.mock.calls.length, actor.setPose.mock.calls.length])).toEqual(calls);
+  expect(view.isWebGLSupported()).toBe(false);
+  expect(container.querySelector('.town-fallback-container')).not.toBeNull();
+  view.dispose(); view.dispose();
+  for (const actor of actors) expect(actor.dispose).toHaveBeenCalledTimes(1);
 });

@@ -240,6 +240,7 @@ export function createTownView(
     }
 
     const handleResize = (): void => {
+      if (isDisposed) return;
       const w = container.clientWidth || 800;
       const h = container.clientHeight || 600;
       camera.resize(w, h);
@@ -269,13 +270,15 @@ export function createTownView(
 
     return {
       whenReady: () => ready,
-      isWebGLSupported: () => !fallbackView,
+      isWebGLSupported: () => !isDisposed && !fallbackView,
 
       playReactionPlan(plan: ReactionPlan, durationSeconds?: number): Promise<void> {
+        if (isDisposed) return Promise.resolve();
         return activeCoordinator.startPlan(plan, durationSeconds);
       },
 
       setPhase(phase: Phase): void {
+        if (isDisposed) return;
         if (phase === 'intro') {
           camera.startIntroSweep(20);
         } else {
@@ -284,6 +287,7 @@ export function createTownView(
       },
 
       setTargetLocation(location: Location | null): void {
+        if (isDisposed) return;
         if (location) {
           const anchor = townBuildings.getLocationAnchor(location);
           camera.setTarget(anchor.x, anchor.z);
@@ -293,6 +297,7 @@ export function createTownView(
       },
 
       setReducedMotion(enabled: boolean): void {
+        if (isDisposed) return;
         currentReducedMotion = enabled;
         camera.setReducedMotion(enabled);
         activeCitizens.setReducedMotion(enabled);
@@ -300,6 +305,7 @@ export function createTownView(
       },
 
       syncFromSnapshot(snapshot: PublicSnapshot): void {
+        if (isDisposed) return;
         activeCoordinator.stop();
         activeBubbles.clear();
         if (snapshot.citizens && snapshot.papers) {
@@ -312,8 +318,8 @@ export function createTownView(
 
       getCitizenPosition: (id: number, out?: THREE.Vector3) => activeCitizens.getCitizenPosition(id, out),
       getCitizenRotation: (id: number) => activeCitizens.getCitizenRotation(id),
-      setCitizenPosition: (id: number, pos: THREE.Vector3) => activeCitizens.setCitizenPosition(id, pos),
-      setCitizenRotation: (id: number, angleY: number) => activeCitizens.setCitizenRotation(id, angleY),
+      setCitizenPosition: (id: number, pos: THREE.Vector3) => { if (!isDisposed) activeCitizens.setCitizenPosition(id, pos); },
+      setCitizenRotation: (id: number, angleY: number) => { if (!isDisposed) activeCitizens.setCitizenRotation(id, angleY); },
       getCitizenHatColor: (id: number) => activeCitizens.getCitizenHatColor(id),
       getNodeWorldPosition: (nodeId: string) => {
         const p = layout.getNodeWorldPos(nodeId);
