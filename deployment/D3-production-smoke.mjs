@@ -10,7 +10,7 @@ import { resolve, relative, dirname } from 'node:path';
 import { chromium } from 'playwright-core';
 import { chromiumArgs } from '../scripts/visual/args.ts';
 
-import { parseSmokeOptions, fetchSmokeResource, requireCleanWatch } from './D4-smoke-options.ts';
+import { parseSmokeOptions, fetchSmokeResource, requireCleanWatch, decodeSmokePackets } from './D4-smoke-options.ts';
 import { watchPage, captureAppEvidence } from '../scripts/visual/evidence.ts';
 import { LOCATIONS, LOCATION_NAMES } from '../src/shared/ids.ts';
 
@@ -85,8 +85,21 @@ try {
     assert.deepEqual(evidence.consoleErrors, [], 'Capture console errors occurred');
   };
   const packets = pages.map(() => []);
+  const webSocketPackets = pages.map(() => []);
+  const pendingPolling = new Set();
+  const drainPolling = () => Promise.all(pendingPolling);
   const sockets = pages.map(() => 0);
   for (const [index, page] of pages.entries()) {
+    page.on('response', response => {
+      const url = new URL(response.url());
+      if (url.origin !== base || url.pathname !== '/socket.io/' || url.searchParams.get('transport') !== 'polling' ||
+        response.request().method() !== 'GET') return;
+      const read = response.text().then(payload => packets[index].push(...decodeSmokePackets(payload))).catch(() => {
+        if (response.request().failure()?.errorText !== 'net::ERR_ABORTED') problems.push('polling-response-read-failed');
+      });
+      pendingPolling.add(read);
+      void read.finally(() => pendingPolling.delete(read));
+    });
     page.on('pageerror', () => problems.push('pageerror'));
     page.on('console', message => { if (message.type() === 'error') problems.push('console-error'); });
     page.on('requestfailed', request => {
@@ -98,9 +111,12 @@ try {
       if (new URL(socket.url()).origin !== expected) problems.push('unexpected-websocket-origin');
       sockets[index]++;
       socket.on('framereceived', ({ payload }) => {
-        if (typeof payload !== 'string' || !payload.startsWith('42')) return;
-        const decoded = JSON.parse(payload.slice(2));
-        if (Array.isArray(decoded)) packets[index].push(decoded);
+        if (typeof payload !== 'string') return;
+        try {
+          const decoded = decodeSmokePackets(payload);
+          webSocketPackets[index].push(...decoded);
+          packets[index].push(...decoded);
+        } catch { problems.push('invalid-websocket-event'); }
       });
     });
   }
@@ -135,12 +151,14 @@ try {
   await Promise.all(pages.map(page => page.getByRole('button', { name: 'Skip Intro', exact: true }).click()));
   await guest.getByRole('button', { name: LOCATION_NAMES[LOCATIONS[0]], exact: true }).click();
   await guest.getByTestId('investigate-locked').waitFor();
+  await drainPolling();
   const submitted = packets[1].filter(([event]) => event === 'private').at(-1)?.[1].investigations.at(-1);
   assert(submitted, 'Submitted investigation missing');
   const hostSocketsBefore = sockets[0];
   const beforeRecovery = packets[1].length;
   await guest.reload({ waitUntil: 'load' });
   await matchReady(guest);
+  await drainPolling();
   assert(await guest.evaluate(code => localStorage.getItem(`news-town:${code}`), match[1]) === saved, 'Recovered token changed');
   assert(packets[1].slice(beforeRecovery).some(([event, data]) => event === 'ack' && data.ok && data.session?.token === saved),
     'No successful token recovery acknowledgment after reload');
@@ -180,9 +198,11 @@ try {
   }
   await capture(host, 0, 'production-final');
   checks.results = true;
+  await drainPolling();
   for (const [index, messages] of packets.entries()) {
     const sessions = messages.filter(([event, data]) => event === 'ack' && data.session).map(([, data]) => data.session);
-    assert(sessions.length > 0, 'No application acknowledgment observed on WebSocket');
+    assert(sessions.length > 0, 'No application acknowledgment observed');
+    assert(webSocketPackets[index].length > 0, 'No application messages observed on WebSocket');
     assert(sockets[index] >= (index === 1 ? 2 : 1), 'Expected WebSocket/reconnect missing');
     const seat = sessions[0].seatId;
     const privatePackets = messages.filter(([event]) => event === 'private');

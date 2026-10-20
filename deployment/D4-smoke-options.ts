@@ -1,4 +1,30 @@
 import type { PageWatch } from '../scripts/visual/evidence.ts';
+import { z } from 'zod';
+import { AckSchema, RoomSnapshotSchema, SERVER_EVENTS } from '../src/shared/protocol.ts';
+import { PrivateSnapshotSchema, PublicSnapshotSchema } from '../src/shared/snapshots.ts';
+
+const eventPacket = z.union([
+  z.tuple([z.literal(SERVER_EVENTS.ack), AckSchema]),
+  z.tuple([z.literal(SERVER_EVENTS.room), RoomSnapshotSchema]),
+  z.tuple([z.literal(SERVER_EVENTS.public), PublicSnapshotSchema]),
+  z.tuple([z.literal(SERVER_EVENTS.private), PrivateSnapshotSchema]),
+]);
+
+export function decodeSmokePackets(payload: string): unknown[][] {
+  const packets: unknown[][] = [];
+  for (const frame of payload.split('\x1e')) {
+    if (!frame.startsWith('42')) continue;
+    let decoded: unknown;
+    try { decoded = JSON.parse(frame.slice(2)); }
+    catch { throw new Error('Invalid Socket.IO event payload'); }
+    if (!Array.isArray(decoded) || !eventPacket.safeParse(decoded).success) {
+      throw new Error('Invalid Socket.IO event payload');
+    }
+    // Keep original fields so schema stripping cannot conceal a privacy violation.
+    packets.push(decoded);
+  }
+  return packets;
+}
 
 export interface SmokeOptions {
   origin: string;

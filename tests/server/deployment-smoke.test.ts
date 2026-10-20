@@ -1,7 +1,7 @@
 import { createServer } from 'node:http';
 import { once } from 'node:events';
 import { describe, expect, it } from 'vitest';
-import { parseSmokeOptions, fetchSmokeResource, requireCleanWatch } from '../../deployment/D4-smoke-options.ts';
+import { parseSmokeOptions, fetchSmokeResource, requireCleanWatch, decodeSmokePackets } from '../../deployment/D4-smoke-options.ts';
 
 describe('deployment smoke options', () => {
   it('rejects browser diagnostics before returning sidecar data, without disclosing their text', async () => {
@@ -54,5 +54,26 @@ describe('deployment smoke options', () => {
       await expect(fetchSmokeResource(`http://127.0.0.1:${address.port}/redirect`)).rejects.toThrow();
       expect(destinationHits).toBe(0);
     } finally { await new Promise<void>(resolve => server.close(() => resolve())); }
+  });
+});
+
+
+describe('smoke transport event decoding', () => {
+  it('reads recovery acknowledgments and private events batched in HTTP polling', () => {
+    const ack = ['ack', { actionId: 'recovery', serverNowMs: 1000, ok: true, session: { code: 'ABCDE', seatId: 1, token: 'a'.repeat(32) } }];
+    const privateView = ['private', { version: 1, seatId: 1, tip: null, evidence: [], proofs: [], investigations: [], acted: false, lockedHeadline: null, extra: 'retain-for-privacy-checks' }];
+    expect(decodeSmokePackets(`40{}\x1e42${JSON.stringify(ack)}\x1e2\x1e42${JSON.stringify(privateView)}`))
+      .toEqual([ack, privateView]);
+  });
+
+  it('reads the same event format on WebSocket and ignores transport controls', () => {
+    const ack = ['ack', { actionId: 'skip', ok: true, serverNowMs: 1000 }];
+    expect(decodeSmokePackets(`42${JSON.stringify(ack)}`)).toEqual([ack]);
+    for (const control of ['0{}', '2', '3probe', '5', '6', '']) expect(decodeSmokePackets(control)).toEqual([]);
+  });
+
+  it('rejects malformed event payloads without echoing private contents', () => {
+    for (const payload of ['42SYNTHETIC-PRIVATE-TOKEN', '42{}', '42[]', '42[1,{}]'])
+      expect(() => decodeSmokePackets(payload)).toThrow(/^Invalid Socket.IO event payload$/);
   });
 });
