@@ -20,7 +20,7 @@ A local idle native production-server check (AI none, no players, Node v26.12.0)
 - Caddy on the same host terminates HTTPS/WSS for an existing, confirmed domain/subdomain. Bind the Node 24 production container to host loopback only, with restart supervision and bounded local logs. Security group admits public TCP 80/443; administrative SSH only from the user's specified IP. Application port 3000 is not public. Require IMDSv2.
 - `AI_PROVIDER=none`, no provider keys. Keep `TRUST_RENDER_PROXY=false`: this is not Render's managed edge.
 - **Deployment adaptation required before acceptance:** current `src/server/proxy.ts` only understands direct peers or the trusted Render header. Behind same-host Caddy, false mode sees the proxy's address and shares the creation budget across users. Reproduce this with a server regression, then propose the smallest separately reviewed local-proxy address boundary: only trust the host-controlled proxy path, overwrite incoming forwarded headers, and reject spoofing/direct-port access. Do not turn on the Render flag or trust arbitrary forwarded headers to bypass the issue. This proposal does not implement that change or authorize a gameplay-contract change.
-- Use an existing DNS provider/domain if available. The user's expired domain is **unconfirmed**; restoration/renewal costs are outside this estimate and not authorized. No Route 53 hosted zone or domain purchase is included. HTTPS/domain availability is a release prerequisite, not assumed solved by the EC2 hostname.
+- Use an existing DNS provider/domain if available. User purchased prophumy.com through Cloudflare; the expired-domain recovery path is superseded. Public DNS confirms Cloudflare nameservers, but apex A/AAAA records are absent and HTTPS is not established by domain registration. Proposed game hostname is newstown.prophumy.com, subject to user choice; it currently has no DNS record. Domain purchase is user-completed and outside the AWS credit estimate; no DNS/account change is performed here. No Route 53 hosted zone or domain purchase is included. HTTPS/domain availability is a release prerequisite, not assumed solved by the EC2 hostname.
 - Basic EC2 metrics and bounded local logs only. No paid detailed monitoring, custom metrics, log ingestion, backup service or registry service is included. Re-evaluate costs before adding one.
 
 ## Credit estimate
@@ -72,7 +72,7 @@ Before approval, obtain only non-secret account facts:
 1. Free Plan, $100 remaining and 183 days remaining are now user-confirmed. Record the exact expiration date/time before scheduling teardown; do not ask again for already-confirmed plan type/balance.
 2. Active credit details: estimated remaining amount, expiration date and applicable products, including EC2, EBS and public IPv4/VPC. Reconcile current-month usage; the older Amount remaining column may lag.
 3. Current shared outbound allowance consumption, supported region/AMI/instance/address permissions without any upgrade, and any existing AWS workloads consuming the same credits.
-4. Confirmed usable domain/subdomain and DNS control, or a separately reviewed no-purchase HTTPS alternative. Domain restoration/renewal price remains the user's investigation.
+4. Confirmed usable domain/subdomain and DNS control, or a separately reviewed no-purchase HTTPS alternative. User now owns prophumy.com on Cloudflare; game hostname and DNS/certificate configuration still need agreement. No further purchase is assumed.
 
 Read-only console paths: Console Home → Cost and Usage widget (balance/plan expiry/days); newer experience: settings.aws.com → Billing → Current Plan / Credits remaining. Older Billing and Cost Management → Credits → individual credit details; Bills → Savings for current estimates. Compare Free Plan expiry with individual credit expiry. Do not click Upgrade Plan or Activate advanced features.
 
@@ -102,3 +102,7 @@ Show this conditional setup and estimate to the user, resolve account/domain fac
 - [CPU Standard mode](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/burstable-credits-baseline-concepts.html)
 - [Caddy HTTPS](https://caddyserver.com/docs/automatic-https) and [WebSocket reverse proxy](https://caddyserver.com/docs/caddyfile/directives/reverse_proxy)
 - [Render Free limits](https://render.com/docs/free)
+
+## Domain update
+
+User reports prophumy.com purchased on Cloudflare. Read-only DNS-over-HTTPS lookup returns Cloudflare NS greg/jessica, no apex A/AAAA, and NXDOMAIN for proposed newstown.prophumy.com. HTTPS browser fetch did not succeed. This proves current public DNS findings only, not Cloudflare dashboard status or certificate issuance. Do not assume SSL is ready. Deployment must configure DNS to the selected host and establish HTTPS/WSS. If Cloudflare proxy is selected, use valid origin TLS with Full (strict) and review the actual client-IP trust topology; a DNS-only Caddy deployment instead uses its own public certificate. No Cloudflare mutation, AWS provisioning, account upgrade or new domain purchase performed.
