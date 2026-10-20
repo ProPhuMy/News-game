@@ -27,7 +27,9 @@ export function createClinic(ctx: ArchitectureContext): PlacedPiece {
   shape.closePath();
   const geometry = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: false });
   geometry.translate(0, 0, -depth / 2);
-  root.add(at(parts.mesh(geometry, roof), 0, WALL_TOP, 0));
+  const roofSlab = at(parts.mesh(geometry, roof), 0, WALL_TOP, 0);
+  roofSlab.name = 'clinic-roof';
+  root.add(roofSlab);
 
   // Two crossing bars, brick red and self-lit so the cross reads at night.
   const cross = new THREE.Group();

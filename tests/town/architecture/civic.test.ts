@@ -14,14 +14,15 @@ interface Case {
   create: (ctx: FakeContext) => PlacedPiece;
   door: string;
   sign: string;
+  roof: string;
 }
 const cases: Case[] = [
-  { name: 'bank', footprint: BANK_FOOTPRINT, create: createBank, door: 'bank-door', sign: 'sign-BANK' },
-  { name: 'town hall', footprint: TOWN_HALL_FOOTPRINT, create: createTownHall, door: 'town-hall-door', sign: 'sign-TOWN HALL' },
-  { name: 'clinic', footprint: CLINIC_FOOTPRINT, create: createClinic, door: 'clinic-door', sign: 'sign-CLINIC' },
+  { name: 'bank', footprint: BANK_FOOTPRINT, create: createBank, door: 'bank-door', sign: 'sign-BANK', roof: 'bank-roof' },
+  { name: 'town hall', footprint: TOWN_HALL_FOOTPRINT, create: createTownHall, door: 'town-hall-door', sign: 'sign-TOWN HALL', roof: 'town-hall-roof' },
+  { name: 'clinic', footprint: CLINIC_FOOTPRINT, create: createClinic, door: 'clinic-door', sign: 'sign-CLINIC', roof: 'clinic-roof' },
 ];
 
-describe.each(cases)('code-built $name', ({ footprint, create, door, sign }) => {
+describe.each(cases)('code-built $name', ({ footprint, create, door, sign, roof }) => {
   it('footprint is 6 x 5', () => {
     expect(footprint).toEqual({ width: 6, depth: 5 });
     expect(create(fakeContext()).footprint).toEqual(footprint);
@@ -37,6 +38,18 @@ describe.each(cases)('code-built $name', ({ footprint, create, door, sign }) => 
     expect(s).toBeDefined();
     expect(new THREE.Box3().setFromObject(s!).min.y).toBeGreaterThanOrEqual(d.max.y);
     expect(new THREE.Box3().setFromObject(s!).getCenter(new THREE.Vector3()).z).toBeGreaterThan(0);
+  });
+
+  // Game camera pitch 55°, architecture close-up 45°: the ray from the sign's top front edge toward the camera must pass under the eave.
+  it.each([45, 55])('sign is not hidden by the roof eave at camera pitch %i°', (pitch) => {
+    const object = create(fakeContext()).object;
+    object.updateMatrixWorld(true);
+    const roofMesh = object.getObjectByName(roof);
+    expect(roofMesh, roof).toBeDefined();
+    const s = new THREE.Box3().setFromObject(object.getObjectByName(sign)!);
+    const eave = new THREE.Box3().setFromObject(roofMesh!);
+    const slope = Math.tan((pitch * Math.PI) / 180);
+    expect(s.max.y + (eave.max.z - s.max.z) * slope).toBeLessThanOrEqual(eave.min.y);
   });
 
   it('ground mesh rect stays inside the footprint', () => {

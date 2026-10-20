@@ -20,7 +20,9 @@ export function createBank(ctx: ArchitectureContext): PlacedPiece {
   root.name = 'bank';
 
   root.add(at(parts.mesh(new THREE.BoxGeometry(width - 0.4, WALL_TOP, WALL_FRONT * 2), brick), 0, WALL_TOP / 2, 0));
-  root.add(at(parts.mesh(new THREE.BoxGeometry(width, 0.3, depth), roof), 0, WALL_TOP + 0.15, 0));
+  const roofSlab = at(parts.mesh(new THREE.BoxGeometry(width, 0.3, depth), roof), 0, WALL_TOP + 0.15, 0);
+  roofSlab.name = 'bank-roof';
+  root.add(roofSlab);
 
   const steps = new THREE.Group();
   steps.name = 'bank-steps';
@@ -44,10 +46,10 @@ export function createBank(ctx: ArchitectureContext): PlacedPiece {
   pediment.name = 'bank-pediment';
   root.add(pediment);
 
-  const door = at(parts.mesh(new THREE.BoxGeometry(1.4, 4.3, 0.12), wood), 0, STEP_TOP + 2.15, WALL_FRONT + 0.06);
+  const door = at(parts.mesh(new THREE.BoxGeometry(1.4, 3.8, 0.12), wood), 0, STEP_TOP + 1.9, WALL_FRONT + 0.06);
   door.name = 'bank-door';
   root.add(door);
-  root.add(at(createSignboard(ctx, parts, 'BANK', 0.7), 0, 5.4, WALL_FRONT + 0.05));
+  root.add(at(createSignboard(ctx, parts, 'BANK', 0.7), 0, 4.8, WALL_FRONT + 0.05));
 
   ctx.materials.outline(root);
   return placedPiece(root, parts, { width, depth });

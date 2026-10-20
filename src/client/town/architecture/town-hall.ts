@@ -33,7 +33,9 @@ export function createTownHall(ctx: ArchitectureContext): PlacedPiece {
   root.name = 'town-hall';
 
   root.add(at(parts.mesh(new THREE.BoxGeometry(width - 0.4, WALL_TOP, WALL_FRONT * 2), brick), 0, WALL_TOP / 2, 0));
-  root.add(at(parts.mesh(new THREE.BoxGeometry(width, 0.3, depth - 0.1), roof), 0, WALL_TOP + 0.15, 0));
+  const roofSlab = at(parts.mesh(new THREE.BoxGeometry(width, 0.3, depth - 0.1), roof), 0, WALL_TOP + 0.15, 0);
+  roofSlab.name = 'town-hall-roof';
+  root.add(roofSlab);
 
   const tower = at(parts.mesh(new THREE.BoxGeometry(TOWER.size, TOWER.top - TOWER.bottom, TOWER.size), brick), 0, (TOWER.top + TOWER.bottom) / 2, TOWER.z);
   tower.name = 'town-hall-tower';
@@ -44,10 +46,10 @@ export function createTownHall(ctx: ArchitectureContext): PlacedPiece {
 
   root.add(at(parts.mesh(new THREE.BoxGeometry(5, 0.25, 0.5), trim), 0, 0.125, 2.25));
   root.add(at(parts.mesh(new THREE.BoxGeometry(4.2, 0.5, 0.3), trim), 0, 0.25, 2.15));
-  const door = at(parts.mesh(new THREE.BoxGeometry(1.6, 4.2, 0.12), wood), 0, 0.5 + 2.1, WALL_FRONT + 0.06);
+  const door = at(parts.mesh(new THREE.BoxGeometry(1.6, 3.8, 0.12), wood), 0, 0.5 + 1.9, WALL_FRONT + 0.06);
   door.name = 'town-hall-door';
   root.add(door);
-  root.add(at(createSignboard(ctx, parts, 'TOWN HALL', 0.45), 0, 5.0, WALL_FRONT + 0.05));
+  root.add(at(createSignboard(ctx, parts, 'TOWN HALL', 0.45), 0, 4.6, WALL_FRONT + 0.05));
 
   ctx.materials.outline(root);
   return placedPiece(root, parts, { width, depth });
