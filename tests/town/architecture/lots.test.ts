@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { LOCATIONS } from '../../../src/shared/ids.ts';
 import { LOCATION_NODES, OFFICE_NODES, STREET_NODES } from '../../../src/shared/town-map.ts';
-import { LOCATION_LOT_SIDES, OFFICE_LOT_SIDES, lotCenter } from '../../../src/client/town/architecture/lots.ts';
+import { HEADROOM, LOCATION_LOT_SIDES, OFFICE_LOT_SIDES, lotCenter } from '../../../src/client/town/architecture/lots.ts';
+import { CITIZEN_REFERENCE_HEIGHT } from '../../../src/client/town/architecture/piece.ts';
 import { clearanceViolations, type GroundRect } from './clearance.ts';
 
 const at = (id: string) => {
@@ -42,5 +43,13 @@ describe('lot rules', () => {
     const n = at(LOCATION_NODES.bakery);
     expect(clearanceViolations([rectAt('onNode', n, { width: 1, depth: 1 })]).length).toBeGreaterThan(0);
     expect(clearanceViolations([rectAt('onRoad', { x: n.x + 6, z: n.z }, { width: 1, depth: 1 })]).length).toBeGreaterThan(0);
+  });
+});
+
+describe('citizen scale', () => {
+  it('uses the approved 1.8 body height, with headroom for the cap', () => {
+    expect(CITIZEN_REFERENCE_HEIGHT).toBe(1.8);
+    // The cap adds well under half the body height, so anything above HEADROOM clears a capped citizen.
+    expect(HEADROOM).toBeGreaterThan(CITIZEN_REFERENCE_HEIGHT * 1.5);
   });
 });

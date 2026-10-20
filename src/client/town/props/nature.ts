@@ -15,7 +15,7 @@ export const NATURE_MATERIAL_ROLES: Readonly<Record<string, keyof PresentationPa
   colorRed: 'brick',
 };
 
-// Heights are world units (citizen 3.29). Footprints are each file's measured bounds at that height, rounded up to 0.05.
+// Heights are world units (sized in C3 against a 3.29 citizen; the approved citizen is now 1.8). Footprints are each file's measured bounds at that height, rounded up to 0.05.
 export const NATURE_MODELS: Readonly<Record<NatureKind, { file: string; height: number; footprint: { width: number; depth: number } }>> = {
   'tree-oak': { file: 'tree_oak.glb', height: 6.5, footprint: { width: 3.4, depth: 3.95 } },
   'tree-round': { file: 'tree_default.glb', height: 6.5, footprint: { width: 2.9, depth: 2.5 } },
