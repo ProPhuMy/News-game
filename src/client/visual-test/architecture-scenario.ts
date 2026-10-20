@@ -1,5 +1,6 @@
 // Architecture sample scenario (C2): which bakery variant, camera view and palette the harness renders.
 import { APPROVED_PALETTE, type PaletteId } from '../visuals/palette.ts';
+import { TIMES_OF_DAY, type TimeOfDay } from '../visuals/time-of-day.ts';
 import { readInt } from './scenario.ts';
 
 export const ARCHITECTURE_VARIANTS = ['code', 'hybrid-original', 'hybrid-palette'] as const;
@@ -14,6 +15,8 @@ export interface ArchitectureScenario {
   /** Exact sample time passed to the rendering sample's setTime (D1). */
   reactionMs: number;
   reducedMotion: boolean;
+  /** Time-of-day look preview (interface §5c); null keeps the approved daytime lighting. */
+  time: TimeOfDay | null;
 }
 
 function oneOf<T extends string>(params: URLSearchParams, key: string, allowed: readonly T[], fallback: T): T {
@@ -39,5 +42,6 @@ export function parseArchitectureScenario(search: string): ArchitectureScenario 
     seed: readInt(params, 'seed', 1, 0, 2 ** 31 - 1),
     reactionMs: readInt(params, 'reactionMs', 0, 0, 600_000),
     reducedMotion: readBoolean(params, 'reducedMotion'),
+    time: params.has('time') ? oneOf(params, 'time', TIMES_OF_DAY, 'midday') : null,
   };
 }

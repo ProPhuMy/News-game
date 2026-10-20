@@ -8,7 +8,8 @@ import { createTownCamera } from '../town/camera.ts';
 import { townFrameBounds } from '../town/index.ts';
 import { createTownLayout } from '../town/layout.ts';
 import { createMaterialKit } from '../town/materials.ts';
-import { getPalette } from '../visuals/palette.ts';
+import { getPalette, type PresentationPalette } from '../visuals/palette.ts';
+import { timeOfDayLook, type TimeOfDay } from '../visuals/time-of-day.ts';
 import type { ArchitectureContext } from '../visuals/town-types.ts';
 import type { ArchitectureScenario } from './architecture-scenario.ts';
 import { measureCanvas, readyVerdict } from './pixels.ts';
@@ -35,6 +36,23 @@ export function closeTarget(group: THREE.Group, view: Close, layout: ReturnType<
     at.set(node.x + FOUNTAIN_OFFSET.x / 2, 0, node.z + FOUNTAIN_OFFSET.z / 2);
   }
   return at;
+}
+
+/** Harness-only preview of a time-of-day look; production lighting is Codex's (interface §5c). */
+export function applyTimeOfDay(
+  target: { scene: THREE.Scene; hemi: THREE.HemisphereLight; sun: THREE.DirectionalLight; setLampLevel?: (level: number) => void },
+  palette: PresentationPalette,
+  time: TimeOfDay | null,
+): void {
+  if (time === null) return;
+  const look = timeOfDayLook(palette, time);
+  target.scene.background = new THREE.Color(look.sky);
+  target.hemi.color.setHex(look.hemiSky);
+  target.hemi.groundColor.setHex(look.hemiGround);
+  target.hemi.intensity = 1.1 * look.lightScale;
+  target.sun.color.setHex(look.sun);
+  target.sun.intensity = 2.4 * look.lightScale;
+  target.setLampLevel?.(look.lampLevel);
 }
 
 export async function runArchitectureTown(
@@ -81,7 +99,8 @@ export async function runArchitectureTown(
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
-  scene.add(new THREE.HemisphereLight(palette.town.sky, palette.town.ground, 1.1));
+  const hemi = new THREE.HemisphereLight(palette.town.sky, palette.town.ground, 1.1);
+  scene.add(hemi);
   const sun = new THREE.DirectionalLight(0xffffff, 2.4);
   sun.position.set(10, 20, 14);
   sun.target.position.set(0, 0, 2);
@@ -92,6 +111,7 @@ export async function runArchitectureTown(
   sun.shadow.normalBias = 0.025;
   sun.shadow.bias = -0.0001;
   scene.add(sun, sun.target);
+  applyTimeOfDay({ scene, hemi, sun, setLampLevel: buildings.setLampLevel }, palette, scenario.time);
 
   let camera: THREE.PerspectiveCamera;
   const aspect = (container.clientWidth || 1280) / (container.clientHeight || 720);
