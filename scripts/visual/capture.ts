@@ -1,9 +1,10 @@
 // Shared screenshot command (owner: Claude). Usage: npm run capture -- --out shots/town.png [flags]
 import { access, mkdir, rm, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
-import { chromium, type Response } from 'playwright-core';
+import { chromium } from 'playwright-core';
 import { chromiumArgs, harnessPath, LIVE_SCREENS, parseCaptureArgs, type CaptureOptions } from './args.ts';
-import { focusAndScroll, measureLayout, openLiveScreen, type LayoutReport } from './app-screens.ts';
+import { focusAndScroll, openLiveScreen, type LayoutReport } from './app-screens.ts';
+import { checkAppLayout, watchPage } from './evidence.ts';
 import { waitForHarnessState } from './harness-state.ts';
 import { withBrowserAndServer } from './lifecycle.ts';
 import { freePort, startGameServer, waitForServer } from './server.ts';
@@ -15,17 +16,6 @@ const BROWSER_ENV = Object.fromEntries(
     (entry): entry is [string, string] => entry[1] !== undefined && entry[0] !== 'DISPLAY' && entry[0] !== 'WAYLAND_DISPLAY',
   ),
 );
-
-interface StylesheetRecord { url: string; status: number; contentType: string; bytes: number }
-
-async function recordStylesheet(response: Response): Promise<StylesheetRecord | null> {
-  const contentType = response.headers()['content-type'] ?? '';
-  const type = response.request().resourceType();
-  // Stylesheets and fonts: the sidecar proves both loaded (or that --block-fonts blocked the font).
-  if (type !== 'stylesheet' && type !== 'font' && !contentType.includes('text/css')) return null;
-  const bytes = await response.body().then((body) => body.length, () => -1);
-  return { url: response.url(), status: response.status(), contentType, bytes };
-}
 
 async function capture(options: CaptureOptions): Promise<void> {
   if (options.prod) {
@@ -52,11 +42,7 @@ async function capture(options: CaptureOptions): Promise<void> {
       deviceScaleFactor: 1,
       reducedMotion: options.reducedMotion ? 'reduce' : 'no-preference',
     });
-    const pendingStyles: Promise<StylesheetRecord | null>[] = [];
-    const consoleErrors: string[] = [];
-    page.on('response', (response) => pendingStyles.push(recordStylesheet(response)));
-    page.on('console', (message) => { if (message.type() === 'error') consoleErrors.push(message.text()); });
-    page.on('pageerror', (error) => consoleErrors.push(`pageerror: ${error.message}`));
+    const watch = watchPage(page);
 
     if (options.blockFonts) await page.route('**/fonts/**', (route) => route.abort());
     const url = `${base}${harnessPath(options)}`;
@@ -74,17 +60,15 @@ async function capture(options: CaptureOptions): Promise<void> {
       state = { status: 'ready', screen: options.screen, ...(join ? { join } : {}) };
     }
     if (options.target === 'app') {
+      // Fonts settle before focus/scroll so the scroll offset matches the final layout; checkAppLayout waits again (no-op).
       await page.evaluate(() => document.fonts.ready.then(() => undefined));
       await focusAndScroll(page, options);
-      layout = await measureLayout(page);
-      if (layout.overflowX.length > 0 || layout.unreachable.length > 0) {
-        throw new Error(`layout: overflowX: ${layout.overflowX.join(', ') || 'none'}; unreachable: ${layout.unreachable.join(', ') || 'none'}`);
-      }
+      ({ layout } = await checkAppLayout(page));
     }
 
     await mkdir(dirname(options.out), { recursive: true });
     await page.screenshot({ path: options.out, timeout: options.timeoutMs });
-    const stylesheets = (await Promise.all(pendingStyles)).filter((entry): entry is StylesheetRecord => entry !== null);
+    const { stylesheets, consoleErrors } = await watch.snapshot();
     await writeFile(`${options.out}.json`, `${JSON.stringify({
       target: options.target, url, options, browser: browser.version(), state, layout, stylesheets, consoleErrors,
     }, null, 2)}\n`);
