@@ -135,6 +135,39 @@ describe('AI adapter', () => {
     expect(RatingSchema.safeParse(await result).success).toBe(true);
   });
 
+  it('discards a late timeout result without caching it or logging provider secrets', async () => {
+    vi.useFakeTimers();
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+    let finish: ((response: Response) => void) | undefined;
+    let calls = 0;
+    const adapter = createAiAdapter({ ...options, fetch: async () => {
+      calls++;
+      if (calls === 1) return new Promise<Response>(resolve => { finish = resolve; });
+      throw new Error('SECRET-provider-token-and-private-headline');
+    } });
+    try {
+      const first = adapter.rateHeadline(input);
+      await vi.advanceTimersByTimeAsync(3000);
+      expect((await first).juiciness).toBe(4);
+      finish!(response(JSON.stringify(rating)));
+      await vi.advanceTimersByTimeAsync(0);
+      expect((await adapter.rateHeadline(input)).juiciness).toBe(4);
+      expect(calls).toBe(2);
+      expect(log).not.toHaveBeenCalled();
+    } finally { log.mockRestore(); }
+  });
+
+  it('evicts the oldest successful result at 1000 entries while retaining recent entries', async () => {
+    const request = vi.fn(async () => response(JSON.stringify(rating)));
+    const adapter = createAiAdapter({ ...options, fetch: request });
+    for (let index = 0; index <= 1000; index++) await adapter.rateHeadline({ ...input, text: `Headline ${index}` });
+    expect(request).toHaveBeenCalledTimes(1001);
+    await adapter.rateHeadline({ ...input, text: 'Headline 1000' });
+    expect(request).toHaveBeenCalledTimes(1001);
+    await adapter.rateHeadline({ ...input, text: 'Headline 0' });
+    expect(request).toHaveBeenCalledTimes(1002);
+  });
+
   it('isolates both headlines inside escaped data without instruction interpolation', async () => {
     let request: unknown;
     const adapter = createAiAdapter({ ...options, fetch: async (_url, init) => {

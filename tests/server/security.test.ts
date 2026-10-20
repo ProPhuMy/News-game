@@ -104,7 +104,7 @@ describe('prelaunch socket security', () => {
   it('delivers only legal public fields and the recipient private view through all match phases and recovery', async () => {
     const host = await connect(); const first = await create(host);
     const room = game.rooms.require(first.session!.code);
-    let guest = await connect();
+    const guest = await connect();
     const joined = await command(guest, { ...profile, color: COLORS[1], type: 'joinRoom', actionId: 'join', code: room.code });
     const seats = new Map<Socket, number>([[host, 0], [guest, 1]]);
     await command(host, { type: 'startMatch', actionId: 'start' });
@@ -140,7 +140,7 @@ describe('prelaunch socket security', () => {
     const displaced = guest;
     const replacement = await connect();
     await command(replacement, { type: 'reconnect', actionId: 'recover', ...joined.session });
-    seats.delete(displaced); seats.set(replacement, 1); guest = replacement;
+    seats.delete(displaced); seats.set(replacement, 1);
     await checkpoint();
     while (room.state!.phase !== 'ended') { game.runner.tick(room.state!.deadlineMs); await checkpoint(); }
     expect(publicView(room.state!).headlines.every(h => h.truth !== 'unknown')).toBe(true);
