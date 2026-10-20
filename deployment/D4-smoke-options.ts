@@ -1,3 +1,5 @@
+import type { PageWatch } from '../scripts/visual/evidence.ts';
+
 export interface SmokeOptions {
   origin: string;
   remote: boolean;
@@ -37,4 +39,14 @@ export function parseSmokeOptions(args: readonly string[]): SmokeOptions {
 
 export function fetchSmokeResource(url: string): Promise<Response> {
   return fetch(url, { redirect: 'error', signal: AbortSignal.timeout(30_000) });
+}
+
+export function requireCleanWatch(watch: PageWatch): PageWatch {
+  return {
+    async snapshot() {
+      const evidence = await watch.snapshot();
+      if (evidence.consoleErrors.length > 0) throw new Error('Browser errors occurred');
+      return evidence;
+    },
+  };
 }

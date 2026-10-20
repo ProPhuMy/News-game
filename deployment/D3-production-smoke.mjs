@@ -1,21 +1,25 @@
-/* global fetch, document, localStorage */
+/* global document, localStorage */
 import assert from 'node:assert/strict';
 import { Buffer } from 'node:buffer';
 import console from 'node:console';
 import process from 'node:process';
 import { URL } from 'node:url';
-import { readFile, readdir } from 'node:fs/promises';
-import { resolve, relative } from 'node:path';
+import { readFile, readdir, mkdir, writeFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+import { resolve, relative, dirname } from 'node:path';
 import { chromium } from 'playwright-core';
 import { chromiumArgs } from '../scripts/visual/args.ts';
 
-// D3 checks only a local production process. D4 owns remote deployment verification.
-const target = new URL(process.argv[2] ?? 'http://127.0.0.1:3000');
-assert(target.protocol === 'http:' && ['127.0.0.1', '[::1]'].includes(target.hostname), 'Local HTTP target required');
-assert(target.pathname === '/' && !target.search && !target.username && !target.password, 'Root URL required');
-const base = target.origin;
+import { parseSmokeOptions, fetchSmokeResource, requireCleanWatch } from './D4-smoke-options.ts';
+import { watchPage, captureAppEvidence } from '../scripts/visual/evidence.ts';
+import { LOCATIONS, LOCATION_NAMES } from '../src/shared/ids.ts';
+
+const options = parseSmokeOptions(process.argv.slice(2));
+const base = options.origin;
+const evidenceDirectory = options.out ? dirname(options.out) : '.superpowers/shots/D4';
 const built = resolve('dist/client');
 const checks = { assets: 0, fonts: 0, models: 0, sounds: 0, browserSessions: 2, restoredSeat: false, results: false };
+const assetHashes = {};
 const types = new Map([
   ['.css', 'text/css'], ['.js', 'javascript'], ['.glb', 'model/gltf-binary'],
   ['.png', 'image/png'], ['.ttf', 'font/ttf'], ['.mp3', 'audio/mpeg'],
@@ -29,11 +33,12 @@ for (const entry of files) {
   const suffix = [...types.keys()].find(type => entry.name.endsWith(type));
   if (!suffix) continue;
   const route = '/' + relative(built, path).split('/').map(encodeURIComponent).join('/');
-  const response = await fetch(base + route);
+  const response = await fetchSmokeResource(base + route);
   assert.equal(response.status, 200, `Asset failed: ${route}`);
   assert(response.headers.get('content-type')?.includes(types.get(suffix)), `Asset MIME failed: ${route}`);
   const bytes = Buffer.from(await response.arrayBuffer());
   assert.deepEqual(bytes, await readFile(path), `Asset bytes differ: ${route}`);
+  assetHashes[route] = createHash('sha256').update(bytes).digest('hex');
   checks.assets++;
   if (suffix === '.glb') checks.models++;
   if (suffix === '.ttf') checks.fonts++;
@@ -47,12 +52,12 @@ for (const entry of files) {
 assert(checks.models >= 2 && checks.fonts >= 1 && checks.sounds >= 4, 'Missing asset categories');
 assert(!html.includes(marker), 'Synthetic server secret reached HTML');
 for (const route of ['/', '/r/ABCDE']) {
-  const response = await fetch(base + route);
+  const response = await fetchSmokeResource(base + route);
   assert.equal(response.status, 200);
   assert.equal(await response.text(), html);
 }
 for (const route of ['/.env', '/src/server/index.ts', '/visual-test/index.html', '/visual-test/app.html', '/assets/%ff.js']) {
-  assert.equal((await fetch(base + route)).status, 404);
+  assert.equal((await fetchSmokeResource(base + route)).status, 404);
 }
 
 const browser = await chromium.launch({
@@ -61,10 +66,24 @@ const browser = await chromium.launch({
   ...(process.env.NEWS_TOWN_CHROMIUM ? { executablePath: process.env.NEWS_TOWN_CHROMIUM } : {}),
 });
 try {
-  const contexts = await Promise.all([browser.newContext({ viewport: { width: 1280, height: 720 }, reducedMotion: 'reduce' }),
-    browser.newContext({ viewport: { width: 1280, height: 720 }, reducedMotion: 'reduce' })]);
+  const contexts = await Promise.all([browser.newContext({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1, reducedMotion: 'reduce' }),
+    browser.newContext({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1, reducedMotion: 'reduce' })]);
   const pages = await Promise.all(contexts.map(context => context.newPage()));
+  const watches = pages.map(page => requireCleanWatch(watchPage(page)));
   const problems = [];
+  for (const context of contexts) {
+    await context.route('**/*', route => {
+      const url = new URL(route.request().url());
+      return url.origin === base ? route.continue() : route.abort();
+    });
+  }
+  const capture = async (page, index, label) => {
+    const evidence = await captureAppEvidence(page, watches[index], {
+      out: resolve(evidenceDirectory, `${label}.png`), label, timeoutMs: 240_000,
+    });
+    assert.equal(evidence.origin, base);
+    assert.deepEqual(evidence.consoleErrors, [], 'Capture console errors occurred');
+  };
   const packets = pages.map(() => []);
   const sockets = pages.map(() => 0);
   for (const [index, page] of pages.entries()) {
@@ -75,6 +94,8 @@ try {
       if (request.failure()?.errorText !== 'net::ERR_ABORTED') problems.push('request-failed');
     });
     page.on('websocket', socket => {
+      const expected = base.replace(/^http/, 'ws');
+      if (new URL(socket.url()).origin !== expected) problems.push('unexpected-websocket-origin');
       sockets[index]++;
       socket.on('framereceived', ({ payload }) => {
         if (typeof payload !== 'string' || !payload.startsWith('42')) return;
@@ -86,9 +107,12 @@ try {
   const [host, guest] = pages;
   const name = '<b>Ink</b>';
   await host.goto(base, { waitUntil: 'load' });
+  await host.getByTestId('home-screen').waitFor();
+  await host.waitForFunction(() => [...document.querySelectorAll('canvas')].some(canvas => canvas.width > 0 && canvas.height > 0));
+  await capture(host, 0, 'production-home');
   await host.getByRole('button', { name: 'Create Room', exact: true }).click();
   await host.getByLabel('Your Name', { exact: true }).fill(name);
-  await host.getByLabel('Newspaper Name', { exact: true }).fill('D3 Daily');
+  await host.getByLabel('Newspaper Name', { exact: true }).fill('D4 Daily');
   await host.getByRole('button', { name: 'Claim Printing Press', exact: true }).click();
   await host.getByTestId('lobby-screen').waitFor();
   const code = await host.locator('.room-code-badge').innerText();
@@ -98,24 +122,35 @@ try {
   assert((await host.getByTestId('lobby-screen').innerText()).includes(name), 'Literal name missing');
   await guest.goto(`${base}/r/${match[1]}`, { waitUntil: 'load' });
   await guest.getByLabel('Your Name', { exact: true }).fill('Guest');
-  await guest.getByLabel('Newspaper Name', { exact: true }).fill('D3 Weekly');
+  await guest.getByLabel('Newspaper Name', { exact: true }).fill('D4 Weekly');
   await guest.getByRole('button', { name: 'Select Blue', exact: true }).click();
   await guest.getByRole('button', { name: 'Claim Printing Press', exact: true }).click();
   await guest.getByTestId('lobby-screen').waitFor();
   const saved = await guest.evaluate(code => localStorage.getItem(`news-town:${code}`), match[1]);
   assert(saved, 'Guest token missing');
-  assert.notEqual(saved, await host.evaluate(code => localStorage.getItem(`news-town:${code}`), match[1]), 'Seats share token');
+  assert(saved !== await host.evaluate(code => localStorage.getItem(`news-town:${code}`), match[1]), 'Seats share token');
   await host.getByRole('button', { name: 'Start Match', exact: true }).click();
   const matchReady = page => page.getByTestId('hud-overlay').waitFor();
   await Promise.all(pages.map(matchReady));
+  await Promise.all(pages.map(page => page.getByRole('button', { name: 'Skip Intro', exact: true }).click()));
+  await guest.getByRole('button', { name: LOCATION_NAMES[LOCATIONS[0]], exact: true }).click();
+  await guest.getByTestId('investigate-locked').waitFor();
+  const submitted = packets[1].filter(([event]) => event === 'private').at(-1)?.[1].investigations.at(-1);
+  assert(submitted, 'Submitted investigation missing');
+  const hostSocketsBefore = sockets[0];
   const beforeRecovery = packets[1].length;
   await guest.reload({ waitUntil: 'load' });
   await matchReady(guest);
-  assert.equal(await guest.evaluate(code => localStorage.getItem(`news-town:${code}`), match[1]), saved);
+  assert(await guest.evaluate(code => localStorage.getItem(`news-town:${code}`), match[1]) === saved, 'Recovered token changed');
   assert(packets[1].slice(beforeRecovery).some(([event, data]) => event === 'ack' && data.ok && data.session?.token === saved),
     'No successful token recovery acknowledgment after reload');
+  // A real deadline may pass during reload; the submitted investigation survives later phases.
+  assert(packets[1].slice(beforeRecovery).some(([event, data]) => event === 'private' &&
+    data.investigations.some(entry => JSON.stringify(entry) === JSON.stringify(submitted))),
+  'Submitted investigation not restored');
+  assert.equal(sockets[0], hostSocketsBefore, 'Host reconnected during guest recovery');
   checks.restoredSeat = true;
-  console.log('Local production assets, separate seats, literal markup and reconnect checked. Playing five rounds.');
+  console.log('Production assets, separate seats, literal markup and reconnect checked. Playing five rounds.');
   const drive = async page => {
     const actions = ['Skip Intro', 'Skip Investigation', 'Skip Writing'];
     while (true) {
@@ -143,6 +178,7 @@ try {
     assert(await page.evaluate(() => document.fonts.check('16px "Playfair Display"')), 'Heading font unavailable');
     assert.equal(await page.locator('.town-fallback-container').count(), 0, 'Unexpected renderer fallback');
   }
+  await capture(host, 0, 'production-final');
   checks.results = true;
   for (const [index, messages] of packets.entries()) {
     const sessions = messages.filter(([event, data]) => event === 'ack' && data.session).map(([, data]) => data.session);
@@ -158,5 +194,11 @@ try {
     assert(!JSON.stringify(messages).includes(rivalToken), 'Rival credential leaked');
   }
   assert.deepEqual(problems, [], 'Browser errors occurred');
-  console.log(JSON.stringify({ passed: true, node: process.version, browser: browser.version(), ...checks }));
+  const summary = { passed: true, origin: base, remote: options.remote, node: process.version,
+    browser: browser.version(), ...checks, assetHashes };
+  if (options.out) {
+    await mkdir(dirname(options.out), { recursive: true });
+    await writeFile(options.out, JSON.stringify(summary, null, 2) + '\n');
+  }
+  console.log(JSON.stringify({ ...summary, assetHashes: undefined }));
 } finally { await browser.close(); }

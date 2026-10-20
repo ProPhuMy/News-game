@@ -1,9 +1,19 @@
 import { createServer } from 'node:http';
 import { once } from 'node:events';
 import { describe, expect, it } from 'vitest';
-import { parseSmokeOptions, fetchSmokeResource } from '../../deployment/D4-smoke-options.ts';
+import { parseSmokeOptions, fetchSmokeResource, requireCleanWatch } from '../../deployment/D4-smoke-options.ts';
 
 describe('deployment smoke options', () => {
+  it('rejects browser diagnostics before returning sidecar data, without disclosing their text', async () => {
+    const watch = requireCleanWatch({ snapshot: async () => ({ stylesheets: [], consoleErrors: ['SYNTHETIC-PRIVATE-TOKEN'] }) });
+    await expect(watch.snapshot()).rejects.toThrow(/^Browser errors occurred$/);
+  });
+
+  it('preserves clean capture evidence', async () => {
+    const evidence = { stylesheets: [], consoleErrors: [] };
+    expect(await requireCleanWatch({ snapshot: async () => evidence }).snapshot()).toEqual(evidence);
+  });
+
   it('preserves the local default and explicit local target', () => {
     expect(parseSmokeOptions([])).toEqual({ origin: 'http://127.0.0.1:3000', remote: false, out: null });
     expect(parseSmokeOptions(['http://127.0.0.1:45335']).origin).toBe('http://127.0.0.1:45335');
