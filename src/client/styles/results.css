@@ -98,3 +98,11 @@
   .archive-item { grid-template-columns: auto minmax(0, 1fr); }
   .archive-text, .archive-truth { grid-column: 1 / -1; }
 }
+
+/* Landscape phones: a compact header leaves room for the scrolling score table. */
+@media (max-height: 500px) {
+  .results-header { padding: var(--space-2) var(--space-4); }
+  .results-header h1 { font-size: 1.25rem; }
+  .winner-announcement { font-size: 1rem; }
+  .results-body { padding: var(--space-2) var(--space-4); gap: var(--space-2); }
+}
