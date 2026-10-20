@@ -4,7 +4,7 @@ Updated 2026-10-20 on `codex/visual-d4`. User confirms Free Plan, 183 days remai
 
 ## Recommendation
 
-Conditionally use one Linux **t3.micro** in us-east-1 (Northern Virginia): 2 vCPUs, 1 GiB RAM, one encrypted 20 GiB gp3 root disk and exactly one public IPv4. This revises the earlier t3.small recommendation after the user confirmed a $100/183-day budget. AWS lists t3.micro as credit-based Free Plan eligible. No resource has been created or resized.
+Conditionally use one Linux **t3.micro** in **us-east-2 (Ohio)**: 2 vCPUs, 1 GiB RAM, one encrypted 20 GiB gp3 root disk and exactly one public IPv4. This revises the earlier t3.small recommendation after the user confirmed a $100/183-day budget. AWS lists t3.micro as credit-based Free Plan eligible. No resource has been created or resized.
 
 At approximately $12.84/month, the micro configuration uses about $77.26 over 183 days, leaving about $22.74 before excess transfer or other AWS usage. The earlier small configuration would use about $122.94 over the same period and cannot fit $100 for the whole window. Reserve at least $20 of credits; review consumption weekly and sooner if traffic rises. These are estimates, not spending enforcement.
 
@@ -36,7 +36,7 @@ USD gross usage value for 730 running hours/month, one instance, one 20 GiB disk
 | Internet egress up to unused allowance | First 100 GB/month shared across AWS services/regions | $0.000 |
 | **Base** | Before excess transfer / unrelated usage | **$12.842 ≈ $12.84** |
 
-AWS's regional Linux pricing feed was rechecked: t3.micro $0.0104/hour, t3.small $0.0208/hour. The T3 marketing page's small-rate discrepancy is irrelevant to the micro estimate. Recheck the launch quote in the account's available region before provisioning; do not activate advanced features to unlock a region. A $15/month planning allowance is reasonable for a short evaluation, but spending $15 every month would leave only about $9.75 after 183 days, below the preferred $20 reserve. Target the $12.84 base and keep excess usage near zero if preserving the full window.
+AWS's Ohio Linux pricing feed was rechecked after the user's project-region restriction: t3.micro $0.0104/hour. The earlier Northern Virginia t3.small comparison used $0.0208/hour. Ohio is now the proposed deployment region; no region unlock or advanced-feature activation is needed. The T3 marketing page's small-rate discrepancy is irrelevant to the micro estimate. Recheck the launch quote in the account's available region before provisioning; do not activate advanced features to unlock a region. A $15/month planning allowance is reasonable for a short evaluation, but spending $15 every month would leave only about $9.75 after 183 days, below the preferred $20 reserve. Target the $12.84 base and keep excess usage near zero if preserving the full window.
 
 Assuming the shared 100-GB outbound allowance is otherwise unused and the initial $0.09/GB overage tier applies:
 
@@ -118,3 +118,7 @@ Free Plan's 183-day remaining duration takes precedence over the later credit ex
 Before launch: implement and verify the already-identified trusted local-proxy boundary; prepare pinned Node24/container/Caddy deployment and rollback configuration with bounded disk/log usage; choose game hostname under the purchased prophumy.com (newstown.prophumy.com proposed); verify the console's region/AMI/storage/IP quote without upgrade prompts; obtain launch approval. Then deploy exact SHA, configure DNS/HTTPS/WSS, verify real container build/start and micro capacity, run public D4 smoke/captures, and get C4 evidence review. If capacity fails, return to the user or Render Free rather than silently increase instance size. Render fallback configuration remains unchanged by this assessment.
 
 Sources for EBS conclusion: [AWS EBS credit eligibility](https://aws.amazon.com/ebs/pricing/) and [AWS EBS billing under EC2](https://repost.aws/knowledge-center/ebs-understand-billing-information), corroborated by [AWS EC2-Other cost grouping](https://aws.amazon.com/blogs/aws-cloud-financial-management/optimize-and-save-on-the-other-services/). User-confirmed facts are distinguished from public documentation and native measurements; no AWS account/API access occurred. No new code/test changes or resources were needed to finish assessment.
+
+## Region correction
+
+User reports the account can launch only in Ohio. AWS documents that the newer project experience assigns US projects to Ohio (us-east-2). Use that available region; do not activate advanced features or upgrade to select Northern Virginia. Ohio t3.micro Linux rate independently retrieved from the public regional pricing feed is $0.0104/hour; baseline gp3 and public IPv4 assumptions preserve the approximately $12.84/month estimate. The exact account launch quote remains to be reviewed. No region/account/resource changes performed. [AWS project-region rules](https://docs.aws.amazon.com/accounts/latest/reference/project-regions.html); [Ohio compute price feed](https://b0.p.awsstatic.com/pricing/2.0/meteredUnitMaps/ec2/USD/current/ec2-ondemand-without-sec-sel/US%20East%20%28Ohio%29/Linux/index.json).

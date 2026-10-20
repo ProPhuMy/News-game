@@ -4,7 +4,7 @@ Owner: Codex. Scope: one credit-funded instance, no account upgrade, paid servic
 
 ## Resource review before launch
 
-Use the accepted assessment in `deployment/D4-ec2-credit-proposal.md`: one first-party Amazon Linux 2023 x86_64 AMI, `t3.micro`, CPU **Standard**, 20 GiB encrypted gp3 at baseline performance, one public IPv4, one instance. No Marketplace software, NAT gateway, load balancer, extra instance, snapshot plan or paid monitoring. Expected base is approximately $2.96 for seven days / $12.84 per 730 hours. Retain $20 credit reserve and stop/review if actual or forecast usage would consume it.
+Use the accepted assessment in `deployment/D4-ec2-credit-proposal.md`: Ohio (`us-east-2`, the available project region), one first-party Amazon Linux 2023 x86_64 AMI, `t3.micro`, CPU **Standard**, 20 GiB encrypted gp3 at baseline performance, one public IPv4, one instance. No Marketplace software, NAT gateway, load balancer, extra instance, snapshot plan or paid monitoring. Expected base is approximately $2.96 for seven days / $12.84 per 730 hours. Retain $20 credit reserve and stop/review if actual or forecast usage would consume it.
 
 Record the account's concrete region/AMI/instance/volume/IP quote and exact Free Plan expiration before asking for launch approval. User confirms Free Plan, $100 and 183 days; credit expiry is 2027-10-20 15:09 UTC, with EC2/VPC/Data Transfer applicability. Do not ask again for these facts. Any upgrade prompt or non-credit-supported product stops this procedure. Nothing here authorizes a Paid Plan upgrade, subscription, domain renewal or out-of-pocket payment.
 
