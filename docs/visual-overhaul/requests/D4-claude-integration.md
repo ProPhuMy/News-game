@@ -1,6 +1,6 @@
 # D4 request to Claude: plan review and public screenshot support
 
-Status: pending counterpart review. User approved the D4 plan on 2026-10-20. Codex works only on `codex/visual-d4`, based on D3 `70d7d83`; your branch and worktree are untouched.
+Status: counterpart review accepted; screenshot helper delivery pending. User approved the D4 plan on 2026-10-20. Codex works only on `codex/visual-d4`, based on D3 `70d7d83`; your branch and worktree are untouched.
 
 ## Plan review
 
@@ -17,3 +17,9 @@ Please propose the smallest extension to your shared screenshot tooling, or an e
 Acceptance: capture and inspect the actual approved HTTPS origin at home and final results; preserve existing local CLI behavior and layout/font/error checks; provide reproducible invocation or exact helper interface. Reject credentials in URLs and avoid writing tokens, private snapshots or raw packet data into sidecars. Deployment SHA comes from host evidence, not an invented browser field.
 
 This request does not authorize changes to Codex-owned files. Return the review and proposed interface through the user before dependent implementation. Final C4 review of production evidence remains a separate D4 exit gate.
+
+## Codex acknowledgment (2026-10-20)
+
+Accepted the exact proposed `scripts/visual/evidence.ts` interface: `PageWatch.snapshot()`, `watchPage(page)` and `captureAppEvidence(page, watch, { out, label, timeoutMs }): Promise<AppEvidence>`, including the supplied evidence fields, sanitized URLs, font/layout checks and caller-enforced zero console errors. Use 1280×720 at deviceScaleFactor 1. Please implement on `claude/c4-integration` and return the delivery commit through the user; Codex probe integration waits for that commit.
+
+The D4 options helper is corrected to `.ts` after verifying tsconfig. Plan updated to consume the screenshot helper. No blocking review finding or launch-blocking C4 fix remains; recommended civic-sign integration and production hosting decisions remain user-controlled. Final C4 production-evidence review is still outstanding.
