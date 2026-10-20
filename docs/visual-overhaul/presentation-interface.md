@@ -195,6 +195,69 @@ User approvals relayed 2026-10-19 after viewing Codex's D1 rendering-sample capt
 - Thirty-citizen crowd rings inside the §4 clearance radii.
 - Camera framing. At the default distance the top and bottom offices are cropped, and a 390 × 844 view shows only the centre (C3 captures `town-b.png`, `town-b-narrow.png`).
 
+## 5c. Should features (user decision 2026-10-20; proposed, awaiting Codex acknowledgment)
+
+The user chose to build all five Should items and cut every Could item (C5 handoff §4). Claude owns everything below except the parts marked Codex. All of it is presentation only: it never changes outcomes, routes, destinations or phase timing, and it never adds a gameplay clock.
+
+### Time of day (Claude: `src/client/visuals/time-of-day.ts`; Codex: lighting)
+
+```ts
+export type TimeOfDay = 'morning' | 'midday' | 'afternoon' | 'late' | 'dusk' | 'night';
+/** Derived only from authoritative round/phase (no clock). Not in a match (no snapshot): 'midday'. */
+export function timeOfDay(round: number, phase: Phase): TimeOfDay;
+export interface TimeOfDayLook {
+  sky: number; fog: number;        // scene background and fog color
+  hemiSky: number; hemiGround: number;
+  sun: number;                     // directional light color
+  lightScale: number;              // multiplier on the approved hemisphere 1.1 and directional 2.4
+  lampLevel: number;               // 0..1, passed to TownBuildings.setLampLevel
+}
+/** Colors come from the palette; one look per TimeOfDay for the given palette. */
+export function timeOfDayLook(palette: PresentationPalette, time: TimeOfDay): TimeOfDayLook;
+```
+
+- **Mapping:** intro and round 1 are `morning`; round 2 `midday`; round 3 `afternoon`; round 4 `late`; round 5 `dusk`; `final` and `ended` are `night`.
+- **Night rule (user):** it must feel like night, with glowing lamps, but must not be too dark. `night` keeps `lightScale ≥ 0.55`, a deep-blue sky that is never black, readable hat colors, and labels at full contrast. Claude proves this with captures before Codex depends on it.
+- **Codex** applies the look to the scene's background, fog, hemisphere and directional lights whenever the phase or round changes, and calls `setLampLevel`. It tweens over about 1 s, or switches instantly under reduced motion. The existing tone mapping and shadow settings stay unchanged.
+
+### Lamp glow (Claude: `props/street.ts`, `buildings.ts`)
+
+- New method `TownBuildings.setLampLevel(level: number): void`, with level clamped to 0..1. Each gas lamp gains a ground light pool: a flat, unoutlined, additive disc with a material the lamp owns. `setLampLevel` changes only material values (pool opacity and lantern emissive strength). It never changes transforms, visibility or outlines, so the D2 static-outline batch stays valid.
+- No real point lights (performance).
+
+### Emotes (Claude: `src/client/visuals/emotes.ts`; Codex: rendering)
+
+```ts
+export type Emote = '!' | '?' | 'anger' | '$';
+export const EMOTE_FOR_BEHAVIOR: Readonly<Record<Behavior, Emote | null>>;
+// flee → '!'; curious → '?'; protest and angry_mob → 'anger'; queue → '$';
+// boycott, relax and routine → null (overhaul design §6 names only these four).
+export const MAX_VISIBLE_EMOTES = 8; // a crowd cap separate from the 6 speech bubbles
+```
+
+- **Codex** draws the glyph above the citizen's head once it arrives at its destination (or immediately under reduced motion, without animation), with at most `MAX_VISIBLE_EMOTES` at a time. Extra emotes are dropped one per destination group first. The glyph itself is the non-color cue; text renders as text, never HTML.
+
+### Picket signs (Claude: `props/picket.ts`; Codex: attachment)
+
+```ts
+export const PICKET_SIGN_TEXTS: readonly string[]; // short pixel-font slogans, family friendly, ≤ 6 glyphs
+export function createPicketSign(ctx: ArchitectureContext, text: string): PlacedPiece;
+```
+
+- **Origin** is the grip point, with the board above it facing +Z. The total height is about 1.3, sized for 1.8-unit citizens.
+- Geometry and textures are cached per text, so 18 or more signs share resources. Codex may use `object.clone()` and must call `dispose()` once, on the original piece, at teardown.
+- **Codex** attaches a sign to each `protest` and `angry_mob` actor when it arrives (for example at the hand or root offset), removes it on the next phase, and shows signs under reduced motion without sway. Signs are not outlined after ready unless Codex adds them to its own batching rules.
+
+### Read, pause and react (Codex)
+
+- **Bounded timing:** for each actor, `prelude = min(1200 ms, max(0, remaining − routeDuration − 500 ms))`. A reading pose uses only spare time. When there is no slack, the prelude is 0, so authoritative movement never starts late and never ends after the deadline.
+- Reduced motion has no prelude; the stable final pose and emote appear at once.
+
+### Latest-edition ticker (Claude: UI)
+
+- During `reveal` only, a newspaper ticker runs along the top of the town, directly under the top bar (on phones, under the standings strip). It shows every published headline of the round in seat order, each with its paper color, icon and name, and an `EXPOSED` mark where public data supplies one. It never implies that one headline caused every reaction (overhaul design §7).
+- The motion is a CSS marquee. Under reduced motion it becomes a static row that scrolls horizontally. It reads from the existing reveal front-page data; there is no new store field.
+
 ## 6. Acknowledgments
 
 | Agent | Revision read | Captured and viewed PNG | Date | Notes |
