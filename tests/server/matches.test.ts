@@ -6,6 +6,8 @@ import { createMatchRunner } from '../../src/server/matches.ts';
 import { SAMPLE_CONTENT } from '../../src/sim/sample-content.ts';
 import { COLORS, LOCATIONS, EVENT_CLAIMS } from '../../src/shared/ids.ts';
 import { SERVER_EVENTS } from '../../src/shared/protocol.ts';
+import { privateView, publicView } from '../../src/engine/index.ts';
+import { PrivateSnapshotSchema, PublicSnapshotSchema } from '../../src/shared/snapshots.ts';
 
 const setup = () => {
   const rooms = createRoomManager(createWordFilter(nameFilterContent.wordList));
@@ -16,6 +18,47 @@ const setup = () => {
 };
 
 describe('match runner', () => {
+  it('projects every publication from engine views and isolates private tip, evidence, proof and lock sentinels', () => {
+    const rooms = createRoomManager(createWordFilter(nameFilterContent.wordList));
+    const profile = { displayName: 'Editor', paperName: 'Daily', color: COLORS[0] };
+    const room = rooms.require(rooms.create(profile, 'human', 'ip', 0).code);
+    rooms.join(room.code, { ...profile, color: COLORS[1] }, 'other', 0);
+    let publications = 0;
+    const runner = createMatchRunner(rooms, SAMPLE_CONTENT, (socket, event, value) => {
+      const seatId = socket === 'human' ? 0 : 1;
+      const forbidden = socket === 'human' ? 'PRIVATE-OTHER' : 'PRIVATE-HUMAN';
+      expect(JSON.stringify(value)).not.toContain(forbidden);
+      expect(JSON.stringify(value)).not.toMatch(/"(?:token|gullibility|templateId|isTrue|events)":/);
+      if (event === SERVER_EVENTS.public) {
+        expect(value).toEqual(publicView(room.state!));
+        expect(value).toEqual(PublicSnapshotSchema.parse(value));
+        expect(JSON.stringify(value)).not.toMatch(/PRIVATE-(?:HUMAN|OTHER)/);
+      } else {
+        expect(event).toBe(SERVER_EVENTS.private);
+        expect(value).toEqual(privateView(room.state!, seatId));
+        expect(value).toEqual(PrivateSnapshotSchema.parse(value));
+      }
+      publications++;
+    });
+    try {
+      runner.handle(room, 0, { type: 'startMatch', actionId: 'start' }, 0);
+      runner.tick(room.state!.deadlineMs);
+      for (const [index, seat] of room.state!.seats.entries()) if (index < 2) {
+        const marker = index === 0 ? 'PRIVATE-HUMAN' : 'PRIVATE-OTHER';
+        seat.tip = { round: 1, location: LOCATIONS[index]!, claim: EVENT_CLAIMS[0], text: `${marker}-TIP` };
+        seat.evidence.push({ round: 1, location: LOCATIONS[index]!, claim: EVENT_CLAIMS[0], text: `${marker}-EVIDENCE` });
+        seat.proofs.push({ headlineId: `h1-${index + 2}`, round: 1 });
+      }
+      runner.connection(room, 0, true, room.state!.deadlineMs - 1);
+      expect(privateView(room.state!, 0).proofs).toEqual([{ headlineId: 'h1-2', round: 1 }]);
+      expect(privateView(room.state!, 1).proofs).toEqual([{ headlineId: 'h1-3', round: 1 }]);
+      // Synthetic private markers test serialization, not investigation or outcome rules.
+      expect(privateView(room.state!, 0).evidence[0]!.text).toBe('PRIVATE-HUMAN-EVIDENCE');
+      for (let step = 0; step < 16; step++) runner.tick(room.state!.deadlineMs);
+      expect(room.state!.phase).toBe('ended');
+      expect(publications).toBeGreaterThan(60);
+    } finally { runner.dispose(); }
+  });
   it('removes only a room whose publication throws and keeps ticking healthy rooms', () => {
     const log = vi.spyOn(console, 'error').mockImplementation(() => {});
     try {
