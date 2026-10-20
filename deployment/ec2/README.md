@@ -1,6 +1,6 @@
-# EC2 deployment and verification — D4 incomplete
+# EC2 deployment and verification — D4 passed
 
-Owner: Codex. Scope: one credit-funded instance, no account upgrade, paid service or automatic resource creation. The user has executed the initial deployment on the approved Ubuntu replacement; see `../D4-production-verification.md` for user-supplied evidence and pending gates. Commands below are reference procedures, not proof they ran. Further resource launches or destructive replacements require explicit user approval. Keep Render Free unchanged as fallback.
+Owner: Codex. Scope: one credit-funded instance, no account upgrade, paid service or automatic resource creation. The user has executed the initial deployment on the approved Ubuntu replacement; see `../D4-production-verification.md` for passed D4 evidence, attribution and operational limits. Commands below are reference procedures, not proof they ran. Further resource launches or destructive replacements require explicit user approval. Keep Render Free unchanged as fallback.
 
 ## Resource review before launch
 

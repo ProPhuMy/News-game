@@ -1,6 +1,6 @@
-# D4 production verification — final review pending
+# D4 production verification — PASSED
 
-Current infrastructure status (2026-10-20): user reports replacing the empty Amazon Linux instance with Ubuntu 24.04 LTS instance `i-0588192c905852f77` in Ohio, with explicit replacement approval. User-provided terminal evidence shows Docker 29.9.1, Node 24.22.0, a running app and Caddy, public HTTPS 200 and HTTP 308. The remote five-round smoke summary passes. These are user-supplied results, not independent AWS access. Final production acceptance remains pending the evidence listed below. No Paid upgrade or out-of-pocket authority; Render Free remains unchanged.
+Current infrastructure status (2026-10-20): user reports replacing the empty Amazon Linux instance with Ubuntu 24.04 LTS instance `i-0588192c905852f77` in Ohio, with explicit replacement approval. User-provided terminal evidence shows Docker 29.9.1, Node 24.22.0, a running app and Caddy, public HTTPS 200 and HTTP 308. The remote five-round smoke summary passes. These are user-supplied results, not independent AWS access. Final counterpart acceptance was supplied for the complete evidence at1607c7c; the closeout section below supersedes earlier pending entries. No Paid upgrade or out-of-pocket authority; Render Free remains unchanged.
 
 ## Candidate and authorization
 
@@ -8,7 +8,7 @@ Codex branch: `codex/visual-d4`, starting from D3 `70d7d83`. User approved C4 in
 
 Initial sections below retain the local verification history and requirements; the latest user-mediated production evidence is recorded at the end. Production origin is `https://newstown.prophumy.com`. Historical Free staging at `https://news-town-staging.onrender.com/` remains a fallback reference, not a certified D4 release.
 
-## Release inputs still required
+## Release inputs at planning time (historical)
 
 - User-selected always-on production host and authorized resources. Existing paid-resource prohibition remains in force; do not apply the paid `render.yaml` blueprint or upgrade staging without authorization.
 - Public HTTPS origin, service ID, single-instance configuration, auto-deploy off and quiet deployment window. In-memory rooms are lost on deployment/restart/rollback.
@@ -171,3 +171,22 @@ Paired external-budget check: user reran the bounded forged-header probe on Arch
 Focused controlled AI/ratings checks rerun: `npm run test -- tests/ai tests/server/ratings.test.ts` passes 3 files / 44 tests. Production stays AI_PROVIDER=none; enabled live-provider outage is inapplicable. Controlled adapter tests cover fallback and failure behavior without paid provider requests. Full latest executable gates remain 121 files / 847 tests, typecheck/lint/build pass; this latest update is documentation only.
 
 D4 evidence is now assembled for final counterpart review: source/image/runtime, public assets/multiplayer/reconnect/results, remote viewed screenshots, actual proxy/port/header/budget controls, bounded resource sample, user-confirmed cleanup and verified retained rollback artifact/procedure (unexecuted). Claude accepted the earlier presentation and preparation; the final replacement and probe repair evidence must be reviewed before D4 is declared closed. See requests/D4-claude-ec2.md's latest review section. Render Free unchanged. No contract requests, new dependencies, further cloud resources or account upgrade. Exact ongoing billed usage is not inferred from Docker counters; the seven-day credit review and $20 reserve still apply.
+
+## D4 closeout — passed (2026-10-20)
+
+Claude's final user-relayed review of codex/visual-d4 at `1607c7c` accepts D4 with **no required fixes**. Claude independently reproduced the 172-file source digest for deployed `6065715a79330ab4867eba0eb6317f33a243b236`, verified no src/public/Dockerfile/package changes through the review commit, matched all 26 summary asset hashes against a fresh build, ran 25 focused deployment/evidence tests and all 847 tests plus typecheck/lint, and directly viewed the final remote home/results PNGs and sidecars. Claude accepted the probe correction, ownership, attributed host/control/resource evidence, and retained rollback artifact with the procedure correctly marked unexecuted. No required C4 fix remains.
+
+Passed evidence covers the approved D4 scope: exact release/image identity; working production Node24 container; HTTPS redirect/certificate and WSS; built asset identity; isolated anonymous multiplayer; same-seat/same-token recovery with retained action and host connection; full five-round AI-disabled results; recipient/privacy checks and controlled AI fallback tests; self-hosted fonts/WebGL and directly viewed remote captures; real proxy peer/header sanitization, external private-backend restriction, spoof resistance and separate real network budgets; bounded load/CPU-credit sample; user-confirmed single intended IP/root volume; verified retained recovery image and documented recovery. Attribution and limitations remain as recorded, including no independent AWS-account inspection, no sustained-load/DDoS certification and no executed rollback.
+
+Release record:
+- URL: https://newstown.prophumy.com (Cloudflare DNS only).
+- Ohio instance: `i-0588192c905852f77`, Ubuntu24.04LTS, user-configured t3.micro/CPUStandard/20GiBgp3, ElasticIP3.20.0.241.
+- Deployed source: `6065715a79330ab4867eba0eb6317f33a243b236`; image `sha256:51f74f3518ec9145dad4fc135798f95d079f27484bc260135187daee05094bfa`; Node24.22.0.
+- Source+lock digest:172files, `d3510ff36f8ac7ffc4f72473aae90788963e1a6e50f929c5c22d88ca44efa07e`.
+- Probe fix: `057ba6e`; reviewable evidence: `1607c7c`; subsequent closeout is documentation only.
+- Recovery: `news-town:recovery-744cc55`, verified image `sha256:d499b0634fb437381ed36299487c4bf4bec9d610a629106696b3fc93884b0245`. Exact recovery/config steps in deployment/ec2/README.md; unexecuted.
+- Durable sanitized smoke: deployment/D4-smoke-result.json; final remote PNGs/sidecars: .superpowers/shots/D4/final-6065715/.
+
+No required D4 work, contract requests or open D4 questions remain after final repository closeout checks. This does not declare C5/D5 or the whole overhaul complete. C5's D4 dependency is satisfied; neither next phase is started here. Main and Claude's worktree/branch remain unchanged. No new cloud action, restart, account upgrade, paid product, additional resource or gameplay change is part of closeout. Preserve Render Free and the retained recovery image. Ongoing credit review/reserve and teardown planning remain operator responsibilities under the accepted seven-day trial, not authority to incur out-of-pocket spending.
+
+Closeout verification rerun: npm test121files/847tests; typecheck/lint/build exit0; fresh build matches all26recorded production asset hashes; source/assets unchanged from6065715. Existing jsdom canvas notices and bundle-size warning only. Whitespace/ownership audit before commit; no app changes.
