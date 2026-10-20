@@ -18,6 +18,7 @@ import { createPoofEffect } from './particles.ts';
 import { createPlaybackCoordinator } from './playback.ts';
 import { createTownScene } from './scene.ts';
 import { attachContextLossHandler, createFallbackView, isWebGL2Supported, type FallbackView } from './webgl.ts';
+import { batchStaticOutlines } from './static-outlines.ts';
 import { attachTownControls } from './controls.ts';
 import { createFallbackTownView, type TownView, type TownViewOptions } from './view.ts';
 export type { TownView, TownViewOptions } from './view.ts';
@@ -82,6 +83,7 @@ export function createTownView(
   let resizeObserver: ResizeObserver | null = null;
   let cleanupContextLoss: (() => void) | null = null;
   let cleanupControls: (() => void) | null = null;
+  let cleanupStaticOutlines: (() => void) | null = null;
   let isDisposed = false;
 
   const cleanupResources = (): void => {
@@ -105,6 +107,7 @@ export function createTownView(
       cleanupContextLoss();
       cleanupContextLoss = null;
     }
+    cleanupStaticOutlines?.();
     coordinator?.dispose();
     bubbles?.dispose();
     citizens?.dispose();
@@ -175,6 +178,7 @@ export function createTownView(
     const ready = Promise.all([townBuildings.ready, activeCitizens.whenReady(), townPaperboys.ready])
       .then(results => {
         if (isDisposed) throw new Error('town disposed before readiness');
+        cleanupStaticOutlines = batchStaticOutlines(townBuildings.group);
         return { degraded: results.flatMap(result => result.degraded) };
       }).catch((error: unknown) => {
         const showFallback = !isDisposed;

@@ -20,8 +20,14 @@ function setup(architectureReady?: Promise<SceneReadiness>) {
   const pieceDispose = vi.fn();
   let release!: () => void;
   const gate = new Promise<void>(resolve => { release = resolve; });
+  const buildingGroup = new THREE.Group();
+  const outlineMaterial = new THREE.LineBasicMaterial();
+  for (let i = 0; i < 2; i++) {
+    const line = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry()), outlineMaterial);
+    line.name = 'toon-outline'; buildingGroup.add(line);
+  }
   vi.mocked(createTownBuildings).mockReturnValue({
-    group: new THREE.Group(), ready: architectureReady ?? gate.then(() => ({ degraded: ['tree: stand-in'] })), dispose: pieceDispose,
+    group: buildingGroup, ready: architectureReady ?? gate.then(() => ({ degraded: ['tree: stand-in'] })), dispose: pieceDispose,
     getLocationAnchor: () => new THREE.Vector3(), getOfficeAnchor: () => new THREE.Vector3(),
     getOfficeBannerColor: () => 0, setOfficeHighlight: vi.fn(), syncOffices: vi.fn(),
   });
@@ -37,10 +43,24 @@ function setup(architectureReady?: Promise<SceneReadiness>) {
     render: vi.fn(), setSize: vi.fn(), setPixelRatio: vi.fn(), dispose: vi.fn() } as unknown as THREE.WebGLRenderer;
   const container = document.createElement('div');
   const view = createTownView({ container, forceWebGL: true, customRenderer: renderer, palette: getPalette('c') });
-  return { view, actors, release, pieceDispose, assetDispose, renderer, container };
+  return { view, actors, release, pieceDispose, assetDispose, renderer, container, buildingGroup };
 }
 
 describe('TownView readiness', () => {
+  it('batches static outlines after assets are ready and frees its geometry before architecture', async () => {
+    const { view, release, buildingGroup, pieceDispose } = setup();
+    expect(buildingGroup.getObjectByName('static-outline-batch')).toBeUndefined();
+    release(); await view.whenReady();
+    const batch = buildingGroup.getObjectByName('static-outline-batch');
+    expect(batch).toBeInstanceOf(THREE.LineSegments);
+    if (!(batch instanceof THREE.LineSegments)) throw new Error('missing static batch');
+    const dispose = vi.spyOn(batch.geometry, 'dispose');
+    view.dispose(); view.dispose();
+    expect(dispose).toHaveBeenCalledTimes(1);
+    expect(dispose.mock.invocationCallOrder[0]).toBeLessThan(pieceDispose.mock.invocationCallOrder[0]!);
+    expect(buildingGroup.children.every(child => child.visible)).toBe(true);
+  });
+
   it('waits for architecture and all rigs and surfaces degraded pieces', async () => {
     const { view, release, actors, renderer } = setup();
     let ready = false; void view.whenReady().then(() => { ready = true; });
