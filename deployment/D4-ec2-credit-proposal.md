@@ -1,6 +1,6 @@
-# D4 EC2 Free Plan proposal — not approved for provisioning
+# D4 EC2 Free Plan assessment — complete; provisioning not authorized
 
-Updated 2026-10-20 on `codex/visual-d4`. User confirms Free Plan, 183 days remaining and $100 credits remaining (user relay, not independent account access). Credit-specific expiry/applicable products and other AWS usage are not yet confirmed. User authorizes evaluation only. Paid hosting, account upgrades and provisioning remain unauthorized. Keep the existing Render Free service available and unchanged as fallback.
+Updated 2026-10-20 on `codex/visual-d4`. User confirms Free Plan, 183 days remaining and $100 credits remaining (user relay, not independent account access). User confirms active credit expiry October 20, 2027 at 15:09 UTC and applicable products Amazon Elastic Compute Cloud, Amazon VPC and AWS Data Transfer. EBS was not listed separately; AWS billing documentation groups it under EC2, and AWS EBS pricing explicitly supports Free Tier credits. Other account usage and actual launch quote remain uninspected. User authorizes evaluation only. Paid hosting, account upgrades and provisioning remain unauthorized. Keep the existing Render Free service available and unchanged as fallback.
 
 ## Recommendation
 
@@ -25,7 +25,7 @@ A local idle native production-server check (AI none, no players, Node v26.12.0)
 
 ## Credit estimate
 
-USD gross usage value for 730 running hours/month, one instance, one 20 GiB disk, one IPv4 and no other AWS workload. Ordinary rates are included even where an account-specific free allowance might reduce actual consumption; no legacy 750-hour or 30-GB entitlement is assumed. Confirm eligible credit coverage for each line before launch.
+USD gross usage value for 730 running hours/month, one instance, one 20 GiB disk, one IPv4 and no other AWS workload. Ordinary rates are included even where an account-specific free allowance might reduce actual consumption; no legacy 750-hour or 30-GB entitlement is assumed. The supplied applicable-products list and primary AWS EBS billing/credit documentation support coverage for these standard resources. Check the concrete launch configuration for any excluded product, Marketplace fee or upgrade requirement; stop if one appears. Do not request another search for a separate EBS credit entry.
 
 | Item | Assumption | Estimated credits/month |
 | --- | --- | ---: |
@@ -70,7 +70,7 @@ AWS's credit-based Free Plan ends at its time limit or credit exhaustion. Resour
 Before approval, obtain only non-secret account facts:
 
 1. Free Plan, $100 remaining and 183 days remaining are now user-confirmed. Record the exact expiration date/time before scheduling teardown; do not ask again for already-confirmed plan type/balance.
-2. Active credit details: estimated remaining amount, expiration date and applicable products, including EC2, EBS and public IPv4/VPC. Reconcile current-month usage; the older Amount remaining column may lag.
+2. Credit balance $100, expiry October 20, 2027 at 15:09 UTC, EC2/VPC/Data Transfer applicability are user-confirmed. EBS coverage is supported by AWS documentation: it bills under EC2 and is eligible for Free Tier credits. Reconcile subsequent usage before launch; no repeated service-list check is needed.
 3. Current shared outbound allowance consumption, supported region/AMI/instance/address permissions without any upgrade, and any existing AWS workloads consuming the same credits.
 4. Confirmed usable domain/subdomain and DNS control, or a separately reviewed no-purchase HTTPS alternative. User now owns prophumy.com on Cloudflare; game hostname and DNS/certificate configuration still need agreement. No further purchase is assumed.
 
@@ -86,7 +86,7 @@ Keep `https://news-town-staging.onrender.com/` and its existing Free configurati
 
 Public AWS/Caddy/Render documentation and regional pricing feed were read. Local repository was clean at evaluation start; built asset size and arithmetic were checked. AWS CLI is not installed here; no AWS account access, independent plan/balance verification, credentials, provisioning, account change, domain change, deployment or application code edit occurred. A native idle production-server start/memory/close check succeeded; it is not a container or loaded-server test. No new app tests are required for this documentation-only evaluation; earlier D4 verification remains separate.
 
-Show this conditional setup and estimate to the user, resolve account/domain facts, then obtain explicit provisioning approval for the concrete resources. D4 remains incomplete until actual deployment/container/proxy/public-match/rollback evidence and C4 review pass. No account upgrade is ever authorized by approving EC2 credit usage.
+Assessment is complete: standard one-instance micro deployment is suitable for a short credit-only trial, with the low-transfer budget fitting the reported remaining Free Plan window. Obtain explicit provisioning approval for the concrete resources only after local deployment preparation and final launch-quote review. Do not treat assessment approval as resource-launch authorization. D4 remains incomplete until actual deployment/container/proxy/public-match/rollback evidence and C4 review pass. No account upgrade is ever authorized by approving EC2 credit usage.
 
 ## Sources checked
 
@@ -106,3 +106,15 @@ Show this conditional setup and estimate to the user, resolve account/domain fac
 ## Domain update
 
 User reports prophumy.com purchased on Cloudflare. Read-only DNS-over-HTTPS lookup returns Cloudflare NS greg/jessica, no apex A/AAAA, and NXDOMAIN for proposed newstown.prophumy.com. HTTPS browser fetch did not succeed. This proves current public DNS findings only, not Cloudflare dashboard status or certificate issuance. Do not assume SSL is ready. Deployment must configure DNS to the selected host and establish HTTPS/WSS. If Cloudflare proxy is selected, use valid origin TLS with Full (strict) and review the actual client-IP trust topology; a DNS-only Caddy deployment instead uses its own public certificate. No Cloudflare mutation, AWS provisioning, account upgrade or new domain purchase performed.
+
+## Final assessment and deployment sequence
+
+**Decision:** proceed with preparation for one seven-day t3.micro evaluation using eligible credits, subject to explicit launch approval; do not provision during assessment. Base seven-day usage is approximately $2.96. This is not unconditional production acceptance, an availability guarantee through all 183 days, or authorization for paid services.
+
+EBS does not need a separate applicable-products entry for this assessment: AWS's EBS billing guide places EBS under Elastic Compute Cloud, and AWS EBS pricing says Free Tier credits apply to EBS. This plus the supplied EC2 listing supports the proposed baseline gp3 disk. No separate snapshot, paid initialization, extra IOPS or throughput is included.
+
+Free Plan's 183-day remaining duration takes precedence over the later credit expiry (2027-10-20 15:09 UTC). Plan expiry and credit exhaustion can stop the service. Preserve at least $20 reserve; if projected remaining cost would consume it, review/teardown before that point. Monitor daily during trial, then weekly only after stable burn is established. At the end of seven days, either approve continuation under the existing resource ceiling or fully tear down after retaining reviewed artifacts outside AWS. Alerts are not hard real-time caps. No automatic Paid Plan upgrade, resize or new service is permitted.
+
+Before launch: implement and verify the already-identified trusted local-proxy boundary; prepare pinned Node24/container/Caddy deployment and rollback configuration with bounded disk/log usage; choose game hostname under the purchased prophumy.com (newstown.prophumy.com proposed); verify the console's region/AMI/storage/IP quote without upgrade prompts; obtain launch approval. Then deploy exact SHA, configure DNS/HTTPS/WSS, verify real container build/start and micro capacity, run public D4 smoke/captures, and get C4 evidence review. If capacity fails, return to the user or Render Free rather than silently increase instance size. Render fallback configuration remains unchanged by this assessment.
+
+Sources for EBS conclusion: [AWS EBS credit eligibility](https://aws.amazon.com/ebs/pricing/) and [AWS EBS billing under EC2](https://repost.aws/knowledge-center/ebs-understand-billing-information), corroborated by [AWS EC2-Other cost grouping](https://aws.amazon.com/blogs/aws-cloud-financial-management/optimize-and-save-on-the-other-services/). User-confirmed facts are distinguished from public documentation and native measurements; no AWS account/API access occurred. No new code/test changes or resources were needed to finish assessment.
