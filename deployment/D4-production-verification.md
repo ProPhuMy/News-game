@@ -57,3 +57,5 @@ Viewed PNG SHA-256: home `bb6f126fe2da777091b2807edeafd54c3861795fc42f8e7a28c972
 ## Credit-only EC2 proposal
 
 User requested evaluation, not provisioning, of one EC2 instance using eligible Free Plan credits, with no Paid Plan upgrade. See `deployment/D4-ec2-credit-proposal.md` for exact conditional resources, compute/storage/IPv4/transfer arithmetic, account checks, HTTPS/proxy prerequisites and retained Render Free fallback. User's expired domain is unconfirmed. No host selection/resource launch is approved by this proposal; no AWS/Render/DNS change occurred.
+
+User subsequently confirms Free Plan/$100/183 days. Assessment now proposes t3.micro to fit that window ($12.84/month base; approximately $77.26 over 183 days), superseding the larger instance estimate. See credit proposal for assumptions, $20 reserve, capacity limits and remaining approval gates. No provisioning or Paid Plan change is authorized by these confirmations.
