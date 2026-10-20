@@ -1,6 +1,6 @@
 # D3 security and release-candidate review
 
-Status: local verification performed on `codex/visual-d3`, base `088b334`; final reviews pending. This is a source and local-runtime review, not production certification. User approved `docs/visual-overhaul/plans/D3.md` on 2026-10-20. Claude accepted the plan's ownership/interfaces with no blockers, relayed by the user and recorded in `cf00387` on C4. C4 remains separate; no C4 commits merged here.
+Status: **D3 COMPLETE**, verified on `codex/visual-d3`, base `088b334`, final executable delivery `c2bb513`. This is a source and local-runtime review, not production certification. User approved `docs/visual-overhaul/plans/D3.md` on 2026-10-20. Claude accepted the plan's ownership/interfaces with no blockers, relayed by the user and recorded in `cf00387` on C4. C4 remains separate; no C4 commits merged here.
 
 ## Trust boundaries and findings
 
@@ -62,4 +62,4 @@ Fresh independent reviewer inspected `088b334..7678901` plus the probe's later H
 
 The reviewer deliberately did not certify actual hosting/proxy enforcement, Docker runtime, live-provider traffic capacity or public production readiness. These remain explicit D4 deployment requirements or documented operational limits; this is not a security waiver or inferred production success.
 
-Pending final gate: Claude final counterpart acceptance. Final probe rerun and final repository gates pass. No C4-owned security fix or shared-contract request is currently required. Claude's separate C4 architecture delivery is not consumed by this branch; integration remains user controlled. Detailed commit/check/resume evidence lives in `docs/visual-overhaul/handoffs/D3.md`.
+Final gates passed: Claude accepted final ownership/interfaces/configuration evidence at `7678901` with no blockers, relayed by the user, and independently reproduced 800 tests, typecheck/lint/build and full browser smoke. Its required Codex final probe rerun passes at `c2bb513`; final repository gates also pass. Claude records consumed `chromiumArgs(noWebgl: boolean): string[]` from its shared tooling and will coordinate changes to that export. No runtime or shared contract changed. No C4-owned security fix or shared-contract request is currently required. Claude's separate C4 architecture delivery is not consumed by this branch; integration remains user controlled. Detailed commit/check/resume evidence lives in `docs/visual-overhaul/handoffs/D3.md`.
