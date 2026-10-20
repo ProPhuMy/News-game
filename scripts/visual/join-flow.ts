@@ -1,7 +1,7 @@
 // Waiting logic for the live join form (owner: Claude). Takes a minimal page view so it can be unit tested.
 import type { Page } from 'playwright-core';
 
-export interface JoinRecord { outcome: 'rejected' | 'accepted' | 'corrected'; error: string | null; entry: 'createRoom' }
+export interface JoinRecord { outcome: 'rejected' | 'error' | 'accepted' | 'corrected'; error: string | null; entry: 'createRoom' }
 export const JOIN_ERROR = '[data-testid="join-error"]';
 export const LOBBY = '[data-testid="lobby-screen"]';
 
@@ -42,4 +42,11 @@ export async function correctedJoinResult(page: JoinPage, timeoutMs: number): Pr
   await firstOf([page.waitFor(LOBBY, 'attached', timeoutMs), page.waitFor(JOIN_ERROR, 'attached', timeoutMs)],
     `corrected join: neither the lobby nor a new banner appeared within ${timeoutMs}ms`);
   return (await page.count(LOBBY)) > 0 ? { lobby: true, error: null } : { lobby: false, error: await page.text(JOIN_ERROR) };
+}
+
+/** A banner is 'rejected' only when it contains the expected text; without an expectation it is just an 'error'. */
+export function bannerOutcome(error: string, expectError: string | null): 'rejected' | 'error' {
+  if (expectError === null) return 'error';
+  if (!error.includes(expectError)) throw new Error(`join error did not match: expected "${expectError}", got "${error}"`);
+  return 'rejected';
 }

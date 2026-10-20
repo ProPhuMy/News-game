@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { correctedJoinResult, JOIN_ERROR, LOBBY, type JoinPage } from '../../scripts/visual/join-flow.ts';
+import { bannerOutcome, correctedJoinResult, JOIN_ERROR, LOBBY, type JoinPage } from '../../scripts/visual/join-flow.ts';
 
 /** Stub page: each selector has a list of timed events that set its presence; waitFor polls virtually via real short timers. */
 function stub(script: { at: number; selector: string; present: boolean }[], text = 'Name not allowed'): JoinPage {
@@ -37,5 +37,20 @@ describe('correctedJoinResult', () => {
 
   it('fails clearly when nothing changes', async () => {
     await expect(correctedJoinResult(stub([]), 60)).rejects.toThrow(/old banner stayed and the lobby never appeared/);
+  });
+});
+
+describe('bannerOutcome', () => {
+  it('is only an error without an expectation', () => {
+    expect(bannerOutcome('No server acknowledgment.', null)).toBe('error');
+  });
+
+  it('is rejected when the banner contains the expected text', () => {
+    expect(bannerOutcome('That name is not allowed here', 'not allowed')).toBe('rejected');
+  });
+
+  it('fails when the banner does not match', () => {
+    expect(() => bannerOutcome('No server acknowledgment.', 'not allowed'))
+      .toThrow('join error did not match: expected "not allowed", got "No server acknowledgment."');
   });
 });

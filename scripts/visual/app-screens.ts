@@ -4,7 +4,7 @@ import type { Page } from 'playwright-core';
 import { stressText } from '../../src/client/visual-test/stress-text.ts';
 import { TUNING } from '../../src/shared/tuning.ts';
 import type { CaptureOptions } from './args.ts';
-import { correctedJoinResult, firstJoinResult, joinPage, LOBBY, type JoinRecord } from './join-flow.ts';
+import { bannerOutcome, correctedJoinResult, firstJoinResult, joinPage, LOBBY, type JoinRecord } from './join-flow.ts';
 import { layoutProblems, type LayoutNode, type LayoutProblems } from './layout.ts';
 
 export type LayoutReport = LayoutProblems;
@@ -34,11 +34,17 @@ export async function openLiveScreen(page: Page, options: CaptureOptions): Promi
   const first = await firstJoinResult(jp, timeout);
   if (first.lobby) return { outcome: 'accepted', error: null, entry: 'createRoom' };
   const error = first.error ?? '';
-  if (options.correctPlayerName === null) return { outcome: 'rejected', error, entry: 'createRoom' };
-  await page.fill('#player-name', options.correctPlayerName);
+  const outcome = bannerOutcome(error, options.expectError);
+  if (options.correctPlayerName === null && options.correctPaperName === null) return { outcome, error, entry: 'createRoom' };
+  if (options.correctPlayerName !== null) await page.fill('#player-name', options.correctPlayerName);
+  if (options.correctPaperName !== null) await page.fill('#paper-name', options.correctPaperName);
   await page.getByRole('button', { name: 'Claim Printing Press' }).click();
   const second = await correctedJoinResult(jp, timeout);
-  if (!second.lobby) throw new Error(`corrected name was also rejected: ${second.error ?? ''}`);
+  if (!second.lobby) {
+    const again = second.error ?? '';
+    bannerOutcome(again, options.expectError);
+    throw new Error(`corrected name was also rejected: ${again}`);
+  }
   return { outcome: 'corrected', error, entry: 'createRoom' };
 }
 

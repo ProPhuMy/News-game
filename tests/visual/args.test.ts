@@ -9,7 +9,7 @@ describe('parseCaptureArgs', () => {
       model: 'characters/kenney-mini/character-male-a.glb', clip: null, timeMs: 0, count: 1,
       screen: 'home', palette: 'b', stressText: false, tab: 0, scroll: null, blockFonts: false,
       variant: 'code', view: 'street', citizenHeight: null, noWebgl: false,
-      playerName: null, paperName: null, correctPlayerName: null,
+      playerName: null, paperName: null, correctPlayerName: null, correctPaperName: null, expectError: null,
     });
   });
 
@@ -164,6 +164,17 @@ describe('join name flags and live --no-webgl', () => {
   it('parses the three name flags on the live lobby', () => {
     expect(parseCaptureArgs([...live, '--player-name', 'Daily Shit', '--paper-name', 'P', '--correct-player-name', 'Ada']))
       .toMatchObject({ playerName: 'Daily Shit', paperName: 'P', correctPlayerName: 'Ada' });
+  });
+
+  it('parses --expect-error and --correct-paper-name, which need a name flag and a value', () => {
+    expect(parseCaptureArgs([...live, '--paper-name', 'P', '--correct-paper-name', 'Q', '--expect-error', 'not allowed']))
+      .toMatchObject({ correctPaperName: 'Q', expectError: 'not allowed' });
+    expect(() => parseCaptureArgs([...live, '--correct-paper-name', 'Q'])).toThrow(/--correct-paper-name needs --paper-name/);
+    expect(() => parseCaptureArgs([...live, '--expect-error', 'x'])).toThrow(/--expect-error needs --player-name or --paper-name/);
+    for (const flag of ['--correct-paper-name', '--expect-error']) {
+      expect(() => parseCaptureArgs([...live, '--paper-name', 'P', flag, ' '])).toThrow(/needs a non-empty value/);
+      expect(() => parseCaptureArgs(['--target', 'app', '--screen', 'join', flag, 'x', '--out', 'j.png'])).toThrow(/need --target app --screen lobby/);
+    }
   });
 
   it('rejects name flags outside --target app --screen lobby', () => {

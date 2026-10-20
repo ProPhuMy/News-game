@@ -54,6 +54,10 @@ export interface CaptureOptions {
   paperName: string | null;
   /** Live lobby only: name resubmitted after the server rejects --player-name. */
   correctPlayerName: string | null;
+  /** Live lobby only: name resubmitted after the server rejects --paper-name. */
+  correctPaperName: string | null;
+  /** Live lobby only: text the join error banner must contain to count as a rejection. */
+  expectError: string | null;
 }
 
 const SWIFTSHADER_ARGS = ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'];
@@ -70,9 +74,11 @@ const DEFAULTS: Omit<CaptureOptions, 'out'> = {
   screen: 'home', palette: APPROVED_PALETTE, stressText: false, tab: 0, scroll: null, blockFonts: false,
   variant: 'code', view: 'street', citizenHeight: null, noWebgl: false,
   playerName: null, paperName: null, correctPlayerName: null,
+  correctPaperName: null, expectError: null,
 };
 
-const NAME_FLAGS = { '--player-name': 'playerName', '--paper-name': 'paperName', '--correct-player-name': 'correctPlayerName' } as const;
+const NAME_FLAGS = { '--player-name': 'playerName', '--paper-name': 'paperName', '--correct-player-name': 'correctPlayerName',
+  '--correct-paper-name': 'correctPaperName', '--expect-error': 'expectError' } as const;
 
 const NUMBER_FLAGS = {
   '--round': 'round', '--reaction-ms': 'reactionMs', '--seed': 'seed',
@@ -157,11 +163,14 @@ export function parseCaptureArgs(argv: readonly string[]): CaptureOptions {
   if (options.noWebgl && options.target !== 'town' && options.target !== 'app') throw new Error('--no-webgl supports only --target town or app');
   const live = options.target === 'app' && LIVE_SCREENS.includes(options.screen);
   if (options.noWebgl && live) throw new Error('--no-webgl does not apply to live screens (the real app URL never carries it); use a harness screen or --target town');
-  if ((options.playerName ?? options.paperName ?? options.correctPlayerName) !== null && !(options.target === 'app' && options.screen === 'lobby')) {
-    throw new Error('--player-name, --paper-name and --correct-player-name need --target app --screen lobby');
+  const nameFlags = [options.playerName, options.paperName, options.correctPlayerName, options.correctPaperName, options.expectError];
+  if (nameFlags.some((v) => v !== null) && !(options.target === 'app' && options.screen === 'lobby')) {
+    throw new Error('--player-name, --paper-name, --correct-player-name, --correct-paper-name and --expect-error need --target app --screen lobby');
   }
   if (options.stressText && (options.playerName ?? options.paperName) !== null) throw new Error('--stress-text cannot be combined with --player-name or --paper-name');
   if (options.correctPlayerName !== null && options.playerName === null) throw new Error('--correct-player-name needs --player-name');
+  if (options.correctPaperName !== null && options.paperName === null) throw new Error('--correct-paper-name needs --paper-name');
+  if (options.expectError !== null && options.playerName === null && options.paperName === null) throw new Error('--expect-error needs --player-name or --paper-name');
   if (options.prod && options.target !== 'app') throw new Error('--prod only supports --target app (the town harness is dev-only)');
   if (options.prod && options.screen !== 'home') throw new Error('--prod supports only --screen home (the UI harness is dev-only)');
   if (options.target === 'app' && LIVE_SCREENS.includes(options.screen) && options.palette !== APPROVED_PALETTE) {

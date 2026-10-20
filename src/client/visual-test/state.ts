@@ -5,9 +5,12 @@ import type { InspectionScenario } from './inspection-scenario.ts';
 import type { CrowdMetrics } from '../town/crowd-sample.ts';
 import type { VisualScenario } from './scenario.ts';
 
-/** What a mounted town reports: pixel-measured WebGL, or the no-WebGL fallback (no canvas, so no pixel count). */
-export type TownFrame = { palette: PaletteId; width: number; height: number } & (
-  | { renderer: 'webgl'; webgl: true; distinctColors: number }
+/**
+ * What a mounted town reports: pixel-measured WebGL with the palette the factory received, or the no-WebGL
+ * fallback (no canvas, so no pixel count, and no palette because the fallback view never consumes one).
+ */
+export type TownFrame = { width: number; height: number } & (
+  | { renderer: 'webgl'; webgl: true; palette: PaletteId; distinctColors: number }
   | { renderer: 'fallback'; webgl: false }
 );
 

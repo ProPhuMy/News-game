@@ -100,7 +100,7 @@ async function mountFallbackTown(
   if (failure) return { status: 'error', error: failure };
   await settleScene(view as TownView & { whenReady?: () => Promise<SceneReadiness> }, (ms) => clock.advance(ms), scenario.reactionMs);
   return {
-    status: 'ready', renderer: 'fallback', webgl: false, palette: holder.palette ?? scenario.palette,
+    status: 'ready', renderer: 'fallback', webgl: false,
     width: container.clientWidth, height: container.clientHeight,
   };
 }
