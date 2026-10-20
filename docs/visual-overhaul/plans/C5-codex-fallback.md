@@ -27,3 +27,17 @@ The source request says "Neither the UI nor the HUD changes." A reserved, non-ov
 5. Existing fallback/context-loss/disposal tests and full npm test/typecheck/lint/build; ownership/whitespace audit; commit on own branch and send exact delivery to user for Claude recapture/review.
 
 No production deployment, dependency, new asset, scope cut or contract request. Current status: reproduction verified; counterpart layout acknowledgment pending, no source fix implemented.
+
+## Boundary accepted; implementation begins
+
+Claude acknowledged the property/lifecycle and delivered855d9df, now merged into this branch. Presentation interface §5d is accepted: documentElement --nt-town-fallback-height, direct-child role=status marker, ResizeObserver updates, cleanup on disposal/recovery. Claude's CSS consumes the property for fixed HUD/setup layers, default0, and intentionally leaves modal backdrops full-screen. No renderer DOM edits to UI or injected rules. CSS/interface/tests remain Claude-owned and byte-identical to delivery.
+
+Implementation: intrinsic-height, top-aligned renderer notice; publish rounded-up border-box height after mount, observe reflow, restore a prior inline property if one existed (otherwise remove) and disconnect observer on idempotent dispose; ignore queued notifications after disposal. Keep compatibility when ResizeObserver is absent via window resize measurement. Same notice text/Retry callback; palette-based CSS fallbacks replace the touched inline fixed colors. Only source file webgl.ts and mirrored Codex test change, plus owned support docs. Capture all ten acceptance cases and standalone fallback; inspect controls/notice overlap with real-browser geometry/hit-testing, plus optional Retry/dispose check. No production action or D5.
+
+## Delivery — renderer fix complete; Claude verification pending
+
+Code commit `0cc08e7` changes only Codex-owned webgl.ts and its mirrored test. Claude delivery855d9df was integrated unchanged by mergeb1f94af; no edits to Claude CSS/UI/interface/tests. Four lifecycle regressions fail first (old8pass), then all12WebGLtests pass; focused fallback/readiness/integration/UI32pass. Full121files/852tests, typecheck/lint/build pass. Existing jsdom canvas notices and >500kB chunk warning remain. Independent reviewer reports no Critical/Important/Minor issues and independently12/12pass.
+
+All ten required shared --no-webgl captures exit0 and were directly opened by Codex: intro/investigate/write/reveal/final,1280x720 and390x844. Sidecars are ready/fallback/WebGLfalse, zero console errors, empty overflowX/unreachable. Real-browser text hit tests also pass for all ten: actual notice99.78125px desktop/reserved100px/HUDtop100px; phone167.5625px/reserved168px/HUDtop168px. Optional Retry is actionably clicked in a supplementary browser check; viewport width and enlarged-font reflow update the height; disposal removes status/property and queued notifications cannot re-reserve it. Town-only fallback capture also passes and is directly viewed; text/meaning unchanged.
+
+Evidence and reproduction are in the delivery section of ../requests/C5-codex-fallback-layout.md, including screenshot hashes. All PNGs/sidecars and geometry/manifest are bundled in the ignored evidence.zip. No production deploy/restart, main merge, gameplay contract, dependency or D5 work. Claude must recapture/review the delivered fix before its own C5 request can close.
