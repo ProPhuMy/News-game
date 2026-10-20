@@ -3,6 +3,7 @@ import type { ArchitectureScenario } from './architecture-scenario.ts';
 import type { PaletteId } from '../visuals/palette.ts';
 import type { InspectionScenario } from './inspection-scenario.ts';
 import type { CrowdMetrics } from '../town/crowd-sample.ts';
+import type { ContextCycleReport } from './context-cycle.ts';
 import type { VisualScenario } from './scenario.ts';
 
 /**
@@ -10,7 +11,7 @@ import type { VisualScenario } from './scenario.ts';
  * fallback (no canvas, so no pixel count, and no palette because the fallback view never consumes one).
  */
 export type TownFrame = { width: number; height: number } & (
-  | { renderer: 'webgl'; webgl: true; palette: PaletteId; distinctColors: number }
+  | { renderer: 'webgl'; webgl: true; palette: PaletteId; distinctColors: number; contextCycle?: ContextCycleReport }
   | { renderer: 'fallback'; webgl: false }
 );
 
@@ -50,6 +51,8 @@ export type VisualState =
       /** Requested citizen height; width and height are the image size. */
       citizenHeight: number;
       palette: PaletteId;
+      /** Which spacing Codex's comparison used: its fixed preview rows or the production allocator. */
+      crowdLayout: 'comparison' | 'production';
       instances: number;
       metrics: CrowdMetrics;
       width: number;

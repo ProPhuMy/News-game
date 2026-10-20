@@ -8,7 +8,7 @@ describe('parseCaptureArgs', () => {
       reducedMotion: false, seed: 1, width: 1280, height: 720, out: 'shots/town.png', prod: false, timeoutMs: 60000,
       model: 'characters/kenney-mini/character-male-a.glb', clip: null, timeMs: 0, count: 1,
       screen: 'home', palette: 'b', stressText: false, tab: 0, scroll: null, blockFonts: false,
-      variant: 'code', view: 'street', citizenHeight: null, noWebgl: false,
+      variant: 'code', view: 'street', citizenHeight: null, crowdLayout: 'comparison', noWebgl: false, contextCycle: false,
       playerName: null, paperName: null, correctPlayerName: null, correctPaperName: null, expectError: null,
     });
   });
@@ -129,7 +129,24 @@ describe('crowd and no-webgl flags', () => {
     const options = parseCaptureArgs(['--target', 'crowd', '--citizen-height', '3.29', '--palette', 'b', '--reaction-ms', '0', '--out', 'c.png']);
     expect(options.citizenHeight).toBe(3.29);
     const query = new URLSearchParams(harnessPath(options).split('?')[1]);
-    expect(Object.fromEntries(query)).toEqual({ scene: 'crowd', height: '3.29', palette: 'b', reactionMs: '0', seed: '1' });
+    expect(Object.fromEntries(query)).toEqual({ scene: 'crowd', height: '3.29', palette: 'b', reactionMs: '0', seed: '1', layout: 'comparison' });
+  });
+
+  it('forwards --crowd-layout, defaulting to comparison', () => {
+    const base = ['--target', 'crowd', '--citizen-height', '1.8', '--out', 'c.png'];
+    expect(parseCaptureArgs(base).crowdLayout).toBe('comparison');
+    const production = parseCaptureArgs([...base, '--crowd-layout', 'production']);
+    expect(new URLSearchParams(harnessPath(production).split('?')[1]).get('layout')).toBe('production');
+    expect(() => parseCaptureArgs([...base, '--crowd-layout', 'grid'])).toThrow(/--crowd-layout must be comparison or production, got "grid"/);
+    expect(() => parseCaptureArgs(['--target', 'town', '--crowd-layout', 'production', '--out', 'c.png'])).toThrow(/--crowd-layout needs --target crowd/);
+  });
+
+  it('accepts --context-cycle only for WebGL town captures', () => {
+    const options = parseCaptureArgs(['--target', 'town', '--context-cycle', '--out', 't.png']);
+    expect(new URLSearchParams(harnessPath(options).split('?')[1]).get('contextCycle')).toBe('true');
+    expect(new URLSearchParams(harnessPath(parseCaptureArgs(['--out', 't.png'])).split('?')[1]).has('contextCycle')).toBe(false);
+    expect(() => parseCaptureArgs(['--target', 'app', '--screen', 'match', '--context-cycle', '--out', 't.png'])).toThrow(/--context-cycle supports only --target town/);
+    expect(() => parseCaptureArgs(['--target', 'town', '--context-cycle', '--no-webgl', '--out', 't.png'])).toThrow(/--context-cycle needs WebGL; drop --no-webgl/);
   });
 
   it('rejects missing, malformed and out-of-range citizen heights', () => {

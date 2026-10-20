@@ -28,7 +28,9 @@ const run = (module: CrowdModule, search = '?scene=crowd&height=3.29&reactionMs=
 
 describe('parseCrowdScenario', () => {
   it('reads height, palette, reactionMs and seed', () => {
-    expect(parseCrowdScenario('?height=3.29&palette=a&reactionMs=5&seed=2')).toEqual({ citizenHeight: 3.29, palette: 'a', reactionMs: 5, seed: 2 });
+    expect(parseCrowdScenario('?height=3.29&palette=a&reactionMs=5&seed=2')).toEqual({ citizenHeight: 3.29, palette: 'a', reactionMs: 5, seed: 2, layout: 'comparison' });
+    expect(parseCrowdScenario('?height=1.8&layout=production').layout).toBe('production');
+    expect(() => parseCrowdScenario('?height=1.8&layout=grid')).toThrow(/layout must be comparison or production/);
     expect(() => parseCrowdScenario('?height=9')).toThrow(/height must be a number between 0.5 and 6/);
     expect(() => parseCrowdScenario('')).toThrow(/height is required/);
   });
@@ -38,10 +40,16 @@ describe('runCrowdScene', () => {
   it('measures at the exact time, publishes instances and metrics, then disposes', async () => {
     const f = fake({ degraded: [], instances: 30 });
     await expect(run(f.module)).resolves.toMatchObject({
-      status: 'ready', scene: 'crowd', citizenHeight: 3.29, palette: 'b', instances: 30, metrics, distinctColors: 500,
+      status: 'ready', scene: 'crowd', citizenHeight: 3.29, palette: 'b', crowdLayout: 'comparison', instances: 30, metrics, distinctColors: 500,
     });
     expect(f.calls).toEqual(['setTime:0', 'dispose']);
-    expect(f.create).toHaveBeenCalledWith(expect.objectContaining({ height: 3.29 }));
+    expect(f.create).toHaveBeenCalledWith(expect.objectContaining({ height: 3.29, layout: 'comparison' }));
+  });
+
+  it('passes the production layout through to the scene', async () => {
+    const f = fake({ degraded: [], instances: 30 });
+    await expect(run(f.module, '?scene=crowd&height=1.8&reactionMs=0&palette=b&layout=production')).resolves.toMatchObject({ crowdLayout: 'production' });
+    expect(f.create).toHaveBeenCalledWith(expect.objectContaining({ height: 1.8, layout: 'production' }));
   });
 
   it('fails with count-mismatch when the scene reports 29', async () => {
