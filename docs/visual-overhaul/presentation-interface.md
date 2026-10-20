@@ -195,7 +195,7 @@ User approvals relayed 2026-10-19 after viewing Codex's D1 rendering-sample capt
 - Thirty-citizen crowd rings inside the §4 clearance radii.
 - Camera framing. At the default distance the top and bottom offices are cropped, and a 390 × 844 view shows only the centre (C3 captures `town-b.png`, `town-b-narrow.png`).
 
-## 5c. Should features (user decision 2026-10-20; proposed, awaiting Codex acknowledgment)
+## 5c. Should features (user decision 2026-10-20; amended for Codex review 2026-10-20, awaiting final acknowledgment)
 
 The user chose to build all five Should items and cut every Could item (C5 handoff §4). Claude owns everything below except the parts marked Codex. All of it is presentation only: it never changes outcomes, routes, destinations or phase timing, and it never adds a gameplay clock.
 
@@ -235,22 +235,30 @@ export const EMOTE_FOR_BEHAVIOR: Readonly<Record<Behavior, Emote | null>>;
 export const MAX_VISIBLE_EMOTES = 8; // a crowd cap separate from the 6 speech bubbles
 ```
 
-- **Codex** draws the glyph above the citizen's head once it arrives at its destination (or immediately under reduced motion, without animation), with at most `MAX_VISIBLE_EMOTES` at a time. Extra emotes are dropped one per destination group first. The glyph itself is the non-color cue; text renders as text, never HTML.
+- **Codex** draws the glyph above the citizen's head once it arrives at its destination (or immediately under reduced motion, without animation), with at most `MAX_VISIBLE_EMOTES` at a time. The glyph itself is the non-color cue; text renders as text, never HTML.
+- **Selection is deterministic** (Codex review): take the actors with a non-null emote in ReactionPlan order. First pick one eligible actor per destination node, in order of each destination's first appearance. Then fill the remaining slots round-robin across destinations, in actor order, until 8. Clear all emotes on any phase change.
 
 ### Picket signs (Claude: `props/picket.ts`; Codex: attachment)
 
 ```ts
 export const PICKET_SIGN_TEXTS: readonly string[]; // short pixel-font slogans, family friendly, ≤ 6 glyphs
-export function createPicketSign(ctx: ArchitectureContext, text: string): PlacedPiece;
+export interface PicketSignKit {
+  /** A sign for one actor: a clone of this kit's original for `text` (created on first use), sharing its resources. */
+  create(text: string): THREE.Object3D;
+  /** Detaches every clone this kit made from its parent, then frees each original's resources once. Idempotent. */
+  dispose(): void;
+}
+/** One kit per town/context; caches never cross kits, so one kit's disposal cannot free another's resources. */
+export function createPicketSignKit(ctx: ArchitectureContext): PicketSignKit;
 ```
 
-- **Origin** is the grip point, with the board above it facing +Z. The total height is about 1.3, sized for 1.8-unit citizens.
-- Geometry and textures are cached per text, so 18 or more signs share resources. Codex may use `object.clone()` and must call `dispose()` once, on the original piece, at teardown.
+- **Origin** of each sign is the grip point, with the board above it facing +Z. The total height is about 1.3, sized for 1.8-unit citizens.
+- Each kit keeps one original per text and makes clones from it, so 18 or more signs share resources. No module-level cache exists. Codex creates the kit with the town's context and disposes it with the town, before the material kit.
 - **Codex** attaches a sign to each `protest` and `angry_mob` actor when it arrives (for example at the hand or root offset), removes it on the next phase, and shows signs under reduced motion without sway. Signs are not outlined after ready unless Codex adds them to its own batching rules.
 
 ### Read, pause and react (Codex)
 
-- **Bounded timing:** for each actor, `prelude = min(1200 ms, max(0, remaining − routeDuration − 500 ms))`. A reading pose uses only spare time. When there is no slack, the prelude is 0, so authoritative movement never starts late and never ends after the deadline.
+- **Bounded timing** (Codex review): routes carry distances, not durations. Playback already moves each actor during a fixed window of **15–70 %** of the remaining reaction time, using normalized progress. That window does not change. The reading pose uses only the lead-in before it: `prelude = min(1200 ms, 0.15 × remaining)`, ending at or before the 15 % mark. The react pose and emote follow arrival, in the 70–100 % tail. Movement never starts late and never ends after the deadline.
 - Reduced motion has no prelude; the stable final pose and emote appear at once.
 
 ### Latest-edition ticker (Claude: UI)
