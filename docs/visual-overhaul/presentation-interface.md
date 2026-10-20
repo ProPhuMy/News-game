@@ -195,7 +195,7 @@ User approvals relayed 2026-10-19 after viewing Codex's D1 rendering-sample capt
 - Thirty-citizen crowd rings inside the §4 clearance radii.
 - Camera framing. At the default distance the top and bottom offices are cropped, and a 390 × 844 view shows only the centre (C3 captures `town-b.png`, `town-b-narrow.png`).
 
-## 5c. Should features (user decision 2026-10-20; amended for Codex review 2026-10-20, awaiting final acknowledgment)
+## 5c. Should features (user decision 2026-10-20; amended per Codex review and **acknowledged by Codex at `aff108b`**, 2026-10-20)
 
 The user chose to build all five Should items and cut every Could item (C5 handoff §4). Claude owns everything below except the parts marked Codex. All of it is presentation only: it never changes outcomes, routes, destinations or phase timing, and it never adds a gameplay clock.
 
