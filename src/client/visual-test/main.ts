@@ -8,6 +8,7 @@ import { runArchitecture } from './architecture.ts';
 import { runCrowd } from './crowd.ts';
 import { runInspection } from './inspect.ts';
 import { sceneKind } from './inspection-scenario.ts';
+import { parsePlayback, runRealtime } from './realtime.ts';
 import { publish } from './state.ts';
 
 const fixtureLoaders = import.meta.glob<unknown>('../../sim/fixtures/*.json', { import: 'default' });
@@ -30,6 +31,12 @@ async function run(): Promise<void> {
 
   const container = document.getElementById('town');
   if (!container) throw new Error('missing #town container');
+
+  // Real-time busy playback for hardware traces: native clock, production renderer, no capture.
+  if (parsePlayback(window.location.search) === 'realtime') {
+    await runRealtime(fixture, frameIndex, scenario, container);
+    return;
+  }
 
   // Engine time and every deadline share one clock, so the virtual epoch starts at the frame time.
   const clock = createVirtualClock(fixture.frames[frameIndex]!.atMs, scenario.seed);

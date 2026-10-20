@@ -4,6 +4,7 @@ import type { PaletteId } from '../visuals/palette.ts';
 import type { InspectionScenario } from './inspection-scenario.ts';
 import type { CrowdMetrics } from '../town/crowd-sample.ts';
 import type { ContextCycleReport } from './context-cycle.ts';
+import type { RealtimeReport } from './realtime.ts';
 import type { VisualScenario } from './scenario.ts';
 
 /**
@@ -18,6 +19,7 @@ export type TownFrame = { width: number; height: number } & (
 /** What the harness publishes on window.__NEWS_TOWN_VISUAL__ for the capture command. */
 export type VisualState =
   | { status: 'loading' }
+  | { status: 'ready'; scene: 'realtime'; stage: 'ready' | 'running' | 'finished'; report: RealtimeReport }
   | ({ status: 'ready'; scene: 'town'; scenario: VisualScenario } & TownFrame)
   | {
       status: 'ready';
