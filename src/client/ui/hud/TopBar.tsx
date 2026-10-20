@@ -65,7 +65,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   return (
     <header className="hud-top-bar" role="banner">
       <div className="round-badge">
-        {phase === 'final' ? 'Final Edition' : `Round ${round} of ${TUNING.rounds}`}
+        {phase === 'final' ? 'Final Edition' : phase === 'intro' ? 'Get Ready' : `Round ${round} of ${TUNING.rounds}`}
       </div>
       <div className="phase-title">{PHASE_LABELS[phase] || phase}</div>
       <div className="top-bar-controls">

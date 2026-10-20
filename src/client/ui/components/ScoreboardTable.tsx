@@ -24,10 +24,10 @@ export const ScoreboardTable: React.FC<ScoreboardTableProps> = ({ scores }) => {
       <thead>
         <tr>
           <th>Paper</th>
-          <th>Final Score</th>
+          <th>Final score</th>
           <th>Total readers</th>
-          <th>Final Trust</th>
-          <th>Truth Record</th>
+          <th>Final trust</th>
+          <th>Truth record</th>
         </tr>
       </thead>
       <tbody>
