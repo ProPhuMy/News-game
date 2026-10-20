@@ -24,12 +24,14 @@ export const FinalEditionScreen: React.FC<FinalEditionScreenProps> = ({
   if (scoreboard.length === 0) {
     return (
       <div className="screen-container final-edition-screen" data-testid="final-edition-screen">
-        <div className="final-card">
-          <h1>Final Edition Scoreboard</h1>
-          <div className="final-loading" role="status">
-            Tabulating final editions and readers...
+        <section className="final-card results-card" aria-labelledby="results-title">
+          <header className="results-header">
+            <h1 id="results-title">Final Edition Scoreboard</h1>
+          </header>
+          <div className="results-body">
+            <p className="final-loading" role="status">Tabulating final editions and readers...</p>
           </div>
-        </div>
+        </section>
       </div>
     );
   }

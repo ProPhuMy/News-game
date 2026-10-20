@@ -37,7 +37,10 @@ describe('createTownBuildings entry point', () => {
 
   it('ready resolves and dispose is idempotent', async () => {
     const town = createTownBuildings(createTownLayout(), fakeContext('b'));
-    await expect(town.ready).resolves.toBeDefined();
+    // The fake asset source fails every Nature model, so each one is reported as a degraded stand-in, never silently.
+    const { degraded } = await town.ready;
+    expect(degraded.length).toBeGreaterThan(0);
+    for (const entry of degraded) expect(entry).toMatch(/kenney-nature/);
     town.dispose();
     expect(() => town.dispose()).not.toThrow();
   });

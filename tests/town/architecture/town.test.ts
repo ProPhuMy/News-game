@@ -123,7 +123,8 @@ describe('createTownBuildings with the full architecture town', () => {
 
   it('disposes twice without throwing and leaves the group empty', () => {
     const town = createTownBuildings(layout, fakeContext('b'));
-    expect(town.group.children.length).toBeGreaterThan(0);
+    // Five location buildings and four offices at least, plus props.
+    expect(town.group.children.length).toBeGreaterThanOrEqual(LOCATIONS.length + 4);
     town.dispose();
     expect(() => town.dispose()).not.toThrow();
     expect(town.group.children).toHaveLength(0);

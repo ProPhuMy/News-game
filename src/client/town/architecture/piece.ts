@@ -11,27 +11,27 @@ export interface PieceParts {
   mesh(geometry: THREE.BufferGeometry, hex: number, options?: { emissive?: number }): THREE.Mesh;
   /** Tracks a resource the piece created itself (geometry, texture, non-kit material) and frees it in dispose(). */
   own<T extends { dispose(): void }>(resource: T): T;
-  /** Frees every tracked geometry once. Safe to call again. */
+  /** Frees every owned resource once. Safe to call again. */
   dispose(): void;
 }
 
 export function createPieceParts(ctx: ArchitectureContext): PieceParts {
-  const geometries = new Set<{ dispose(): void }>();
+  const owned = new Set<{ dispose(): void }>();
   return {
     mesh(geometry, hex, options) {
-      geometries.add(geometry);
+      owned.add(geometry);
       const mesh = new THREE.Mesh(geometry, ctx.materials.surface(hex, options));
       mesh.castShadow = true;
       mesh.receiveShadow = true;
       return mesh;
     },
     own(resource) {
-      geometries.add(resource);
+      owned.add(resource);
       return resource;
     },
     dispose() {
-      for (const geometry of geometries) geometry.dispose();
-      geometries.clear();
+      for (const resource of owned) resource.dispose();
+      owned.clear();
     },
   };
 }

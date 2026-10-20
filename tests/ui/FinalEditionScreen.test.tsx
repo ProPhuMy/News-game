@@ -134,4 +134,16 @@ describe('FinalEditionScreen', () => {
       expect(within(container).getByText('No headlines were printed this match.')).toBeDefined();
     });
   });
+  it('shows the tabulating state inside the bounded results panel', () => {
+    render(<FinalEditionScreen scoreboard={[]} onPlayAgain={vi.fn()} />);
+    const status = screen.getByRole('status');
+    expect(status.textContent).toContain('Tabulating');
+    expect(status.closest('.results-card')).not.toBeNull();
+  });
+
+  it('labels every scoreboard column in sentence case, matching the spec label Total readers', () => {
+    render(<FinalEditionScreen scoreboard={mockScores} onPlayAgain={vi.fn()} />);
+    const headers = screen.getAllByRole('columnheader').map((th) => th.textContent);
+    expect(headers).toEqual(['Paper', 'Final score', 'Total readers', 'Final trust', 'Truth record']);
+  });
 });

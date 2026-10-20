@@ -137,3 +137,9 @@
   }
   .hud-center-content > .hud-error-banner { width: calc(100% - 2 * var(--space-2)); }
 }
+
+/* Reveal is when the town reacts: on phones (portrait or landscape) the front pages take at most 45% of the
+   screen and scroll inside, so the crowd stays visible above them. */
+@media (max-width: 640px), (max-height: 500px) {
+  .hud-center-content > .reveal-screen { max-height: min(100%, 45vh); }
+}

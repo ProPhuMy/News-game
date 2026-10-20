@@ -55,6 +55,12 @@ describe('HUD', () => {
     expect(screen.getByText('Trust: 54')).toBeDefined();
   });
 
+  it('shows a get-ready badge during the intro instead of round 0', () => {
+    render(<HUD round={0} phase="intro" deadlineMs={Date.now() + 30000} serverTimeOffset={0} papers={mockPapers} />);
+    expect(screen.getByText('Get Ready')).toBeDefined();
+    expect(screen.queryByText(/Round 0/)).toBeNull();
+  });
+
   it('renders top-level error banner when error prop is provided', () => {
     render(
       <HUD

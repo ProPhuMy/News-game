@@ -41,8 +41,10 @@ describe('lot rules', () => {
 
   it('checker flags a rect on a node and on a road midpoint', () => {
     const n = at(LOCATION_NODES.bakery);
-    expect(clearanceViolations([rectAt('onNode', n, { width: 1, depth: 1 })]).length).toBeGreaterThan(0);
-    expect(clearanceViolations([rectAt('onRoad', { x: n.x + 6, z: n.z }, { width: 1, depth: 1 })]).length).toBeGreaterThan(0);
+    expect(clearanceViolations([rectAt('onNode', n, { width: 1, depth: 1 })])).toContainEqual(expect.stringMatching(/^onNode within 5 of node /));
+    const onRoad = clearanceViolations([rectAt('onRoad', { x: n.x + 6, z: n.z }, { width: 1, depth: 1 })]);
+    expect(onRoad).toContainEqual(expect.stringMatching(/^onRoad overlaps road /));
+    expect(onRoad.filter((v) => v.includes('of node'))).toEqual([]);
   });
 });
 
