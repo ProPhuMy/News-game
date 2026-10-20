@@ -106,10 +106,14 @@ try {
   assert(saved, 'Guest token missing');
   assert.notEqual(saved, await host.evaluate(code => localStorage.getItem(`news-town:${code}`), match[1]), 'Seats share token');
   await host.getByRole('button', { name: 'Start Match', exact: true }).click();
-  await Promise.all(pages.map(page => page.getByTestId('intro-screen').waitFor()));
+  const matchReady = page => page.getByTestId('hud-overlay').waitFor();
+  await Promise.all(pages.map(matchReady));
+  const beforeRecovery = packets[1].length;
   await guest.reload({ waitUntil: 'load' });
-  await guest.getByTestId('intro-screen').waitFor();
+  await matchReady(guest);
   assert.equal(await guest.evaluate(code => localStorage.getItem(`news-town:${code}`), match[1]), saved);
+  assert(packets[1].slice(beforeRecovery).some(([event, data]) => event === 'ack' && data.ok && data.session?.token === saved),
+    'No successful token recovery acknowledgment after reload');
   checks.restoredSeat = true;
   console.log('Local production assets, separate seats, literal markup and reconnect checked. Playing five rounds.');
   const drive = async page => {
