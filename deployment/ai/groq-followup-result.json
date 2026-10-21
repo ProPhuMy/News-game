@@ -1,0 +1,223 @@
+{
+  "version": 1,
+  "suite": "follow-up",
+  "model": "openai/gpt-oss-20b",
+  "sourceRevision": "1d008dd4efc9cc738d8cfc63e7e5096ed7258f9f",
+  "status": "pending-review",
+  "completed": 12,
+  "cap": 12,
+  "cases": [
+    {
+      "id": "followup-1",
+      "operation": "rateHeadline",
+      "outcome": "success",
+      "elapsedMs": 794.5092729999999,
+      "finish": "stop",
+      "validation": "valid",
+      "filtered": false,
+      "quality": true,
+      "httpStatus": "ok",
+      "tokens": {
+        "input": 738,
+        "output": 96
+      }
+    },
+    {
+      "id": "followup-2",
+      "operation": "rateHeadline",
+      "outcome": "success",
+      "elapsedMs": 429.06586499999685,
+      "finish": "stop",
+      "validation": "valid",
+      "filtered": false,
+      "quality": true,
+      "httpStatus": "ok",
+      "tokens": {
+        "input": 740,
+        "output": 132
+      }
+    },
+    {
+      "id": "followup-3",
+      "operation": "rateHeadline",
+      "outcome": "failure",
+      "elapsedMs": 1091.9487420000005,
+      "finish": "unknown",
+      "validation": "unknown",
+      "filtered": false,
+      "quality": false,
+      "httpStatus": "error",
+      "tokens": {
+        "input": null,
+        "output": null
+      }
+    },
+    {
+      "id": "followup-4",
+      "operation": "rateHeadline",
+      "outcome": "success",
+      "elapsedMs": 564.9218579999942,
+      "finish": "stop",
+      "validation": "valid",
+      "filtered": false,
+      "quality": true,
+      "httpStatus": "ok",
+      "tokens": {
+        "input": 741,
+        "output": 182
+      }
+    },
+    {
+      "id": "followup-5",
+      "operation": "rateHeadline",
+      "outcome": "success",
+      "elapsedMs": 842.243083999987,
+      "finish": "stop",
+      "validation": "valid",
+      "filtered": false,
+      "quality": true,
+      "httpStatus": "ok",
+      "tokens": {
+        "input": 743,
+        "output": 141
+      }
+    },
+    {
+      "id": "followup-6",
+      "operation": "rateHeadline",
+      "outcome": "success",
+      "elapsedMs": 616.8949939999875,
+      "finish": "stop",
+      "validation": "valid",
+      "filtered": false,
+      "quality": true,
+      "httpStatus": "ok",
+      "tokens": {
+        "input": 742,
+        "output": 119
+      }
+    },
+    {
+      "id": "followup-7",
+      "operation": "rateHeadline",
+      "outcome": "success",
+      "elapsedMs": 872.7662960000016,
+      "finish": "stop",
+      "validation": "valid",
+      "filtered": false,
+      "quality": true,
+      "httpStatus": "ok",
+      "tokens": {
+        "input": 739,
+        "output": 206
+      }
+    },
+    {
+      "id": "followup-8",
+      "operation": "rateHeadline",
+      "outcome": "success",
+      "elapsedMs": 580.0225970000029,
+      "finish": "stop",
+      "validation": "valid",
+      "filtered": false,
+      "quality": true,
+      "httpStatus": "ok",
+      "tokens": {
+        "input": 738,
+        "output": 181
+      }
+    },
+    {
+      "id": "followup-9",
+      "operation": "rateHeadline",
+      "outcome": "success",
+      "elapsedMs": 1391.4202529999893,
+      "finish": "stop",
+      "validation": "valid",
+      "filtered": false,
+      "quality": true,
+      "httpStatus": "ok",
+      "tokens": {
+        "input": 738,
+        "output": 97
+      }
+    },
+    {
+      "id": "followup-10",
+      "operation": "rateHeadline",
+      "outcome": "success",
+      "elapsedMs": 736.7135999999882,
+      "finish": "stop",
+      "validation": "valid",
+      "filtered": false,
+      "quality": true,
+      "httpStatus": "ok",
+      "tokens": {
+        "input": 743,
+        "output": 111
+      }
+    },
+    {
+      "id": "followup-11",
+      "operation": "rateHeadline",
+      "outcome": "success",
+      "elapsedMs": 1432.6406600000046,
+      "finish": "stop",
+      "validation": "valid",
+      "filtered": false,
+      "quality": true,
+      "httpStatus": "ok",
+      "tokens": {
+        "input": 744,
+        "output": 113
+      }
+    },
+    {
+      "id": "followup-12",
+      "operation": "rateHeadline",
+      "outcome": "success",
+      "elapsedMs": 967.8747399999993,
+      "finish": "stop",
+      "validation": "valid",
+      "filtered": false,
+      "quality": true,
+      "httpStatus": "ok",
+      "tokens": {
+        "input": 744,
+        "output": 137
+      }
+    }
+  ],
+  "operations": {
+    "rateHeadline": {
+      "attempts": 12,
+      "success": 11,
+      "cache": 0,
+      "disabled": 0,
+      "failure": 1,
+      "limited": 0,
+      "successRate": 0.9166666666666666,
+      "underDeadline": 11,
+      "latency": {
+        "p50": 794.5092729999999,
+        "p95": 1432.6406600000046,
+        "max": 1432.6406600000046
+      }
+    },
+    "writeBotHeadline": {
+      "attempts": 0,
+      "success": 0,
+      "cache": 0,
+      "disabled": 0,
+      "failure": 0,
+      "limited": 0,
+      "successRate": 0,
+      "underDeadline": 0,
+      "latency": {
+        "p50": null,
+        "p95": null,
+        "max": null
+      }
+    }
+  }
+}

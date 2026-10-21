@@ -18,6 +18,7 @@ Field requirements:
   * 4 = Urgent, dramatic, high-stakes alarm ("Toxic Flour Shipment Poisoning Town!").
   * 5 = Explosive, shocking, outrageous headline impossible to ignore.
 - "onTopic": True IF the headline actively expresses and asserts the selected claim type at the given location (whether true or a lie), or for expose claims, names the rival newspaper being called out (location name is optional for expose). False if off-topic, denying the claim, or asserting an unrelated topic.
+  Judge whether the headline asserts the selected claim, not just whether it mentions the same topic or place. Example for scandal at the Bank: "Bank manager caught in shady deal!" asserts it (onTopic true); "Bank denies all scandal rumors" denies it (onTopic false). Read the meaning of the whole headline; no single word decides it. Never judge whether the claim is actually true.
 - "inappropriate": True if the headline contains hate speech, profanity, slurs, harassment, or adult content.
 - "bubbles": Array of 2 to 3 non-empty citizen reaction speech lines (each strictly 1 to 60 characters inclusive).
 

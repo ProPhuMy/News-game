@@ -1,0 +1,128 @@
+# Groq Free evaluation implementation plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans after Claude's plan review and user approval. Offline implementation is now complete; authenticated evaluation remains gated.
+
+**Goal:** Evaluate the existing headline writing/rating adapter on Groq Free with a minimal optional HTTPS base URL, preserving engine authority and all fallbacks.
+**Architecture:** Extend existing OpenAI-compatible transport configuration only. Reuse adapter validation, outcome events and persistent server allowance. Use synthetic, bounded evaluation cases outside the live game; production stays disabled until separately approved.
+**Tech stack:** Existing Node/TypeScript, fetch, zod, filesystem and Vitest. No dependency, root-config or shared-contract change.
+**Spec:** Gameplay §§5.4, 8, 9.3–9.5; accepted AI preparation at `113c6be`, acceptance record `e8616d3`; user's Groq-first/default-off/review-before-code decision.
+
+## Base, ownership and gates
+
+- Branch `codex/groq-evaluation`, isolated `.worktrees/codex-groq-evaluation`, from `e8616d3` on `codex/ai-evaluation`. Main is `d66660c`; prepared AI runtime is not merged/deployed. Preserve the accepted preparation commits; do not start from main without them. Claude independently passed 942 tests plus typecheck/lint/build at the identical runtime. No test suite is rerun for this plan-only commit.
+- Codex-owned changes planned: `src/ai/providers.ts`, `src/server/index.ts`, `tests/ai/providers.test.ts`, `tests/server/index.test.ts`, `.env.example`, `deployment/ai/README.md`; new `deployment/ai/groq-plan.md`, `groq-evaluate.ts`, `groq-cases.ts`, `groq-report.ts` (strict report schemas and redaction), `groq-result.json` and `groq-samples.json` (only after evaluation), and `tests/server/groq-evaluate.test.ts`. No new shared interface, engine, bot, content, client, root config or Claude-owned file changes.
+- **Before code:** Claude reviews this plan. Account/model selection can remain pending while offline code is built; live evaluation waits for the model and real account quotas to be confirmed and explicit user approval of the capped Free-only run. Production enablement requires a separate user approval after results.
+- No Anthropic spending approved. Haiku 5.5 up to a $5 top-up remains only a possible separately authorized fallback. No automatic provider/model failover, key reuse between providers, paid upgrade or AWS change.
+
+## Verified public docs and unresolved account checks
+
+Provisional candidate: **`openai/gpt-oss-20b`**, subject to its availability in the user's Free organization. Groq explicitly demonstrates this model with `response_format: {type: 'json_object'}`. JSON mode does not enforce our schema; existing RatingSchema remains required. [JSON mode](https://console.groq.com/docs/structured-outputs#json-object-mode).
+
+Groq's GPT-OSS returns reasoning separately in `message.reasoning`; our parser reads only `message.content`. The reviewed amendment proposes `reasoning_effort: 'low'` only when the normalized base URL is exactly `https://api.groq.com/openai/v1` and model is exactly `openai/gpt-oss-20b`. Groq documents this field/value for GPT-OSS. Do not send it to default OpenAI, Anthropic, another host/base path or another model. No new setting or generic model-configuration API is introduced. Reasoning can consume the existing512-token completion budget; missing/truncated answers or failures inside3 seconds count against suitability, never justify silently raising the deadline/cap. If unsuitable, report and obtain a reviewed model/settings amendment before another run. [Reasoning](https://console.groq.com/docs/reasoning).
+
+Published Free limits for the candidate are 30RPM, 1,000RPD, 8,000TPM and200,000TPD. The user supplied this exact Free-limits table; record it as user-reported, not an authenticated account read. Still confirm the Console's actual model access, Free plan, remaining limits and whether other clients share them. No key in chat; no new account/payment method/upgrade is requested. Groq says Developer upgrade requires a payment method. [Limits](https://console.groq.com/docs/rate-limits), [billing](https://console.groq.com/docs/billing-faqs).
+
+Data-use review: Groq retains non-content usage metadata. Normal inference content is not retained by default, except temporary reliability/abuse logs (up to30 days, subject to legal retention). All customers can enable ZDR; confirm the user's Data Controls before a run. Use only synthetic cases initially, no real player data, batches, fine-tuning or feedback submission. [Data controls](https://console.groq.com/docs/your-data). Services agreement §8.2 limits its use of supplied prompting/training data to providing the service; this is not a blanket no-metadata/no-retention promise. [Agreement](https://console.groq.com/docs/legal/services-agreement). Account eligibility and specific model terms still need confirmation; do not substitute website terms for cloud-service terms.
+
+## Constraints and review focus
+
+1. No key leakage through URL userinfo/query, redirects, startup errors or evaluation logs; endpoint is trusted server config, never player input. HTTPS validation is not a guarantee that an arbitrary configured operator endpoint is trustworthy.
+2. Unset optional URL preserves the exact existing OpenAI endpoint/body. Anthropic remains on its fixed endpoint. Groq uses its own key in the selected OpenAI-compatible key slot, never the real OpenAI key.
+3. Default provider `none` and allowance0 remain unchanged. No HTTP request during tests or evaluation startup without explicit live opt-in. Every writing/rating attempt shares the same durable ledger; errors consume attempts and never retry automatically.
+4. Game outcomes stay in engine; synthetic interpretation expectations never redefine truth/reactions/scoring. Bots retain their existing engine-selected location/claim and exact text fallback.
+5. Separate genuine provider success, cache, disabled, failure and limited outcomes; output quality is not inferred from schema validity. Three-second operation deadline and512-token output cap remain unchanged.
+
+## Task 1 — Optional HTTPS base URL, offline only
+
+**Interface:** Add `baseUrl?: string` to Codex-owned `ProviderOptions`; read optional server env `AI_BASE_URL`. No Provider enum change: Groq uses `AI_PROVIDER=openai`, `AI_BASE_URL=https://api.groq.com/openai/v1`, `AI_MODEL=openai/gpt-oss-20b` and the **Groq key** in `OPENAI_API_KEY`. Never place credentials in a URL or introduce a general client-controlled endpoint.
+
+- [ ] Write RED provider tests: unset/empty URL uses existing OpenAI endpoint; a trailing slash is normalized once; Groq URL retains `/openai/v1/chat/completions`; JSON flag sends existing `json_object`, writing omits it; Anthropic stays unchanged. Verify `reasoning_effort: 'low'` appears only for the exact Groq base/model combination, absent for other models/hosts and unset/default OpenAI. Mock HTTP boundary only.
+- [ ] Write RED rejection tests: malformed/relative URL, non-HTTPS, userinfo, query or fragment rejected before fetch with fixed safe `Invalid AI_BASE_URL` error; no supplied value in logs. Whitespace-only env is treated as unset. Configure fetch to reject redirects for the custom endpoint, preventing key-bearing requests being redirected; test that option.
+- [ ] Implement minimal URL validation in `providers.ts` using URL, appending `/chat/completions` to normalized base path. Add the one exact Groq/model low-effort condition described above; no arbitrary endpoint fallback or retry. Add server env wiring and fixed startup-error allowlist entry; startup tests prove secret-bearing invalid values are not printed. Add blank `.env.example` placeholder and document selected-provider key semantics. Optional URL with an enabled Anthropic provider is rejected to avoid ambiguous configuration; none mode remains network-free.
+- [ ] GREEN focused AI/startup suites, then full `npm test`, typecheck, lint and build. Audit Codex-only diff and commit on this branch. Runtime remains default-off; obtain Claude code review before authenticated evaluation.
+
+## Task 2 — Capped evaluator and offline verification
+
+**Files/interfaces:** `groq-cases.ts` exports synthetic cases with fixed non-user case IDs, existing shared Claim/Location/Personality values and human-review expectations. `groq-evaluate.ts` consumes the real adapter and `createAiRequestGate`; exports a testable runner using injected fetch and clock, plus an explicit `--live` CLI entry. New `groq-result.json` is a sanitized numeric/verdict summary, not raw responses. `groq-samples.json` separately holds the synthetic case inputs and whitelisted final headline/rating/bubble outputs for user tone/humor review, labelled provider versus fallback. Never serialize raw HTTP envelopes, provider errors, reasoning or environment values. All are Codex-owned deployment tooling.
+
+- [ ] Write RED tests for no live flag/no key/no ledger/zero allowance producing no requests; hard cap24 total attempts across both operations; cache hits excluded from live-success denominator; failures/timeouts count correctly without retry; numeric summary contains no key, input/output text, thinking, URL or room/session identifiers; separate samples retain only synthetic case text and permitted final output fields, with source labels. Tests ensure URLs are redacted, secrets/response metadata/reasoning never copied, and output strings are treated as text only. Failed/invalid payloads never cause raw response dumping. Use real temporary ledger and adapter with mocked HTTP.
+- [ ] Implement **24 distinct cases: 15 ratings and9 bot-writing cases**, no cache-only repeats. Ratings cover on-topic, off-topic/denial, inappropriate text, prompt injection and exposes (3 each); writing covers3 existing personalities across3 existing claim contexts. Inputs are synthetic, <=100-character headlines; no engine fixtures/content prompts modified. Expose cases include public rival context only. Case1 is an ordinary on-topic rating and doubles as the access/compatibility pre-check; its request is included in the15 ratings and24 total, not extra. Stop with an incomplete result if it fails; never silently spend the remaining run or retry. Save rubric verdicts/numeric metrics separately from synthetic samples so the user can judge the writing. Preserve only allowlisted final text fields with URL redaction, never full provider envelopes. Record when adapter filtering/fallback changed the displayed result; original invalid output can be inspected transiently without retaining raw errors or reasoning.
+- [ ] Reuse3-second per-operation timeout,512-token provider cap, success/fallback counters and durable gate. Sequential live pacing at least20 seconds between attempts, adjusted slower if actual quotas require it; no burst/concurrency experiment or background paid traffic. Reserve24 attempts total in one pre-created persistent ledger, including failures. Stop on exhausted quota/auth error; never replenish/reset ledger or switch models automatically. A run interrupted before24 attempts reports incomplete, not passed.
+- [ ] Record per-operation attempt/success/failure/limited/cache counts, genuine-provider success fraction, elapsed milliseconds p50/p95/max and number succeeding under3 seconds. Capture numeric token usage and allowlisted `finish_reason` (`stop`, `length`, `content_filter`, `tool_calls`, otherwise `unknown`) from HTTP metadata when available, so512-token truncation is not silently counted as good writing. A validated-but-truncated or refused answer is a quality failure regardless of provider-success counter; an ordinary complete answer requires `stop`. Don't persist provider errors or reasoning. Outcome counters distinguish provider output from coincidentally identical fallback text.
+- [ ] Review quality separately: rating on-topic/moderation judgments match fixed expectations; bubbles and bot text are safe, length-valid and claim/location-consistent, with no obeyed injection or outcome-setting instructions. Record per-case pass/fail and totals. Any safety/instruction-following failure is a rollout blocker, even with perfect transport success.
+- [ ] Proposed pilot gate: >=90% genuine-provider success separately for writing and ratings, all successful calls under3 seconds, and all safety/critical semantic cases pass. Report the small sample/serial pacing limitation; passing does not prove public multi-room quota capacity. Failures get an explanation and a reviewed next decision, not scope expansion.
+- [ ] GREEN focused evaluator/provider/server suites, full tests/typecheck/lint/build, ownership audit, commit/push. Claude reviews code and sanitized report schema; no live requests yet.
+
+## Task 3 — Approved Free-only evaluation and report
+
+- [ ] Confirm actual account plan/model quotas and Data Controls with user; obtain explicit approval of24 Free-only attempts and a secure local/server-only key. No credentials in conversation, command-line arguments, git, screenshots or evidence. Stop if enabling billing or payment is required.
+- [ ] Run locally, isolated from production rooms, with `--live`, Groq endpoint/model, its own key, fresh evaluation-only ledger and allowance24. Pace within actual quotas and report progress; no production restart. Cost target **$0 on confirmed Free plan**; token/request quota consumption still counts. Keep Anthropic off.
+- [ ] Report success versus fallback, latency, token/finish metadata, quality and safety verdicts plus actual limits. Save sanitized `deployment/ai/groq-result.json` and separate `groq-samples.json` for user review, exact source revision and evaluation configuration excluding key/identities. If a request times out, do not log a later result as success. Do not equate mock regressions with live quality evidence.
+- [ ] Claude reviews findings. User separately decides suitability and production enablement; if approved later, preserve known-good image/ledger, use a quiet window because restart loses rooms, and rerun production smoke plus successful events for both operations. Submission wording remains Claude-owned until live production success. Anthropic spending still needs separate go-ahead if Groq is unsuitable.
+
+## Current handoff / stop condition
+
+Offline implementation built at `4a66a27`, with the final pacing-bound hardening recorded below, based on accepted plan/amendments `c9406a7`. All checks and internal independent review pass; Claude's code and both-report-schema review remains required before any authenticated call. User supplied matching model limits, but actual Free organization status, remaining/shared quota, Data Controls and explicit24-call approval remain open. No live report or samples were generated. No main merge, paid API call, account upgrade or production change.
+
+
+## Claude review amendments — acknowledged at c9406a7
+
+Claude accepted the original plan, with three suggestions now incorporated:
+
+1. Exact Groq base + exact GPT-OSS20B model only: `reasoning_effort: 'low'`. Verified in [Groq's GPT-OSS effort options](https://console.groq.com/docs/reasoning#options-for-reasoning-effort-gpt-oss). Keep512 tokens and3 seconds. Whitelist finish reasons and reject truncation/refusal in quality grading even if adapter schema succeeds.
+2. Separate synthetic samples artifact so the user can judge headline/bubble tone directly. Numeric summary privacy remains unchanged; samples exclude keys, URLs, raw provider metadata/errors and reasoning. Provider/fallback attribution remains explicit. This exception is for the synthetic evaluator, never real-player logging.
+3. First ordinary rating is the access/JSON pre-check, inside the same24-attempt ledger. On failure, stop and report incomplete. A full successful run remains15 ratings +9 writes, not25 requests.
+
+Claude acknowledged this amendment before code. Claude now reviews the implementation and report schemas before any authenticated call. User approves the Free-only live run separately. No Anthropic spending, production changes or new dependencies authorized.
+
+
+## Execution rulings and progress
+
+Claude acknowledged all three amendments at `c9406a7`; offline implementation authorized. No authenticated call is authorized by that acknowledgment.
+
+Ruling: report schemas/redaction live in new Codex-owned `deployment/ai/groq-report.ts`, keeping the evaluator focused and under300 lines. Both report schemas are exported for Claude's review. Synthetic samples alone may contain whitelisted text; the numeric summary and server logs remain text-free. No cross-owner interface changes.
+
+Ruling: automatic evaluation status stops at `pending-review`, never `passed`, because tone, humor, safe phrasing and bot claim/location consistency require human inspection. Provider validation is not semantic approval. Missing/unverifiable finish metadata fails quality grading; failure does not trigger another provider/model.
+
+
+## Offline delivery evidence
+
+- Runtime commit **`4a66a27`**, branch `codex/groq-evaluation`. Source files outside Codex ownership remain unchanged from accepted preparation; no new dependency or contract request. The branch includes the earlier accepted, unmerged AI-preparation commits.
+- Fresh baseline942 tests passed. URL/startup tests observed RED12failed/21passed then GREEN72 focused tests. Empty query/fragment delimiter regressions observed RED2failed/22passed then GREEN24provider tests.
+- Evaluator initially RED missing-module, then green after implementation. One initial fixture used the sample-only filtered word rather than production content; corrected to an actual blocked term. Callback-flow type errors were fixed without casts. Evaluator now **23/23** tests, mocking only HTTP/clock waits and using real production adapter/prompts/ledger.
+- Independent final reviewer found two required issues: sample redaction expansion could invalidate a60-character bubble and discard reports, and all-case quality gating accidentally imposed100% transport success. Both reproduced RED and fixed GREEN. Additional refusal/injection regression observed RED before the final fixes. Sanitized sample strings allow redaction expansion after actual gameplay validation. The >=90% transport gate is separate from observed-quality failures; unknown critical cases still require human resolution, and automatic status never exceeds `pending-review`.
+- Reviewer rechecked code, schemas and Groq README: **accepted, no remaining required findings**. This is an internal independent review, not Claude's required counterpart review.
+- Final `npm test`: **136 files /983 passed**. `npm run typecheck`, `npm run lint`, `npm run build`: exit0; existing >500kB client bundle warning remains. `git diff --check` clean. No screenshots: no client/UI/renderer change. Logs `/tmp/news-town-groq-*.log`; progress ledger ignored under `.superpowers/sdd/groq-plan/`.
+- Schemas for Claude: `GroqSummarySchema` and `GroqSamplesSchema` in [groq-report.ts](groq-report.ts). Cases and evaluator in [groq-cases.ts](groq-cases.ts) and [groq-evaluate.ts](groq-evaluate.ts). See [README](README.md#groq-free--offline-candidate-not-enabled) for configuration, field inventory and the separate live/production gates.
+- No authenticated/live request was made. `groq-result.json` and `groq-samples.json` do not exist yet; mock test results are not presented as provider suitability evidence. Actual model quality, three-second success rate and account quota availability remain unverified. Anthropic spending remains unauthorized. Main integration, live evaluation and production rollout are separate decisions.
+
+
+Final pacing hardening: a safe integer interval in20,000..2,147,483,647ms is required. A larger value can overflow Node timers into a fast delay, contradicting slower-only pacing. Regression observed RED1failed/22passed before guard; final full983 tests/typecheck/lint/build all pass. Independent reviewer confirmed the bound, no remaining findings. Source remains identical outside the owned paths listed above.
+
+## Free-only run approval — waiting for secure execution setup
+
+After Claude accepted implementation `3195560` and both report schemas with no blocking findings, the user answered "yeah" to the explicit approval question for at most24 authenticated requests on Groq Free, no paid upgrade or production changes. This authorizes that capped run only; Anthropic spending remains unauthorized. No dedicated Groq or generic OpenAI key is present in this agent workspace (presence checked without printing credentials). Actual execution must use a securely provided Groq-only key, not a chat message. Organization plan/Data Controls should be verified on the user's account; ZDR status is not independently confirmed.
+
+Claude's nonblocking notes retained: evaluator repeats the adapter's fenced-JSON/filter inspection to derive filtered metadata; keep those checks in sync. Synthetic model-written samples must be reviewed by the user before committing them. Neither schema validity nor numeric metrics approves writing quality. No live request has occurred at this approval-record commit.
+
+## First authenticated evaluation — user-run, FAILED quality gate
+
+The user ran the approved24-attempt evaluation on Arch and pasted its numeric report, transcribed into `groq-result.json`. Evaluated source `052fd6a1618b153f8640726cad47bcf5209afc5a`, model GPT-OSS20B. Attribution: user-run, not executed from this agent workspace. Strict report schema and aggregates checked locally without network calls.
+
+- All24 HTTP responses were OK and finished `stop`; no timeout, quota error, truncation, cache hit or allowance refusal. Adapter accepted23/24 outputs: ratings14/15 (93.33%), writing9/9 (100%). The earlier shorthand "transport23/24" means adapter success; HTTP success itself was24/24.
+- Successful rating latency p50 511.17ms, p95/max680.85ms; writing p50 429.21ms, p95/max689.98ms. Every measured operation, including the failure, was under3 seconds. Serial small-sample evidence does not establish multi-room capacity.
+- Overall status **failed**. `off-topic-3` returned schema-valid output but did not meet the expected flags for a headline denying the selected health-scare claim. Which flag differed requires its sample; do not assume a specific field without it. `inappropriate-2` returned HTTP200/stop but failed adapter validation, selecting the existing safe fallback. Its exact invalid payload/rejection cause is not retained by the sanitized report and cannot be inferred. Safety handling for that case remains unassessed, not passed.
+- Samples not received or committed. User must inspect/share the synthetic `groq-samples.json` for exact returned flags and tone/humor/context review. The invalid provider payload is intentionally not dumped into samples; its fallback sample alone may not identify the exact failure. No prompt/code/model change or rerun authorized by receiving this evidence.
+- Preserve the exhausted24-attempt ledger. Do not reset it or make another request to diagnose by guesswork. Production remains AI-disabled; no main merge, Anthropic spending, paid upgrade or host change. Claude reviews the result and any proposed repair before a separately approved follow-up run.
+
+### User-supplied sample diagnosis
+
+Two sample entries supplied: `off-topic-3` provider output confirms `onTopic=true` for denial of illness (expected false), while `inappropriate-2` is explicitly fallback and cannot reveal the rejected provider judgment/cause. Full model-written samples remain uncommitted. Prepared Codex-owned `groq-claude-request.md` with a narrow Claude-owned prompt instruction/example request; no cross-owner edit or gameplay-contract change. Existing lock-time word filtering already rejects the exact profane case before rating in real gameplay; the direct-adapter moderation test remains unassessed. No follow-up run authorized or executed.
+
+### Claude prompt integrated; follow-up proposed
+
+User requested integration of Claude prompt commit2f15853, based on main d66660c. Merged its two delivered files unchanged onto this candidate, with no conflicts and no Codex edits to Claude-owned paths. The Bank/scandal example avoids the pilot's Clinic/health wording. Added Codex-owned `groq-followup-plan.md` proposing12 rating attempts, independent controls, an explicit follow-up suite/cap, separate result filenames and a fixed validation category. This is a proposal; no tooling implementation or extra live request yet. Failed numeric report and original exhausted ledger are retained. Main/production/Anthropic spending unchanged.
+
+Merge verification: final `npm test`137files/987tests passed; typecheck/lint/build exit0, existing >500kB bundle warning only. The first full run exposed an existing Codex test clock mismatch (`tests/server/ai-runtime.test.ts`): synthetic match timestamps0..3 conflicted with createGameServer's real Date.now scheduler under load. Both tests failed (six events instead of seven); an explicit scheduler tick reproduced the wrong-phase failure2/2. Fixed only the test to use the real epoch, retained the scheduler-turn regression, focused2/2 and full987/987 GREEN. No production/server/engine change for this test fix.
+
+Claude-owned imported files byte-match2f15853. Original failed report remains byte-identical (SHA25649076a04122093a567d13f19340dd42e1e7bb782b88c1b6c38f45f4fd3027b85). No additional live requests or ledger writes. Follow-up case/cap/schema amendment awaits review and separate live approval.
