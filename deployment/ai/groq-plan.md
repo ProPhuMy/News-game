@@ -118,3 +118,11 @@ The user ran the approved24-attempt evaluation on Arch and pasted its numeric re
 ### User-supplied sample diagnosis
 
 Two sample entries supplied: `off-topic-3` provider output confirms `onTopic=true` for denial of illness (expected false), while `inappropriate-2` is explicitly fallback and cannot reveal the rejected provider judgment/cause. Full model-written samples remain uncommitted. Prepared Codex-owned `groq-claude-request.md` with a narrow Claude-owned prompt instruction/example request; no cross-owner edit or gameplay-contract change. Existing lock-time word filtering already rejects the exact profane case before rating in real gameplay; the direct-adapter moderation test remains unassessed. No follow-up run authorized or executed.
+
+### Claude prompt integrated; follow-up proposed
+
+User requested integration of Claude prompt commit2f15853, based on main d66660c. Merged its two delivered files unchanged onto this candidate, with no conflicts and no Codex edits to Claude-owned paths. The Bank/scandal example avoids the pilot's Clinic/health wording. Added Codex-owned `groq-followup-plan.md` proposing12 rating attempts, independent controls, an explicit follow-up suite/cap, separate result filenames and a fixed validation category. This is a proposal; no tooling implementation or extra live request yet. Failed numeric report and original exhausted ledger are retained. Main/production/Anthropic spending unchanged.
+
+Merge verification: final `npm test`137files/987tests passed; typecheck/lint/build exit0, existing >500kB bundle warning only. The first full run exposed an existing Codex test clock mismatch (`tests/server/ai-runtime.test.ts`): synthetic match timestamps0..3 conflicted with createGameServer's real Date.now scheduler under load. Both tests failed (six events instead of seven); an explicit scheduler tick reproduced the wrong-phase failure2/2. Fixed only the test to use the real epoch, retained the scheduler-turn regression, focused2/2 and full987/987 GREEN. No production/server/engine change for this test fix.
+
+Claude-owned imported files byte-match2f15853. Original failed report remains byte-identical (SHA25649076a04122093a567d13f19340dd42e1e7bb782b88c1b6c38f45f4fd3027b85). No additional live requests or ledger writes. Follow-up case/cap/schema amendment awaits review and separate live approval.
