@@ -69,3 +69,11 @@ User-run EC2 observations at2026-10-21 15:11:35UTC:
 - These are point-in-time resource observations, not a sustained-load or during-match measurement. No new CPU-credit balance was supplied. Resource-observation closeout is satisfied; no additional capacity claim is made.
 
 The remaining rollout-closeout gate is the user-run external3000 connection check. Total allowance remains100 on the same retained ledger; no increase/reset is approved. No source changes, new calls or host mutations were made while recording this update. Prior pending lists above are historical snapshots superseded by this section.
+
+## Final closeout — passed
+
+The user supplied the external Arch connection result for http://3.20.0.241:3000/: `curl: (28) Connection timed out after 5002 milliseconds`. Combined with the inspected127.0.0.1-only Docker publication, this closes the remaining external-port gate for this deployment.
+
+The approved Groq Free pilot rollout is complete: reviewed candidate running, public HTTPS and full production smoke passed, genuine successes demonstrated for both operations, recovery image retained, external backend inaccessible in the supplied test, and host resource observations recorded. Claude accepted the production evidence with no required findings before these final host checks. All host evidence remains attributed to user-run commands; no executed rollback or sustained-load capacity claim is made.
+
+Allowance remains100 lifetime attempts shared across operations on the same persistent ledger. The last supplied usage snapshot was20 consumed/80 remaining, not a current balance. Any increase needs new user approval on that ledger; no automatic reset/refill. No sample commit, main merge, paid upgrade or submission wording change occurred. Full candidate checks were996tests/typecheck/lint/build passing; no suite rerun was needed for this evidence-only closeout. No new API calls were made by the agent.
