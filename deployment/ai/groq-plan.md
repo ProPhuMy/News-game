@@ -98,3 +98,9 @@ Ruling: automatic evaluation status stops at `pending-review`, never `passed`, b
 
 
 Final pacing hardening: a safe integer interval in20,000..2,147,483,647ms is required. A larger value can overflow Node timers into a fast delay, contradicting slower-only pacing. Regression observed RED1failed/22passed before guard; final full983 tests/typecheck/lint/build all pass. Independent reviewer confirmed the bound, no remaining findings. Source remains identical outside the owned paths listed above.
+
+## Free-only run approval — waiting for secure execution setup
+
+After Claude accepted implementation `3195560` and both report schemas with no blocking findings, the user answered "yeah" to the explicit approval question for at most24 authenticated requests on Groq Free, no paid upgrade or production changes. This authorizes that capped run only; Anthropic spending remains unauthorized. No dedicated Groq or generic OpenAI key is present in this agent workspace (presence checked without printing credentials). Actual execution must use a securely provided Groq-only key, not a chat message. Organization plan/Data Controls should be verified on the user's account; ZDR status is not independently confirmed.
+
+Claude's nonblocking notes retained: evaluator repeats the adapter's fenced-JSON/filter inspection to derive filtered metadata; keep those checks in sync. Synthetic model-written samples must be reviewed by the user before committing them. Neither schema validity nor numeric metrics approves writing quality. No live request has occurred at this approval-record commit.
