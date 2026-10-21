@@ -20,22 +20,26 @@ describe('picket sign kit (interface §5c, as amended by Codex)', () => {
   it('has short family-friendly slogans in the pixel font', () => {
     expect(PICKET_SIGN_TEXTS.length).toBeGreaterThanOrEqual(3);
     for (const text of PICKET_SIGN_TEXTS) {
-      expect(text.length, text).toBeLessThanOrEqual(6);
+      expect(text.length, text).toBeLessThanOrEqual(5);
       for (const ch of text) expect(SIGN_GLYPHS[ch], `${text}: ${ch}`).toBeDefined();
     }
   });
 
-  it.each(PICKET_SIGN_TEXTS)('"%s" holds at the grip: board above it facing +Z, about 1.3 tall', (text) => {
+  // Codex holds the grip at about 0.85 above a 1.8-tall citizen's feet; the board must clear the head and cap (~2.0)
+  // so a protest reads as raised signs from the whole-town camera, and stay narrow enough for a packed crowd.
+  it.each(PICKET_SIGN_TEXTS)('"%s" holds at the grip: board raised above the crowd, facing +Z', (text) => {
     const kit = createPicketSignKit(fakeContext('b'));
     const sign = kit.create(text);
     sign.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(sign);
     expect(box.min.y).toBeLessThan(0);
-    expect(box.max.y - box.min.y).toBeGreaterThanOrEqual(1.2);
-    expect(box.max.y - box.min.y).toBeLessThanOrEqual(1.4);
-    const face = sign.getObjectByName(`sign-face-${text}`)!;
-    expect(new THREE.Box3().setFromObject(face).getCenter(new THREE.Vector3()).z).toBeGreaterThan(0);
-    expect(new THREE.Box3().setFromObject(face).min.y).toBeGreaterThan(0.5);
+    expect(box.max.y - box.min.y).toBeGreaterThanOrEqual(2.0);
+    expect(box.max.y - box.min.y).toBeLessThanOrEqual(2.5);
+    const face = new THREE.Box3().setFromObject(sign.getObjectByName(`sign-face-${text}`)!);
+    expect(face.getCenter(new THREE.Vector3()).z).toBeGreaterThan(0);
+    expect(face.min.y + 0.85).toBeGreaterThan(2.05);
+    expect(face.max.y - face.min.y).toBeGreaterThanOrEqual(0.55);
+    expect(box.max.x - box.min.x).toBeLessThanOrEqual(2.1);
     kit.dispose();
   });
 

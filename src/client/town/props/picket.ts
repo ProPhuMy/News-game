@@ -5,8 +5,8 @@ import type { ArchitectureContext } from '../../visuals/town-types.ts';
 import { at, createPieceParts, type PieceParts } from '../architecture/piece.ts';
 import { createSignboard } from '../architecture/signs.ts';
 
-/** Family-friendly slogans in the pixel font, at most 6 glyphs each. */
-export const PICKET_SIGN_TEXTS: readonly string[] = ['BOO!', 'NO!', 'FAKE!', 'SHAME!'];
+/** Family-friendly slogans in the pixel font; at most 5 glyphs so a raised board stays narrower than a crowd slot. */
+export const PICKET_SIGN_TEXTS: readonly string[] = ['BOO!', 'NO!', 'FAKE!'];
 
 export interface PicketSignKit {
   /** A sign for one actor: a clone of this kit's original for `text` (created on first use), sharing its resources. */
@@ -15,9 +15,9 @@ export interface PicketSignKit {
   dispose(): void;
 }
 
-const BOARD_HEIGHT = 0.36;
+const BOARD_HEIGHT = 0.56;
 const STICK_BOTTOM = -0.15; // the grip (origin) sits a little above the stick's lower end
-const STICK_TOP = 0.7;
+const STICK_TOP = 1.3; // board clears a 1.8-tall citizen's head when held at Codex's grip (~0.85)
 
 function buildOriginal(ctx: ArchitectureContext, parts: PieceParts, text: string): THREE.Object3D {
   const root = new THREE.Group();
