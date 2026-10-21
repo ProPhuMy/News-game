@@ -1,6 +1,6 @@
 # C5 Should renderer handoff — Codex
 
-Status: renderer implementation, counterpart review and reference-laptop FPS are accepted. **C5 remains open** for candidate deployment/production smoke and Claude's final closeout. D5 has not started.
+Status: renderer implementation, counterpart review and reference-laptop FPS are accepted. **C5 remains open** for final production screenshot/source-identity evidence and Claude's closeout. The candidate is now deployed and its user-run remote smoke passed; latest rollout details are recorded below. D5 has not started.
 
 ## Base, gates and ownership
 
@@ -124,3 +124,22 @@ After receiving the full measurement and comparison, the user said: **"right i t
 The required FPS gate is therefore **accepted by user decision**. No additional optimization, feature removal or identical recording is required for this candidate. All agreed Should effects remain present. Product source is unchanged; candidate identity remains merge `1001abad` / 179-file source digest `bb1e10483d5e92a2735c6683a31247b457805edbd79da26be694420da76bea92`.
 
 Next: use the existing user-operated EC2 candidate deployment and production smoke workflow, retain the current image for rollback, record the actual deployed source/image identity, and send the resulting production evidence for C5 closeout. C5/D5 are not declared passed here. No paid services, account upgrade, contract change or production action was authorized or executed by this acceptance record. Documentation-only update: `git diff --check` and ownership/source checks; no app tests rerun.
+
+
+## EC2 candidate rollout and remote smoke — user-run, passed
+
+The user uploaded the reviewed `d86a2d5ea16cfb8e5fb42ae0230b611f0bb0a9b8` Git archive. Arch archive regeneration initially failed because an existing same-named /tmp archive belonged to the other user; its reported checksum exactly matched Codex's prepared archive, and upload succeeded. Host checksum also matched: `cd402f0196ef73ee3c17a3db24606b8a636febd5d30ae004f9d0966e4a023279`.
+
+User-run Docker build succeeded from that release directory. Inspection returned image **`sha256:4a038abd4b757e14f25455c0ca6c9f92787e9a220c2b6f63c17033a0705c87e6`**, OCI revision **`d86a2d5ea16cfb8e5fb42ae0230b611f0bb0a9b8`**. The existing running image was retained as `news-town:recovery-before-c5`, resolving to **`sha256:51f74f3518ec9145dad4fc135798f95d079f27484bc260135187daee05094bfa`**. Observed bridge gateway remained `172.17.0.1`.
+
+User replaced only `news-town-app` using the inspected image and the same loopback port, local log limits, AI_PROVIDER=none, Render trust off and exact bridge-proxy trust settings. Caddy/DNS/EC2 resources were not changed by these commands. Post-replacement inspection returned that same image ID; HTTPS returned HTTP/2 200 via Caddy on 2026-10-21 03:11:34 UTC.
+
+User then ran the existing remote smoke from Arch against `https://newstown.prophumy.com` with output `$HOME/news-town-C5-smoke/smoke.json`. Supplied stdout:
+
+```json
+{"passed":true,"origin":"https://newstown.prophumy.com","remote":true,"node":"v26.12.0","browser":"153.0.8010.12","assets":26,"fonts":1,"models":17,"sounds":4,"browserSessions":2,"restoredSeat":true,"results":true}
+```
+
+This is **user-run and user-reported** passing evidence: all asset byte/MIME checks, isolated seats, actual WebSocket traffic, submitted investigation recovery, privacy assertions and complete five-round results passed according to the probe. The stdout omits assetHashes by design; the saved JSON retains them. The existing probe also writes shared-helper `production-home.png`/`production-final.png` plus sidecars alongside the output. Codex cannot yet read those private-home files; do not substitute the earlier local screenshots or claim remote PNG inspection.
+
+Remaining closeout evidence: copy the five saved smoke/evidence files into a readable shared location, inspect remote PNGs/sidecars and asset hashes, obtain the running container's same 179-file source digest, then relay the production evidence for Claude's final C5 closure. Expected digest remains `bb1e10483d5e92a2735c6683a31247b457805edbd79da26be694420da76bea92`; archive/revision/image identity is recorded, but the full container fingerprint has not been supplied yet. Rollback image is retained; rollback remains **not executed**. D5 remains unstarted. No new app code, resources, paid upgrade or contract request.
