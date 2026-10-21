@@ -43,6 +43,7 @@ New Codex-owned modules with mirrored tests:
 - `src/client/town/daylight.ts`, `tests/town/daylight.test.ts`: interpolate supplied lighting looks and lamp level in frame time.
 - `src/client/town/emotes.ts`, `tests/town/emotes.test.ts`: deterministic selection and camera-projected text glyph overlay (anger mark, not the word "anger").
 - `src/client/town/reaction-props.ts`, `tests/town/reaction-props.test.ts`: bounded per-citizen sign reuse and arrival/clear lifecycle.
+- `tests/town/playback-shoulds.test.ts`: dedicated C5 arrival/timing regressions, keeping the existing playback test file under about 300 lines.
 - `docs/visual-overhaul/handoffs/C5-codex-shoulds.md`: resulting evidence and remaining gates.
 
 Additive presentation API: `TownView.setTimeOfDay(time: TimeOfDay): void`, implemented by the town and as a no-op by the fallback. `mountTown` calls it using `timeOfDay(snapshot.round, snapshot.phase)` on authoritative updates and `'midday'` without a snapshot. No shared or store shape changes. Existing `setPhase(phase)` and playback signatures stay stable. Counterpart must acknowledge this addition before code.
@@ -88,3 +89,12 @@ Internal module exports (Codex-owned): `createDaylight(scene: TownScene, buildin
 ## Expected delivery and stop condition
 
 A committed Codex branch with all renderer Should features, no gameplay changes, passing checks, viewed screenshots and explicit performance/production evidence status. User controls merge and art approval. D5 and its cover remain separate and wait for C5; no new contract requests are anticipated.
+
+## Execution record
+
+- All prerequisite gates were relayed as passed by the user: Claude delivery merged at `ee66d69`, counterpart acceptance (including `setTimeOfDay`) and six-look art approval. Main merged into this branch without conflicts.
+- Task 1 implemented at `d304b9c`; daylight/mount tests 17/17. Morning/dusk/night captures opened directly. Fog is updated with the other look fields.
+- Tasks 2/3 implemented together at `7b96b5e`, since they share the same arrival path and coordinator regressions. No redundant reduced-motion setter was added: index already provides a live getter. Sign clones remain bounded per citizen; natural completion preserves feedback while explicit stop clears it.
+- Review fix pass: pre-plan elapsed time after suspension and overlapping emotes each received RED/GREEN regressions. Playback now uses a per-plan wall-time baseline; bounded glyph placement avoids speech bubbles and other icons. Six focused renderer files passed, then the full suite passed 129 files / 908 tests. Typecheck/lint/build exit 0.
+- Lifecycle ruling: context loss hides/restores emotes rather than clearing completed feedback; bubbles keep the established clear policy. Missing snapshot after an active match maps to existing renderer `setPhase('ended')` cleanup and midday lighting, without sending an action or altering authoritative state.
+- Task 4 is in progress: final captures and evidence handoff. Hardware FPS, counterpart final presentation review and actual production rollout/smoke remain open. Details live in `handoffs/C5-codex-shoulds.md`; D5 has not started.
