@@ -70,3 +70,16 @@ Final offline verification: `npm test` **138files/996tests passed**; typecheck, 
 Claude accepted implementation `3e364e1`, including both strict report schemas, cap/selection, legacy compatibility and safe diagnostics. User relayed Claude's independent996-test/typecheck/lint/build pass and explicitly said "yeah i approve". This authorizes at most12 additional authenticated Groq Free requests for the reviewed fixed suite only, with a separate allowance12 ledger. It does not authorize resetting the original exhausted24-attempt ledger, paid upgrades, Anthropic spending, main merge or production change.
 
 Execution remains user-run on Arch, where the Groq-only key can be entered through a hidden local prompt rather than chat. Preserve prior generated artifacts before updating the checkout; do not discard changes if git refuses. No new follow-up call occurred in this approval-record delivery. Generated follow-up samples require user inspection before any commit; unknown validation after timeout/transport failure remains unassessed, never a moderation pass.
+
+## User-run follow-up result — pending review
+
+The user supplied the completed numeric report from source `1d008dd4efc9cc738d8cfc63e7e5096ed7258f9f`; it is preserved in `groq-followup-result.json`. This is user-run evidence, not an agent-executed authenticated check.
+
+- All12 attempts completed:11 genuine provider successes and1 fallback, clearing the numeric90% transport threshold at91.67%. Successful calls had median794.51ms and maximum1432.64ms, within3seconds. No writing calls were made.
+- The original Clinic-denial error (case2) and original unusable moderation response (case7) now pass the automated expectations. Every returned valid rating passed its expectations and injection checks; samples still require human review for correctness, tone and humor.
+- Case3, the independent Clinic denial, returned a non-success HTTP response after1091.95ms. Its finish and validation categories are unknown; there is no usable model judgment. The report does not identify the HTTP status or cause. Do not infer a transient outage, quota failure or semantic failure. This generalization case remains unassessed.
+- Known usage is8150 input and1515 output tokens across11 successful responses. Usage for the failed request is unknown; these are not complete billed totals.
+- The full follow-up samples have not been received or committed. The user must inspect them before a sample commit; Claude must review the sanitized evidence before acceptance. Numeric success does not clear production enablement or establish public multi-room quota capacity.
+- The12-attempt allowance is exhausted. Preserve both ledgers and the original failed pilot report. No retry, new allowance, paid spending, main merge or production change is authorized by this result. Any targeted additional probe needs a separately reviewed selection/cap and user approval.
+
+Artifact verification: the saved report parses under `GroqSummarySchema`; counts are12 total/11 successes/1 failure, and only case3 has `quality: false`. No API calls were made while recording this evidence. Runtime code is unchanged; full suites were not repeated for this numeric-report/documentation-only update.
