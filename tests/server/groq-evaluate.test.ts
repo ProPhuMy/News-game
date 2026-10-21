@@ -178,4 +178,12 @@ describe('Groq offline evaluation', () => {
     expect(result.stderr).not.toContain(opts.apiKey);
   });
 
+
+  it.each([19999, 2147483648, Infinity, NaN])('rejects pacing %s that is too fast or overflows Node timers', async (intervalMs) => {
+    let calls = 0;
+    await expect(runGroqEvaluation({ ...setup(), intervalMs, fetch: async () => { calls++; return successful(0); } }))
+      .rejects.toThrow('Invalid Groq evaluation configuration');
+    expect(calls).toBe(0);
+  });
+
 });

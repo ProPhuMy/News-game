@@ -25,7 +25,7 @@ const operations = ['rateHeadline', 'writeBotHeadline'] as const;
 export async function runGroqEvaluation(options: EvaluationOptions): Promise<{ summary: GroqSummary; samples: GroqSamples }> {
   if (!options.live || !options.apiKey?.trim() || options.apiKey.trim().length < 8 || !options.ledgerFile ||
       !Number.isSafeInteger(options.allowance) || options.allowance < 1 || options.allowance > 24 ||
-      (options.intervalMs !== undefined && (!Number.isFinite(options.intervalMs) || options.intervalMs < 20000))) {
+      (options.intervalMs !== undefined && (!Number.isSafeInteger(options.intervalMs) || options.intervalMs < 20000 || options.intervalMs > 2147483647))) {
     throw new Error('Invalid Groq evaluation configuration');
   }
   const sourceRevision = options.sourceRevision ?? execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8', cwd: fileURLToPath(new URL('.', import.meta.url)) }).trim();
