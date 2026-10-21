@@ -4,7 +4,7 @@ import { TIMES_OF_DAY, type TimeOfDay } from '../visuals/time-of-day.ts';
 import { readInt } from './scenario.ts';
 
 export const ARCHITECTURE_VARIANTS = ['code', 'hybrid-original', 'hybrid-palette'] as const;
-export const ARCHITECTURE_VIEWS = ['street', 'awning', 'town', 'bakery', 'bank', 'town_hall', 'clinic', 'fountain_square', 'office'] as const;
+export const ARCHITECTURE_VIEWS = ['street', 'awning', 'town', 'bakery', 'bank', 'town_hall', 'clinic', 'fountain_square', 'office', 'picket'] as const;
 const PALETTE_IDS: readonly PaletteId[] = ['a', 'b', 'c'];
 
 export interface ArchitectureScenario {

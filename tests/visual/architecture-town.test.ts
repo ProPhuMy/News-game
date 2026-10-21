@@ -2,7 +2,8 @@ import { describe, expect, it, vi } from 'vitest';
 import * as THREE from 'three';
 import { getPalette } from '../../src/client/visuals/palette.ts';
 import { timeOfDayLook } from '../../src/client/visuals/time-of-day.ts';
-import { applyTimeOfDay, closeTarget } from '../../src/client/visual-test/architecture-town.ts';
+import { addPicketRow, applyTimeOfDay, closeTarget } from '../../src/client/visual-test/architecture-town.ts';
+import { PICKET_SIGN_TEXTS, createPicketSignKit } from '../../src/client/town/props/picket.ts';
 import { ARCHITECTURE_VIEWS } from '../../src/client/visual-test/architecture-scenario.ts';
 import { createTownBuildings } from '../../src/client/town/buildings.ts';
 import { createTownLayout } from '../../src/client/town/layout.ts';
@@ -12,7 +13,7 @@ describe('closeTarget', () => {
   it('resolves every close-up view to a distinct position in the assembled town', () => {
     const layout = createTownLayout();
     const town = createTownBuildings(layout, fakeContext());
-    const views = ARCHITECTURE_VIEWS.filter((v) => !['street', 'awning', 'town'].includes(v));
+    const views = ARCHITECTURE_VIEWS.filter((v) => !['street', 'awning', 'town', 'picket'].includes(v));
     const keys = views.map((v) => closeTarget(town.group, v as Parameters<typeof closeTarget>[1], layout).toArray().join(','));
     expect(views).toHaveLength(6);
     expect(new Set(keys).size).toBe(views.length);
@@ -57,5 +58,18 @@ describe('applyTimeOfDay (harness preview, interface §5c)', () => {
     expect((scene.background as THREE.Color).getHex()).toBe(0x123456);
     expect([hemi.intensity, sun.intensity]).toEqual([1.1, 2.4]);
     expect(setLampLevel).not.toHaveBeenCalled();
+  });
+});
+
+describe('addPicketRow (harness preview of the picket sign kit)', () => {
+  it('stands one sign per slogan at hand height in a row facing +Z', () => {
+    const scene = new THREE.Scene();
+    const kit = createPicketSignKit(fakeContext('b'));
+    const signs = addPicketRow(scene, kit, new THREE.Vector3(4, 0, 10));
+    expect(signs).toHaveLength(PICKET_SIGN_TEXTS.length);
+    expect(signs.every((s) => s.parent === scene && s.position.y === 1 && s.position.z === 10)).toBe(true);
+    expect(new Set(signs.map((s) => s.position.x)).size).toBe(signs.length);
+    kit.dispose();
+    expect(scene.children).toHaveLength(0);
   });
 });

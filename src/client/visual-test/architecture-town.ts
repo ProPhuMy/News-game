@@ -10,6 +10,7 @@ import { createTownLayout } from '../town/layout.ts';
 import { createMaterialKit } from '../town/materials.ts';
 import { getPalette, type PresentationPalette } from '../visuals/palette.ts';
 import { timeOfDayLook, type TimeOfDay } from '../visuals/time-of-day.ts';
+import { PICKET_SIGN_TEXTS, createPicketSignKit, type PicketSignKit } from '../town/props/picket.ts';
 import type { ArchitectureContext } from '../visuals/town-types.ts';
 import type { ArchitectureScenario } from './architecture-scenario.ts';
 import { measureCanvas, readyVerdict } from './pixels.ts';
@@ -18,7 +19,7 @@ import type { VisualState } from './state.ts';
 const ROAD_WIDTH = 3.4;
 const SLAB = 96;
 
-type Close = Exclude<ArchitectureScenario['view'], 'street' | 'awning' | 'town'>;
+type Close = Exclude<ArchitectureScenario['view'], 'street' | 'awning' | 'town' | 'picket'>;
 
 /** World position a close-up frames: a building's root, the fountain plaza midpoint, or office seat 0. */
 export function closeTarget(group: THREE.Group, view: Close, layout: ReturnType<typeof createTownLayout>): THREE.Vector3 {
@@ -36,6 +37,16 @@ export function closeTarget(group: THREE.Group, view: Close, layout: ReturnType<
     at.set(node.x + FOUNTAIN_OFFSET.x / 2, 0, node.z + FOUNTAIN_OFFSET.z / 2);
   }
   return at;
+}
+
+/** Harness-only preview: one sign per slogan, held at hand height (1.0) in a row along x at `center`. */
+export function addPicketRow(scene: THREE.Object3D, kit: PicketSignKit, center: THREE.Vector3): THREE.Object3D[] {
+  return PICKET_SIGN_TEXTS.map((text, i) => {
+    const sign = kit.create(text);
+    sign.position.set(center.x + (i - (PICKET_SIGN_TEXTS.length - 1) / 2) * 1.6, 1, center.z);
+    scene.add(sign);
+    return sign;
+  });
 }
 
 /** Harness-only preview of a time-of-day look; production lighting is Codex's (interface §5c). */
@@ -69,7 +80,9 @@ export async function runArchitectureTown(
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(palette.town.sky);
   const geometries: THREE.BufferGeometry[] = [];
+  const pickets = createPicketSignKit(ctx);
   const disposeAll = (): void => {
+    pickets.dispose();
     buildings.dispose();
     for (const geometry of geometries) geometry.dispose();
     materials.dispose();
@@ -123,6 +136,13 @@ export async function runArchitectureTown(
       townCamera.frame(townFrameBounds(buildings.group, layout));
       townCamera.resize(container.clientWidth || 1280, container.clientHeight || 720);
       camera = townCamera.camera;
+    } else if (view === 'picket') {
+      const node = layout.getNodeWorldPos(layout.getLocationNode('bakery'));
+      const at = new THREE.Vector3(node.x, 0, node.z);
+      addPicketRow(scene, pickets, at);
+      camera = new THREE.PerspectiveCamera(35, aspect, 0.1, 400);
+      camera.position.copy(at).add(new THREE.Vector3(0, 5, 8));
+      camera.lookAt(at.x, 1.4, at.z);
     } else {
       const at = closeTarget(buildings.group, view, layout);
       camera = new THREE.PerspectiveCamera(35, aspect, 0.1, 400);
