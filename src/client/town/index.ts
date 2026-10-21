@@ -16,6 +16,8 @@ import { createTownLayout } from './layout.ts';
 import { createRouteInterpolator } from './movement.ts';
 import { createPoofEffect } from './particles.ts';
 import { createPlaybackCoordinator } from './playback.ts';
+import { createDaylight } from './daylight.ts';
+import type { TimeOfDay } from '../visuals/time-of-day.ts';
 import { createTownScene } from './scene.ts';
 import { attachContextLossHandler, createFallbackView, isWebGL2Supported, type FallbackView } from './webgl.ts';
 import { batchStaticOutlines } from './static-outlines.ts';
@@ -146,6 +148,10 @@ export function createTownView(
     scene = activeScene;
     const townEnvironment = createTownEnvironment(layout, ctx); environment = townEnvironment;
     const townBuildings = createTownBuildings(layout, ctx); buildings = townBuildings;
+    const daylight = createDaylight(activeScene, townBuildings, palette);
+    let currentTime: TimeOfDay = 'midday';
+    let hasSnapshotLook = false;
+    daylight.setTime(currentTime, true);
     const townPaperboys = createPaperboys(ctx); paperboys = townPaperboys;
     const activePoof = createPoofEffect(activeScene.scene);
     poof = activePoof;
@@ -207,6 +213,7 @@ export function createTownView(
           fallbackView = null;
         }
         if (canvas) canvas.style.display = 'block';
+        daylight.setTime(currentTime, true);
         handleResize();
         lastTime = performance.now();
         if (animFrameId === null) {
@@ -223,6 +230,7 @@ export function createTownView(
       lastTime = now;
 
       try {
+        daylight.update(deltaSeconds);
         camera.update(deltaSeconds);
         activePoof.update(deltaSeconds);
         activeCitizens.update(deltaSeconds);
@@ -281,6 +289,13 @@ export function createTownView(
         return activeCoordinator.startPlan(plan, durationSeconds);
       },
 
+      setTimeOfDay(time: TimeOfDay): void {
+        if (isDisposed) return;
+        currentTime = time;
+        daylight.setTime(time, currentReducedMotion || !hasSnapshotLook);
+        hasSnapshotLook = true;
+      },
+
       setPhase(phase: Phase): void {
         if (isDisposed) return;
         if (phase === 'intro') {
@@ -303,6 +318,7 @@ export function createTownView(
       setReducedMotion(enabled: boolean): void {
         if (isDisposed) return;
         currentReducedMotion = enabled;
+        if (enabled) daylight.setTime(currentTime, true);
         camera.setReducedMotion(enabled);
         activeCitizens.setReducedMotion(enabled);
         if (enabled) { activePoof.clear(); activeCoordinator.update(0); }

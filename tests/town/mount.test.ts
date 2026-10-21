@@ -23,6 +23,7 @@ function createMockTownView(): TownView & {
     isWebGLSupported: () => true,
     playReactionPlan: mockPlayPlan,
     setPhase: mockSetPhase,
+    setTimeOfDay: vi.fn(),
     setTargetLocation: vi.fn(),
     setReducedMotion: mockSetReducedMotion,
     resize: vi.fn(),
@@ -128,6 +129,22 @@ describe('mountTown', () => {
     container.remove();
     document.documentElement.removeAttribute('data-reduced-motion');
     vi.restoreAllMocks();
+  });
+
+  it('derives lighting on same-phase round changes and resets to midday without a snapshot', () => {
+    const view = createMockTownView();
+    const store = createMockStore();
+    const cleanup = mountTown(container, store as unknown as ClientStore, { viewFactory: () => view });
+    expect(view.setTimeOfDay).toHaveBeenLastCalledWith('midday');
+    store.emit({ publicSnapshot: makeMockSnapshot({ round: 1 }) });
+    expect(view.setTimeOfDay).toHaveBeenLastCalledWith('morning');
+    store.emit({ publicSnapshot: makeMockSnapshot({ round: 5 }) });
+    expect(view.setTimeOfDay).toHaveBeenLastCalledWith('dusk');
+    store.emit({ publicSnapshot: makeMockSnapshot({ phase: 'final', round: 5 }) });
+    expect(view.setTimeOfDay).toHaveBeenLastCalledWith('night');
+    store.emit({ publicSnapshot: null });
+    expect(view.setTimeOfDay).toHaveBeenLastCalledWith('midday');
+    cleanup();
   });
 
   it('plays each round reaction plan once and calculates remaining reveal time', () => {
