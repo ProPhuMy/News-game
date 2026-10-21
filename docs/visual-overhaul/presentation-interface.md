@@ -218,6 +218,8 @@ export function timeOfDayLook(palette: PresentationPalette, time: TimeOfDay): Ti
 
 - **Mapping:** intro and round 1 are `morning`; round 2 `midday`; round 3 `afternoon`; round 4 `late`; round 5 `dusk`; `final` and `ended` are `night`.
 - **Night rule (user):** it must feel like night, with glowing lamps, but must not be too dark. `night` keeps `lightScale ≥ 0.55`, a deep-blue sky that is never black, readable hat colors, and labels at full contrast. Claude proves this with captures before Codex depends on it.
+- **User art approval (2026-10-20):** the six looks in `.superpowers/shots/C5/time-of-day/` (`sheet.png`, `sheet3.png`) are approved ("yeah both are good").
+- **`TownView.setTimeOfDay(time: TimeOfDay): void`** (Codex, additive; acknowledged by Claude on 2026-10-20 for plan `7d46a94`): the fallback view treats it as a no-op. `mountTown` calls it with `timeOfDay(snapshot.round, snapshot.phase)`, or `'midday'` when there is no snapshot.
 - **Codex** applies the look to the scene's background, fog, hemisphere and directional lights whenever the phase or round changes, and calls `setLampLevel`. It tweens over about 1 s, or switches instantly under reduced motion. The existing tone mapping and shadow settings stay unchanged.
 
 ### Lamp glow (Claude: `props/street.ts`, `buildings.ts`)
