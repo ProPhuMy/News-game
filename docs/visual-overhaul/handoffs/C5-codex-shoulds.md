@@ -143,3 +143,14 @@ User then ran the existing remote smoke from Arch against `https://newstown.prop
 This is **user-run and user-reported** passing evidence: all asset byte/MIME checks, isolated seats, actual WebSocket traffic, submitted investigation recovery, privacy assertions and complete five-round results passed according to the probe. The stdout omits assetHashes by design; the saved JSON retains them. The existing probe also writes shared-helper `production-home.png`/`production-final.png` plus sidecars alongside the output. Codex cannot yet read those private-home files; do not substitute the earlier local screenshots or claim remote PNG inspection.
 
 Remaining closeout evidence: copy the five saved smoke/evidence files into a readable shared location, inspect remote PNGs/sidecars and asset hashes, obtain the running container's same 179-file source digest, then relay the production evidence for Claude's final C5 closure. Expected digest remains `bb1e10483d5e92a2735c6683a31247b457805edbd79da26be694420da76bea92`; archive/revision/image identity is recorded, but the full container fingerprint has not been supplied yet. Rollback image is retained; rollback remains **not executed**. D5 remains unstarted. No new app code, resources, paid upgrade or contract request.
+
+### Production evidence inspected by Codex
+
+User copied the five saved smoke/evidence files to `/tmp/news-town-C5-production-evidence` and made that folder readable. Codex opened both actual remote PNGs directly and retained copies under `.superpowers/shots/C5-codex-shoulds/production-d86a2d5/`. No substitute local capture was used.
+
+- All **26 assetHashes** in the saved `smoke.json` independently match bytes in the local candidate `dist/client` build.
+- Both sidecars: origin `https://newstown.prophumy.com`, 1280×720, DPR 1, browser 153.0.8010.12, fontsReady true, CSS/font HTTP 200, empty overflowX/unreachable and zero console errors. CSS is 22,668 bytes; TTF is 300,724 bytes. Sidecars contain bare origin and sanitized resource URLs, not room paths or tokens.
+- Home PNG: complete title, solo/create/join controls and toon town; SHA-256 `bb6f126fe2da777091b2807edeafd54c3861795fc42f8e7a28c9728486339eb1`.
+- Final PNG: readable centered card on night town, visible Play Again, the name `<b>Ink</b>` is literal text; scores agree with the formula (67×47/50 rounds to63; 83×59/50 rounds to98). SHA-256 `e35b84146b3fa8db4a5470eef84defa15983cbafa16e23cf306f60853eb555b0`.
+
+Only the running container's full source fingerprint remains for Codex's production identity record, then Claude's final C5 closeout. The existing archive/OCI revision/running image match and remote asset identity are already recorded. No app code changed; no tests rerun for this read-only PNG/hash review.
