@@ -1,6 +1,6 @@
 # C5 Should renderer handoff — Codex
 
-Status: implementation and local verification complete; ready for counterpart review. **C5 remains open** for counterpart presentation review, updated reference-laptop FPS and candidate deployment/smoke. D5 has not started.
+Status: renderer implementation, counterpart review and reference-laptop FPS are accepted. **C5 remains open** for candidate deployment/production smoke and Claude's final closeout. D5 has not started.
 
 ## Base, gates and ownership
 
@@ -91,7 +91,7 @@ Wait for **Ready**, start the browser's Performance recording, press **Run**, wa
 
 No new FPS result is claimed. Once that evidence is reviewed, proceed through candidate approval and the existing EC2 release/smoke workflow; production has not been touched here.
 
-## Reference-laptop trace received — performance gate remains OPEN
+## Reference-laptop trace received — initial failure, superseded by user acceptance below
 
 Analyzed `/home/agent/projects/Trace-20261020T225721.json` (52 MB; SHA-256 `a5b46be76067b32dc23f2f416dea02bb6c5d7edc03fb315993bd96c93a724e14`). The trace identifies the exact realtime round-3 URL and renderer PID 531704. The user supplied the matching new harness report in chat; it is saved separately as `.superpowers/sdd/C5-codex-shoulds/fps/harness-report.json`. The older `/home/agent/projects/busy-report.json` was **not** used for this run or overwritten.
 
@@ -114,4 +114,13 @@ The script also reproduced the old trace's 737 presentations and rolling minimum
 
 Structured analysis: `.superpowers/sdd/C5-codex-shoulds/fps/summary.json`; raw trace remains unchanged outside git. No source changes, new app tests, hardware FPS claim from software rendering, deployment or contract request. Prior candidate checks (907 tests/typecheck/lint/build) still apply to unchanged source; they were not rerun for this read-only analysis.
 
-**Outcome:** the run is valid, but FPS does not pass the stated 30 floor or the previously accepted brief 29 exception. C5 remains open. Next is profiling the mid-run dip and deciding on a targeted correction; do not silently broaden the old exception to 26 or remove agreed effects. Production remains unchanged.
+**Initial outcome (before the user decision below):** the run is valid, but FPS does not pass the stated 30 floor or the previously accepted brief 29 exception. C5 remains open. Next is profiling the mid-run dip and deciding on a targeted correction; do not silently broaden the old exception to 26 or remove agreed effects. Production remains unchanged.
+
+
+## User performance acceptance — FPS gate CLOSED
+
+After receiving the full measurement and comparison, the user said: **"right i think that's acceptable"**. This explicitly accepts this candidate's measured **34.7322 FPS average** and **26-frame minimum rolling one-second window**, at the recorded reference configuration (1280×691 CSS, DPR approximately 2), as a new exception to the proposed 30 FPS floor. It does not imply sustained 30 FPS, 60 FPS, improved performance, or approval of an unmeasured later regression. Keep the trace, profile limitations and measured values above intact.
+
+The required FPS gate is therefore **accepted by user decision**. No additional optimization, feature removal or identical recording is required for this candidate. All agreed Should effects remain present. Product source is unchanged; candidate identity remains merge `1001abad` / 179-file source digest `bb1e10483d5e92a2735c6683a31247b457805edbd79da26be694420da76bea92`.
+
+Next: use the existing user-operated EC2 candidate deployment and production smoke workflow, retain the current image for rollback, record the actual deployed source/image identity, and send the resulting production evidence for C5 closeout. C5/D5 are not declared passed here. No paid services, account upgrade, contract change or production action was authorized or executed by this acceptance record. Documentation-only update: `git diff --check` and ownership/source checks; no app tests rerun.

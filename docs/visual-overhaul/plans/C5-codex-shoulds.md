@@ -98,3 +98,8 @@ A committed Codex branch with all renderer Should features, no gameplay changes,
 - Review fix pass: pre-plan elapsed time after suspension and overlapping emotes each received RED/GREEN regressions. Playback now uses a per-plan wall-time baseline; bounded glyph placement avoids speech bubbles and other icons. Six focused renderer files passed, then the full suite passed 129 files / 908 tests. Typecheck/lint/build exit 0.
 - Lifecycle ruling: context loss hides/restores emotes rather than clearing completed feedback; bubbles keep the established clear policy. Missing snapshot after an active match maps to existing renderer `setPhase('ended')` cleanup and midday lighting, without sending an action or altering authoritative state.
 - Task 4 local verification is complete: 30 shared captures opened (including real context loss/recovery), byte-identical repeated reveal, live ticker motion check and saved evidence handoff. Test organization change leaves 130 files / 908 tests passing; typecheck/lint pass and the production build passed on the identical source. Hardware FPS, counterpart final presentation review and actual production rollout/smoke remain open. Details live in `handoffs/C5-codex-shoulds.md`; D5 has not started.
+
+
+### User FPS decision
+
+The user explicitly accepts the latest laptop result ("right i think that's acceptable"): 34.7322 FPS average, minimum rolling one-second count 26, same recorded reference viewport/DPR as D2. FPS gate closed by this recorded exception; no performance improvement or sustained-30 claim. Counterpart review is accepted. Remaining work is actual candidate deployment/production evidence and Claude's C5 closeout; D5 remains separate. See the handoff for the trace and exact scope of acceptance.
