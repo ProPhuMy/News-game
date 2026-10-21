@@ -4,7 +4,7 @@ export type Provider = 'openai' | 'anthropic' | 'none';
 export interface ProviderOptions { provider: Provider; model?: string; apiKey?: string; fetch?: typeof fetch }
 
 const OpenAiResponse = z.object({ choices: z.array(z.object({ message: z.object({ content: z.string() }) })).min(1) });
-const AnthropicResponse = z.object({ content: z.array(z.object({ type: z.literal('text'), text: z.string() })).min(1) });
+const AnthropicResponse = z.object({ content: z.array(z.object({ type: z.string(), text: z.unknown().optional() })).min(1) });
 
 export function createProvider(options: ProviderOptions) {
   if (!['openai', 'anthropic', 'none'].includes(options.provider)) throw new Error('Invalid AI_PROVIDER');
@@ -20,14 +20,18 @@ export function createProvider(options: ProviderOptions) {
         ? { 'content-type': 'application/json', 'x-api-key': options.apiKey!, 'anthropic-version': '2023-06-01' }
         : { 'content-type': 'application/json', Authorization: `Bearer ${options.apiKey}` },
       body: JSON.stringify(anthropic
-        ? { model: options.model, max_tokens: 512, system, messages: [{ role: 'user', content: data }] }
+        ? { model: options.model, max_tokens: 512, system, messages: [{ role: 'user', content: data }],
+          ...(options.model === 'claude-haiku-5-5'
+            ? { thinking: { type: 'disabled' }, output_config: { effort: 'low' } } : {}) }
         : { model: options.model, max_completion_tokens: 512,
           messages: [{ role: 'system', content: system }, { role: 'user', content: data }],
           ...(json ? { response_format: { type: 'json_object' } } : {}) }),
     });
     if (!response.ok) throw new Error('AI provider request failed');
     const body: unknown = await response.json();
-    return anthropic ? AnthropicResponse.parse(body).content.map((block) => block.text).join('')
-      : OpenAiResponse.parse(body).choices[0]!.message.content;
+    if (!anthropic) return OpenAiResponse.parse(body).choices[0]!.message.content;
+    const text = AnthropicResponse.parse(body).content.filter((block) => block.type === 'text')
+      .map((block) => z.string().parse(block.text)).join('');
+    return z.string().min(1).parse(text);
   };
 }

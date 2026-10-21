@@ -8,14 +8,25 @@ import { createRoomManager } from './rooms.ts';
 import { createMatchRunner } from './matches.ts';
 import { registerSocketHandlers } from './socket.ts';
 import { createStaticHandler } from './static.ts';
+import type { AiOutcome } from '../ai/adapter.ts';
+import { createAiRequestGate, parseAiLimits, type AiLimits } from './ai-budget.ts';
 import { createAiAdapter } from '../ai/adapter.ts';
 import type { ProviderOptions } from '../ai/providers.ts';
 
-export async function createGameServer(options: { content: GameContent; distDirectory?: string; dev?: boolean; ai?: ProviderOptions; trustRenderProxy?: boolean; trustedProxyAddress?: string }) {
+export async function createGameServer(options: { content: GameContent; distDirectory?: string; dev?: boolean; ai?: ProviderOptions; aiLimits?: AiLimits; trustRenderProxy?: boolean; trustedProxyAddress?: string }) {
   if (options.trustedProxyAddress !== undefined && !isIP(options.trustedProxyAddress)) throw new Error('Invalid TRUSTED_PROXY_ADDRESS');
   if (options.trustRenderProxy && options.trustedProxyAddress) throw new Error('Proxy trust modes must not be combined');
   const content = ContentSchema.parse(options.content);
-  const ai = createAiAdapter({ ...(options.ai ?? { provider: 'none' }), content });
+  const acquireRequest = createAiRequestGate(options.aiLimits ?? parseAiLimits({}));
+  const counts: Record<AiOutcome, number> = { success: 0, cache: 0, disabled: 0, failure: 0, limited: 0 };
+  const ai = createAiAdapter({ ...(options.ai ?? { provider: 'none' }), content, acquireRequest,
+    onOutcome(operation, outcome) {
+      counts[outcome]++;
+      if (options.ai?.provider && options.ai.provider !== 'none') {
+        console.info(JSON.stringify({ event: 'ai_outcome', operation, outcome, counts }));
+      }
+    },
+  });
   const http = createServer();
   const vite = options.dev ? await (await import('vite')).createServer({ server: { middlewareMode: true, hmr: { server: http } } }) : null;
   if (vite) http.on('request', vite.middlewares);
@@ -58,6 +69,7 @@ async function main() {
   const game = await createGameServer({ content: ContentSchema.parse(module.content), dev: process.env.NODE_ENV !== 'production',
     trustRenderProxy: process.env.TRUST_RENDER_PROXY === 'true',
     ...(process.env.TRUSTED_PROXY_ADDRESS ? { trustedProxyAddress: process.env.TRUSTED_PROXY_ADDRESS } : {}),
+    aiLimits: parseAiLimits(process.env),
     ai: { provider, ...(process.env.AI_MODEL ? { model: process.env.AI_MODEL } : {}), ...(key ? { apiKey: key } : {}) } });
   try { await game.listen(port); }
   catch (error) {
@@ -73,6 +85,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   void main().catch((error: unknown) => {
     const safeMessages = [
       'Validated src/content/index.ts is required', 'PORT must be between 1 and 65535',
+      'Invalid AI request configuration',
       'Invalid AI_PROVIDER', 'Invalid TRUST_RENDER_PROXY', 'Invalid TRUSTED_PROXY_ADDRESS',
       'Proxy trust modes must not be combined', 'AI_MODEL and provider API key are required',
       'Content must provide safe headline and bubble fallbacks',

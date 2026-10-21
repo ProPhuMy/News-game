@@ -17,6 +17,8 @@ describe('server startup', () => {
   });
 
   it.each([
+    [{ AI_REQUEST_ALLOWANCE: 'SECRET-invalid-allowance' }, 'Invalid AI request configuration'],
+    [{ AI_REQUEST_ALLOWANCE: '1', AI_ALLOWANCE_FILE: '/SECRET/missing-ledger' }, 'Invalid AI request configuration'],
     [{ AI_PROVIDER: 'SECRET-invalid-provider' }, 'Invalid AI_PROVIDER'],
     [{ TRUST_RENDER_PROXY: 'SECRET-invalid-proxy' }, 'Invalid TRUST_RENDER_PROXY'],
     [{ TRUSTED_PROXY_ADDRESS: 'SECRET-invalid-address' }, 'Invalid TRUSTED_PROXY_ADDRESS'],
