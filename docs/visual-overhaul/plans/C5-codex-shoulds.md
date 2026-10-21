@@ -103,3 +103,8 @@ A committed Codex branch with all renderer Should features, no gameplay changes,
 ### User FPS decision
 
 The user explicitly accepts the latest laptop result ("right i think that's acceptable"): 34.7322 FPS average, minimum rolling one-second count 26, same recorded reference viewport/DPR as D2. FPS gate closed by this recorded exception; no performance improvement or sustained-30 claim. Counterpart review is accepted. Remaining work is actual candidate deployment/production evidence and Claude's C5 closeout; D5 remains separate. See the handoff for the trace and exact scope of acceptance.
+
+
+### Codex delivery complete
+
+Candidate d86a2d5 deployed; remote two-session/full-match/recovery/privacy/WSS smoke passed. Codex opened remote home/final screenshots, checked clean sidecars and all26 asset hashes, and matched the user-run179-file host fingerprint to the local expected digest. Recovery image retained; rollback not executed. Codex's implementation and evidence tasks are complete. Claude's final C5 closeout remains the prerequisite for D5. See the handoff's latest production identity section for exact source/image/digest and performance exception.

@@ -1,6 +1,6 @@
 # C5 Should renderer handoff — Codex
 
-Status: renderer implementation, counterpart review and reference-laptop FPS are accepted. **C5 remains open** for final production screenshot/source-identity evidence and Claude's closeout. The candidate is now deployed and its user-run remote smoke passed; latest rollout details are recorded below. D5 has not started.
+Status: renderer implementation, counterpart review and reference-laptop FPS are accepted. **Codex's renderer/performance/production evidence is complete; C5 awaits Claude's final closeout.** The candidate is deployed, its user-run remote smoke passed, remote screenshots/assets were independently inspected, and the host source fingerprint matches. Latest evidence is recorded below. D5 has not started.
 
 ## Base, gates and ownership
 
@@ -154,3 +154,18 @@ User copied the five saved smoke/evidence files to `/tmp/news-town-C5-production
 - Final PNG: readable centered card on night town, visible Play Again, the name `<b>Ink</b>` is literal text; scores agree with the formula (67×47/50 rounds to63; 83×59/50 rounds to98). SHA-256 `e35b84146b3fa8db4a5470eef84defa15983cbafa16e23cf306f60853eb555b0`.
 
 Only the running container's full source fingerprint remains for Codex's production identity record, then Claude's final C5 closeout. The existing archive/OCI revision/running image match and remote asset identity are already recorded. No app code changed; no tests rerun for this read-only PNG/hash review.
+
+
+### Running source identity confirmed — Codex production gates complete
+
+User ran the supplied read-only fingerprint command inside `news-town-app` and returned:
+
+```json
+{"files":179,"sourceDigest":"bb1e10483d5e92a2735c6683a31247b457805edbd79da26be694420da76bea92"}
+```
+
+This exactly matches Codex's independently computed full src/package/lock fingerprint for deployed release `d86a2d5` (production source equivalent to `1001abad`). Together with the matching archive checksum, OCI revision, actual running image and all 26 remote asset hashes, the running source/client identity is established. Attribution remains explicit: host command user-run; expected fingerprint and asset/image review independently checked by Codex.
+
+**Codex gates complete:** acknowledged interface/ownership, 907 tests/typecheck/lint/build on the unchanged candidate, local/recovery/fallback captures reviewed, Claude counterpart acceptance and prop delivery integrated, measured performance explicitly accepted by the user, candidate deployed, real two-session/WSS/five-round/recovery/privacy smoke passed, remote home/final PNGs opened, asset and full-source identities matched, recovery image retained. No new app code or test rerun for this documentation-only closeout. No contract requests.
+
+**To Claude for final C5 closeout:** review this handoff's latest candidate/production sections and the five files at `.superpowers/shots/C5-codex-shoulds/production-d86a2d5/` in the Codex worktree. Source release `d86a2d5ea16cfb8e5fb42ae0230b611f0bb0a9b8`, running image `sha256:4a038abd4b757e14f25455c0ca6c9f92787e9a220c2b6f63c17033a0705c87e6`, host/source digest above. FPS exception is explicit (34.7322 average / 26 rolling minimum), not a sustained-30 claim. Existing recovery-before-c5 image `sha256:51f74f3518ec9145dad4fc135798f95d079f27484bc260135187daee05094bfa` remains retained, rollback not executed. The description approval is already recorded in `5b42019`. If no required findings remain, Claude can record C5 as passed in its own handoff. D5 waits for that record; it has not started here.
