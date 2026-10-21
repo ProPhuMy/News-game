@@ -16,7 +16,7 @@ Run a small-town newspaper. Print the truth, or print what sells, and hope nobod
 
 ## Short description (about 120 words)
 
-News Town is a multiplayer browser party game for one to four players. Each player runs a newspaper in a tiny 3D town. Every round you get a vague tip, investigate one lead, then write a headline that is either true or a lie. All front pages hit the streets at once, and thirty citizens react right in front of you: they queue, protest, flee or crowd around, and switch to the paper they now believe. Lies can win readers fast, but they can be exposed later by the town or by a rival, and that wrecks your trust. Your final score is total readers times trust. Press Play Solo to face three computer-run rival papers. No login, no download.
+News Town is a multiplayer browser party game for one to four players. Each player runs a newspaper in a tiny 3D town. Every round you get a vague tip, investigate one lead, then write a headline that is either true or a lie. All front pages hit the streets at once, and thirty citizens react right in front of you: they queue, protest, flee or crowd around, and switch to the paper they now believe. Lies can win readers fast, but they can be exposed later by the town or by a rival, and that wrecks your trust. Your final score is total readers times trust. Press Play Solo to face three rival papers, with headlines and crowd reactions written live by an AI editor. No login, no download.
 
 ## Long description (about 420 words)
 
@@ -26,7 +26,7 @@ News Town is a multiplayer browser party game for one to four players. Each play
 
 **The finale.** After round five, the Final Edition gives every surviving lie one last chance to be caught, reveals the truth behind every headline, and scores each paper: total readers × trust ÷ 50.
 
-**Play together or alone.** Create a room and share the five-letter code or link with up to three friends. Empty seats are filled by computer-run papers with distinct personalities: a tabloid, a cautious gazette and a wildcard. If you lose your connection, a caretaker editor holds your seat until you reload. A full match takes about eight minutes.
+**Play together or alone.** Create a room and share the five-letter code or link with up to three friends. Empty seats are filled by computer-run papers with distinct personalities: a tabloid, a cautious gazette and a wildcard. An AI editor writes the rival papers' headlines and judges every front page; if it is ever slow or unavailable, hand-written headlines and reactions take over instantly. If you lose your connection, a caretaker editor holds your seat until you reload. A full match takes about eight minutes.
 
 **The look.** The town is drawn like a Sunday comic: bright vintage colors, toon shading with bold outlines and real shadows. Citizens wear caps in their newspaper's color. The bakery has its striped awning and pretzel sign, the bank its columns, the town hall its clock tower and the clinic its lit cross. As the match goes on, the town turns from morning light to a lamp-lit night for the Final Edition. Protesters raise picket signs, citizens flash little reaction icons, and a newspaper ticker runs each round's headlines across the top of the screen.
 
@@ -57,6 +57,7 @@ The buildings are built in code, not imported from a kit. Each is a few palette-
 | Juicier lies are exposed faster; exposure rolls every later round | Gameplay spec §6.2 |
 | Score = total readers × trust ÷ 50, rounded | Gameplay spec §6.5; on-screen formula in the D4 production final capture |
 | Tabloid, gazette and wildcard bots; caretaker on disconnect | Gameplay spec §4.5, §8 |
+| AI editor writes rival headlines and judges front pages, with instant fallbacks | Gameplay spec §8, §9.3; `deployment/ai/groq-production-result.md`; adapter fallbacks in `src/ai/adapter.ts` |
 | Reaction recap line; exposures shown first | Gameplay spec §4.3, §6.1; C5 reveal captures |
 | Toon shading, outlines, shadows, paper-colored caps | Overhaul design §3, §6; presentation interface §5b; D2 handoff |
 | Building identities | Overhaul design §5; C3 handoff; C4 sign fix |
@@ -66,7 +67,7 @@ The buildings are built in code, not imported from a kit. Each is a few palette-
 | Live URL | C5 closeout and D5 handoff: deployed source `d86a2d5`, image `sha256:4a038abd…`, HTTPS 200 rechecked in D5 |
 
 **Deliberately left out:**
-- **Language models:** the live build runs with `AI_PROVIDER=none`. Rival headlines and speech bubbles come from hand-written templates, and the "AI" papers are rule-based. The text calls them "computer-run" to avoid implying language-model generation. If the mission requires AI use, say so and the text can describe the optional AI adapter (gameplay spec §9.3, §12).
+- **Language models:** live since the Groq Free pilot (`deployment/ai/groq-production-result.md`): `openai/gpt-oss-20b` writes rival headlines and rates every headline (juiciness, topic, moderation, crowd bubbles), with 20/20 successful live calls for both operations. Rule-based bots still choose each paper's location and claim, and the engine decides truth, reactions and scores, so the text says "computer-run papers" and credits the AI only with headline text and judging. Every call has a hand-written fallback (3 s timeout, provider limits, allowance exhaustion), which the text states. The wording depends on the contest-period allowance of 3,000 calls (user approved 2026-10-21); if AI is switched off or the allowance runs out, revert to the "computer-run" wording.
 - **Frame rate:** no claim. The current release's reference-laptop result is a 34.73 FPS average, with a worst one-second window of 26, accepted by the user as an exception (C5). The earlier D2 figures (36.8 / 29) describe an older build.
 - **Phone support:** not claimed as a feature. Phone layouts work in captures, but the spec lists phone layout as a stretch goal.
 - **Should features:** described only as shipped and verified in C5 (night at the Final Edition, picket signs, reaction icons, the reveal ticker). The reading pause is left out because it only happens when there is spare time. No Could item was built (the user cut them all), so none is described.
