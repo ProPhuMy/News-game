@@ -60,8 +60,33 @@ Source identity: 179 tracked files under src/ plus package.json/package-lock.jso
 ## Remaining gates and next operator steps
 
 1. Claude reviews the integrated PNGs against §5c: night readability and fog; stable reduced-motion feedback; sign grip/scale; emote grouping/placement; ticker and fallback notice at phone/landscape sizes. Any defect inside a Claude-owned module goes back to Claude.
-2. Repeat the **existing reference-laptop** realtime performance recording on this candidate: run `npm run dev`, then open `http://localhost:3000/visual-test/index.html?fixture=solo-honest&round=3&phase=reveal&palette=b&reducedMotion=false&playback=realtime` at 1280×720, DPR 1. Wait for Ready, start the recorder and click Run. Preserve the harness report with `problems: []`, hardware/browser/settings and frame data, especially the 70–100% tail with 26 signs (18 protest, 8 angry_mob). Sign outlines are unbatched; no hardware FPS is claimed from software WebGL captures. Compare against recorded D2 performance (36.8 FPS average, user-accepted brief 29 FPS dip). Report regressions; do not silently drop agreed effects.
+2. Repeat the **existing reference-laptop** realtime performance recording on this candidate: run `npm run dev`, then open `http://localhost:3000/visual-test/index.html?fixture=solo-honest&round=3&phase=reveal&palette=b&reducedMotion=false&playback=realtime` using the same laptop/browser/display scaling as the accepted D2 trace. Aim for 1280×720 CSS, but record actual dimensions and DPR; the accepted prior trace was 1280×691 CSS, DPR about 2, drawing buffer 2560×1382. Do not silently force DPR 1 and compare its FPS directly against that baseline. Wait for Ready, start the recorder and click Run. Preserve the harness report with `problems: []`, hardware/browser/settings and frame data, especially the 70–100% tail with 26 signs (18 protest, 8 angry_mob). Sign outlines are unbatched; no hardware FPS is claimed from software WebGL captures. Compare against recorded D2 performance (36.8 FPS average, user-accepted brief 29 FPS dip). Report regressions; do not silently drop agreed effects.
 3. After approval of a concrete candidate, use the existing user-operated EC2 release/rollback procedure and D3/D4 smoke probe against `https://newstown.prophumy.com`. Retain the current image as recovery before restarting. Record exact source digest/image and remote home/final evidence. No Paid Plan upgrade, new paid resources or out-of-pocket spending authorized. Render Free fallback unchanged.
-4. Claude completes C5's final whole-match review and remaining description approval. Only then can D5 start.
+4. Claude completes C5's final whole-match review. Description approval is already recorded in Claude `5b42019` (integrated here). Only then can D5 start.
 
 Production is unchanged by this renderer branch. Last confirmed live source remains `6065715`, image `sha256:51f74f3518ec9145dad4fc135798f95d079f27484bc260135187daee05094bfa`; check the host again before any rollout. A restart loses in-memory rooms. No contract requests filed; no scope cuts added.
+
+
+## Raised-picket candidate integration (latest)
+
+Claude accepted `565eaae` with no required Codex changes (908 tests plus typecheck/lint/build, all 30 captures reviewed). Claude found/fixed its own small-board defect in `a1b658b`: board height 0.56 and stick top 1.3 above the grip, making the sign clear the head at Codex's existing 0.85 grip offset. Slogans now BOO!, NO!, FAKE!; modulo selection works unchanged. No API change. Interface §5c and Claude's final review are delivered in `6450302`.
+
+User instructed integration for the candidate. Merged `claude/c5-final-review` through `6450302` into this branch at **`1001abad7c06c7511c4278c6835da5faa47c1e02`**, no conflicts. Claude-owned paths were consumed unchanged. This also brings in recorded description approval and parked AI-enablement findings; no AI provider/configuration was enabled.
+
+Fresh combined checks: **130 files / 907 tests passed**, typecheck/lint/build exit 0. The one-test difference is the removed SHAME! parameterized case, not a failure or scope cut. The original 30-image ZIP above certifies the pre-resize renderer and is retained as historical evidence; fresh raised-sign town/phone captures are saved separately under `.superpowers/shots/C5-codex-shoulds/candidate/`.
+
+Latest source identity is **179 files**, digest **`bb1e10483d5e92a2735c6683a31247b457805edbd79da26be694420da76bea92`**, same sorted-record format as above, computed at merge `1001abad`. `candidate/source-identity.json` records it. The earlier digest belongs to the pre-resize source and must not be used for this candidate's host check.
+
+Ruling for FPS comparability: use the same reference display scaling/settings as D2 and preserve the actual viewport/DPR in the report. The earlier plan's DPR-1 instruction differed from the accepted D2 trace (approximately DPR 2); comparing those rates without disclosure would be misleading. Hardware FPS and production rollout/smoke remain pending.
+
+Fresh candidate captures `picket-town.png` (1280×720) and `picket-phone.png` (390×844), both round-3 reveal at 15000 ms, passed and were opened directly by Codex: ready, WebGL, zero console errors; phone overflow/unreachable lists empty. Raised boards clear the heads; speech bubbles and HUD can still occlude parts of the town as before. Candidate bundle `candidate/evidence.zip`: 308,362 bytes, SHA-256 `3d8096204528ff79767c99761c262268f60fbb8977d6779b885bc837b30f7900`. It contains these PNG/sidecar pairs, manifest and new source identity. This supplements, rather than silently replaces, the pre-resize 30-capture bundle.
+
+### Laptop FPS operator checklist (next)
+
+On the reference laptop's repository, fetch/check out `codex/c5-shoulds` and verify its current SHA, then run `npm run dev`. Use the same browser/display scaling as the accepted D2 trace. Open:
+
+`http://localhost:3000/visual-test/index.html?fixture=solo-honest&round=3&phase=reveal&palette=b&reducedMotion=false&playback=realtime`
+
+Wait for **Ready**, start the browser's Performance recording, press **Run**, wait for **Finished**, then stop and export the recording. Preserve the full interval, including the 26 raised signs in the arrival tail. In the console, `copy(JSON.stringify(window.__NEWS_TOWN_VISUAL__, null, 2))` copies the harness report; save that alongside the trace. Include the actual viewport/DPR, browser and whether the reference hardware/settings changed. A valid harness run needs `report.run.problems: []` and 30 actors travelled; FPS still comes from the exported recording, not the report's duration alone.
+
+No new FPS result is claimed. Once that evidence is reviewed, proceed through candidate approval and the existing EC2 release/smoke workflow; production has not been touched here.
