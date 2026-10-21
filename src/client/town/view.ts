@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import type { TimeOfDay } from '../visuals/time-of-day.ts';
 import type { Location, Phase, SeatId } from '../../shared/ids.ts';
 import type { PublicSnapshot, ReactionPlan } from '../../shared/snapshots.ts';
 import { APPROVED_PALETTE, getPalette, type PresentationPalette } from '../visuals/palette.ts';
@@ -20,6 +21,7 @@ export interface TownView {
   isWebGLSupported(): boolean;
   playReactionPlan(plan: ReactionPlan, durationSeconds?: number): Promise<void>;
   setPhase(phase: Phase): void;
+  setTimeOfDay(time: TimeOfDay): void;
   setTargetLocation(location: Location | null): void;
   setReducedMotion(enabled: boolean): void;
   resize(): void;
@@ -42,6 +44,7 @@ export function createFallbackTownView(container: HTMLElement, layout?: TownLayo
     isWebGLSupported: () => false,
     playReactionPlan: async () => {},
     setPhase: () => {},
+    setTimeOfDay: () => {},
     setTargetLocation: () => {},
     setReducedMotion: () => {},
     resize: () => {},

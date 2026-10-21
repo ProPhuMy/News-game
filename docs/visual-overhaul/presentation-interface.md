@@ -218,6 +218,8 @@ export function timeOfDayLook(palette: PresentationPalette, time: TimeOfDay): Ti
 
 - **Mapping:** intro and round 1 are `morning`; round 2 `midday`; round 3 `afternoon`; round 4 `late`; round 5 `dusk`; `final` and `ended` are `night`.
 - **Night rule (user):** it must feel like night, with glowing lamps, but must not be too dark. `night` keeps `lightScale ≥ 0.55`, a deep-blue sky that is never black, readable hat colors, and labels at full contrast. Claude proves this with captures before Codex depends on it.
+- **User art approval (2026-10-20):** the six looks in `.superpowers/shots/C5/time-of-day/` (`sheet.png`, `sheet3.png`) are approved ("yeah both are good").
+- **`TownView.setTimeOfDay(time: TimeOfDay): void`** (Codex, additive; acknowledged by Claude on 2026-10-20 for plan `7d46a94`): the fallback view treats it as a no-op. `mountTown` calls it with `timeOfDay(snapshot.round, snapshot.phase)`, or `'midday'` when there is no snapshot.
 - **Codex** applies the look to the scene's background, fog, hemisphere and directional lights whenever the phase or round changes, and calls `setLampLevel`. It tweens over about 1 s, or switches instantly under reduced motion. The existing tone mapping and shadow settings stay unchanged.
 
 ### Lamp glow (Claude: `props/street.ts`, `buildings.ts`)
@@ -252,7 +254,7 @@ export interface PicketSignKit {
 export function createPicketSignKit(ctx: ArchitectureContext): PicketSignKit;
 ```
 
-- **Origin** of each sign is the grip point, with the board above it facing +Z. The total height is about 1.3, sized for 1.8-unit citizens.
+- **Origin** of each sign is the grip point, with the board above it facing +Z. Revised in C5 review (`a1b658b`): the stick reaches 1.3 above the grip and the board is 0.56 tall, so with Codex's grip at about 0.85 above the feet the board clears a 1.8-unit citizen's head and cap. Total height is about 2.1 and the widest board is under 2.1. Slogans are `BOO!`, `NO!` and `FAKE!`; `SHAME!` was dropped as too wide. At 1.3 tall the signs read as slivers at town zoom.
 - Each kit keeps one original per text and makes clones from it, so 18 or more signs share resources. No module-level cache exists. Codex creates the kit with the town's context and disposes it with the town, before the material kit.
 - **Codex** attaches a sign to each `protest` and `angry_mob` actor when it arrives (for example at the hand or root offset), removes it on the next phase, and shows signs under reduced motion without sway. Signs are not outlined after ready unless Codex adds them to its own batching rules.
 

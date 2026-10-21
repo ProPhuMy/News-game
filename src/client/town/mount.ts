@@ -1,3 +1,4 @@
+import { timeOfDay } from '../visuals/time-of-day.ts';
 import type { Phase } from '../../shared/ids.ts';
 import type { ClientStore } from '../net/store.ts';
 import { createTownView, type TownView, type TownViewOptions } from './index.ts';
@@ -83,6 +84,10 @@ export function mountTown(
     const currentSessionKey = state.session ? `${state.session.code}:${state.session.seatId}` : null;
     const sessionChanged = lastSessionKey !== null && currentSessionKey !== lastSessionKey;
     lastSessionKey = currentSessionKey;
+
+    view.setTimeOfDay(state.publicSnapshot ? timeOfDay(state.publicSnapshot.round, state.publicSnapshot.phase) : 'midday');
+
+    if (!state.publicSnapshot && lastPhase !== null) view.setPhase('ended');
 
     if (!state.publicSnapshot || sessionChanged) {
       lastPhase = null;
