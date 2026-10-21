@@ -1,0 +1,67 @@
+# C5 Should renderer handoff — Codex
+
+Status: implementation and local verification complete; ready for counterpart review. **C5 remains open** for counterpart presentation review, updated reference-laptop FPS and candidate deployment/smoke. D5 has not started.
+
+## Base, gates and ownership
+
+- Branch `codex/c5-shoulds`, isolated worktree `.worktrees/codex-c5-shoulds`.
+- Plan `plans/C5-codex-shoulds.md` at `7d46a94`, accepted by Claude through the user. Main `ee66d69` integrates Claude modules `ccf642c`; merged into this branch without conflicts. User relayed approval of all six looks ("yeah both are good").
+- Source commits: `d304b9c` (day progression), `7b96b5e9adfe33fa5b7b335466bd79673f841bc7` (reading/arrival feedback and review fixes).
+- Direct code changes are Codex-owned town renderer files and tests only. Claude UI/styles, props/buildings/architecture, palette/interface and shared capture tooling are byte-identical to main `ee66d69`. No shared gameplay contract, engine, route, fixture, asset, dependency or root configuration changes.
+- Additive acknowledged API: `TownView.setTimeOfDay(time: TimeOfDay): void`. The fallback is a no-op. Mount derives the look from the authoritative round/phase, or midday without a snapshot.
+
+## Delivered behavior
+
+- All supplied look fields apply to the scene: background, fog, hemisphere sky/ground and sun colors. Intensities are 1.1/2.4 times `lightScale`; pool opacity uses `setLampLevel?.(lampLevel)`. Lantern emissive remains constant. First look is immediate, later changes interpolate over one second without restarting on duplicate targets; reduced motion switches immediately. Context restoration reapplies the current look.
+- Prelude uses existing procedural reading pose for `min(1.2 seconds, 0.15 * remainingSeconds)`, followed by a neutral pause if needed. Travel remains the existing 15–70% normalized window and final-node/slot segment. Prescribed behavior gestures, hat changes, signs and emotes follow arrival. Very short reconnect intervals and reduced motion snap immediately.
+- Emotes use Claude's mapping, with an anger glyph (💢), not the word "anger". Selection is deterministic by eligible destination groups and round-robin up to eight, independent of six speech bubbles. Empty/invalid routes use the playback coordinator's canonical resolved destination. A bounded projection-placement search avoids speech bubbles and other emotes; icons outside the viewport or without room are hidden rather than overpainted.
+- All `protest` and `angry_mob` actors get signs at arrival, including reduced motion. One original per slogan lives in Claude's per-town kit; Codex reuses one clone per citizen with deterministic slogan selection. Clear detaches signs without growing the kit's clone set over repeated rounds. Dispose frees the kit before citizens/materials.
+- Normal playback completion preserves arrival feedback until the next phase. Explicit stop, replacement plan, phase change and session reset clear it. Missing snapshot after an active match calls the existing renderer `setPhase('ended')` for cleanup, then selects midday; this is presentation cleanup only, with no store action or server event.
+- Context loss hides the emote overlay; recovery restores it. Speech bubbles retain their existing clear-on-loss behavior. Full elapsed playback time catches up after a suspended frame or context recovery, with a per-plan baseline so a new plan never inherits time before it began. Camera/effect delta remains capped.
+
+## Verification so far
+
+Commands run in the isolated worktree:
+
+- `npm test`: **130 files / 908 tests passed**.
+- `npm run typecheck`, `npm run lint`, `npm run build`: exit 0. Build has the existing large-bundle warning; jsdom reports its existing canvas notices.
+- RED/GREEN evidence: missing daylight import and absent mount call; missing emote/prop modules; absent arrival/reading behavior; suspension/reset regressions; fresh-plan elapsed-time and overlapping-icon regressions. Focused final tests passed before the full checks.
+- Fresh independent whole-change review: two Important findings, both fixed in one RED/GREEN pass: pre-plan elapsed time being charged after a frame gap, and overlapping crowd emotes. No other correctness/interface findings. Reviewer ran the focused suite and opened the first arrival PNG. Updated desktop/phone captures are for Claude's final review.
+- `git diff --exit-code main HEAD -- scripts/visual src/client/visuals src/client/ui src/client/styles src/client/town/architecture src/client/town/props src/client/town/buildings.ts`: exit 0.
+- Browser live ticker check (no screenshot freeze): normal CSS transform changes; switching browser media preference to reduce yields animation name `none`. Browser 153.0.8010.12. Report: `.superpowers/shots/C5-codex-shoulds/final/live-ticker.json`.
+
+All 30 final captures have been opened directly by Codex (29 matrix scenarios plus one real WebGL context cycle). Shared command example:
+
+```sh
+npm run capture -- --target app --screen match --fixture solo-honest --round 3 --phase reveal --reaction-ms 15000 --width 390 --height 844 --timeout-ms 400000 --out .superpowers/shots/C5-codex-shoulds/final/reveal-phone.png
+```
+
+Evidence root: `.superpowers/shots/C5-codex-shoulds/final/` (ignored, retained in this worktree).
+
+| Captures | Count | Result |
+|---|---:|---|
+| `day-round-1` through `day-round-5` (write), `night-town`, `night-app` | 7 | All six looks present; hat colors, street edges and lamp pools visible; fog color applied. |
+| `reveal-0`, `reveal-1200`, `reveal-6000`, `reveal-15000` (town) | 4 | Lead-in, travel and arrival reviewed; all prescribed actors remain on their routes. |
+| `reveal-desktop`, `reveal-phone`, `reveal-landscape` | 3 | 1280×720, 390×844, 844×390; bounded UI and readable emote glyphs. |
+| `reveal-reduced`, `reveal-reduced-phone` | 2 | Stable icons and all protest signs; no movement/prelude. |
+| `reveal-desktop-repeat` | 1 | `cmp` against `reveal-desktop.png` exits 0: byte-identical with ticker present. |
+| `emote-question`, `emote-danger` (town, reduced motion) | 2 | Supplemental ? and ! coverage; anger and $ appear in round-3 captures. |
+| `fallback-{intro,investigate,write,reveal,final}-{desktop,phone}` | 10 | Notice heading/body remain visible above HUD/ticker; controls retain scroll paths. |
+| `context-cycle` (town, round 3 reveal, 15000 ms) | 1 | Real WebGL loss/fallback/restore passed, bubbles 4 → 0, restored frame advanced 100 ms and opened; signs/emotes survive. |
+
+All 30 sidecars report ready, the expected WebGL/fallback renderer, zero console errors, empty app overflow/unreachable lists and HTTP 200 recorded CSS/font responses. Scene-only sidecars have no app layout report. Glyphs obey camera clipping; HUD panels can naturally cover town decorations, and bounded placement may hide icons when room is unavailable. Picket slogans are small at whole-town zoom; their scale is the supplied Claude prop scale.
+
+Review bundle: `.superpowers/shots/C5-codex-shoulds/evidence.zip` (4,524,188 bytes; SHA-256 `bef5c46b340da3b5b8d07b91c7fcc90613dc4032e5f27004da478709c4c7eb5d`). Includes all 30 PNG/sidecar pairs, manifest, live ticker and source identity reports.
+
+`manifest.json` holds each scenario's sidecar and PNG SHA-256. `live-ticker.json` records the live motion check. All capture paths above use the shared screenshot command; no replacement screenshot implementation. Scratch logs/ledger live under `.superpowers/sdd/C5-codex-shoulds/`.
+
+Source identity: 179 tracked files under src/ plus package.json/package-lock.json; sorted records `relative-path,NUL,SHA256-of-bytes,newline`; combined SHA-256 `d4ef4b20e69849f32de9ebf0b093aa6bb0bdb405bec43213639b780541236b87`. The same value is saved in `source-identity.json`. `335f377` only relocates tests and updates the plan; its src/public/Dockerfile/package files are byte-identical to source commit `7b96b5e`. This is local identity evidence, not a host/deployment claim.
+
+## Remaining gates and next operator steps
+
+1. Claude reviews the integrated PNGs against §5c: night readability and fog; stable reduced-motion feedback; sign grip/scale; emote grouping/placement; ticker and fallback notice at phone/landscape sizes. Any defect inside a Claude-owned module goes back to Claude.
+2. Repeat the **existing reference-laptop** realtime performance recording on this candidate: run `npm run dev`, then open `http://localhost:3000/visual-test/index.html?fixture=solo-honest&round=3&phase=reveal&palette=b&reducedMotion=false&playback=realtime` at 1280×720, DPR 1. Wait for Ready, start the recorder and click Run. Preserve the harness report with `problems: []`, hardware/browser/settings and frame data, especially the 70–100% tail with 26 signs (18 protest, 8 angry_mob). Sign outlines are unbatched; no hardware FPS is claimed from software WebGL captures. Compare against recorded D2 performance (36.8 FPS average, user-accepted brief 29 FPS dip). Report regressions; do not silently drop agreed effects.
+3. After approval of a concrete candidate, use the existing user-operated EC2 release/rollback procedure and D3/D4 smoke probe against `https://newstown.prophumy.com`. Retain the current image as recovery before restarting. Record exact source digest/image and remote home/final evidence. No Paid Plan upgrade, new paid resources or out-of-pocket spending authorized. Render Free fallback unchanged.
+4. Claude completes C5's final whole-match review and remaining description approval. Only then can D5 start.
+
+Production is unchanged by this renderer branch. Last confirmed live source remains `6065715`, image `sha256:51f74f3518ec9145dad4fc135798f95d079f27484bc260135187daee05094bfa`; check the host again before any rollout. A restart loses in-memory rooms. No contract requests filed; no scope cuts added.
