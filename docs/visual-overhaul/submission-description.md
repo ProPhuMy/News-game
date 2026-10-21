@@ -1,6 +1,6 @@
 # Submission description — draft for user review
 
-Owner: Claude (reassigned from Gemini 3 by the user on 2026-10-20). Status: **draft**. The user approves the title, edits the text and submits. The cover image is Codex's D5 deliverable and is still pending.
+Owner: Claude (reassigned from Gemini 3 by the user on 2026-10-20). Status: **approved by the user on 2026-10-20** ("i think it is good enough"). If the Should features ship, one sentence about day-to-night, emotes, picket signs and the ticker can be added after their final review; that addition needs the user's OK. The user approves the title, edits the text and submits. The cover image is Codex's D5 deliverable and is still pending.
 
 Live URL: https://newstown.prophumy.com
 
