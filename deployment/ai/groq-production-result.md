@@ -47,3 +47,25 @@ Live AI use is demonstrated for both operations and the user-run production smok
 Pending: Claude's final production-evidence review; post-replacement external3000 check, current recovery-tag inspection, resource/CPU-credit observations, and full smoke artifact if needed for independent asset review. Actual account remaining quota/Data Controls have not been independently authenticated by the agent. Samples remain uncommitted pending user approval. Claude may now propose submission wording using this live evidence, subject to the user's separate wording approval.
 
 Local candidate verification before deployment:138test files/996tests passed; typecheck, lint and build exited0. This result record adds documentation only; those suites were not repeated. Recording this evidence made no API call, restarted no process, reset no ledger and changed no allowance. No contract requests.
+
+## Counterpart acceptance and host closeout update
+
+Claude accepted efe9bec with no required findings: ff8a70b runtime matches reviewed3e364e1 and includes prompt2f15853; client/public match byte-verifiedd86a2d5. Claude accepted the supplied20/20 outcomes and passing smoke, while requiring the remaining host checks before completion.
+
+Exact reproducible archive command used for the independently checked hash:
+
+```bash
+git archive --format=tar.gz ff8a70b | sha256sum
+```
+
+The user transferred an archive produced with `git archive --format=tar.gz --output="$rollout_archive" ff8a70b`; its EC2 hash matches the piped command. A plain-tar archive has different bytes and therefore a different hash. Compression is part of this artifact identity.
+
+User-run EC2 observations at2026-10-21 15:11:35UTC:
+
+- Recovery tag news-town:recovery-before-groq resolves to expectedsha256:4a038abd4b757e14f25455c0ca6c9f92787e9a220c2b6f63c17033a0705c87e6. Retained-image check is now closed; rollback remains unexecuted.
+- Running app binding is3000/tcp on127.0.0.1:3000 only. This confirms the binding; the independent external connection test remains pending.
+- App CPU0.12%, memory93.02MiB/911.3MiB; edge CPU0.00%, memory30.02MiB/911.3MiB.
+- Host available memory400MiB; swap137MiB used of2GiB; root7.0GiB used/12GiB available,39% used.
+- These are point-in-time resource observations, not a sustained-load or during-match measurement. No new CPU-credit balance was supplied. Resource-observation closeout is satisfied; no additional capacity claim is made.
+
+The remaining rollout-closeout gate is the user-run external3000 connection check. Total allowance remains100 on the same retained ledger; no increase/reset is approved. No source changes, new calls or host mutations were made while recording this update. Prior pending lists above are historical snapshots superseded by this section.
