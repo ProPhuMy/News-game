@@ -25,16 +25,20 @@ describe('server AI wiring', () => {
       } } });
     try {
       await game.listen(0);
-      const session = game.rooms.create({ displayName: 'PRIVATE-NAME', paperName: 'PRIVATE-PAPER', color: COLORS[0] }, 'socket', 'ip', 0);
+      const now = Date.now();
+      const session = game.rooms.create({ displayName: 'PRIVATE-NAME', paperName: 'PRIVATE-PAPER', color: COLORS[0] }, 'socket', 'ip', now);
       const room = game.rooms.require(session.code);
-      game.runner.handle(room, 0, { type: 'startMatch', actionId: 'start' }, 0);
-      game.runner.handle(room, 0, { type: 'skipIntro', actionId: 'intro', round: 0, phase: 'intro' }, 1);
-      game.runner.handle(room, 0, { type: 'skipInvestigate', actionId: 'skip', round: 1, phase: 'investigate' }, 2);
+      game.runner.handle(room, 0, { type: 'startMatch', actionId: 'start' }, now);
+      game.runner.handle(room, 0, { type: 'skipIntro', actionId: 'intro', round: 0, phase: 'intro' }, now + 1);
+      game.runner.handle(room, 0, { type: 'skipInvestigate', actionId: 'skip', round: 1, phase: 'investigate' }, now + 2);
       const choices = room.state!.headlines.map(({ id, location, claim, isTrue }) => ({ id, location, claim, isTrue }));
       await vi.waitFor(() => expect(room.state!.headlines.every((h) => h.rating !== null)).toBe(true));
       expect(room.state!.headlines.map(({ id, location, claim, isTrue }) => ({ id, location, claim, isTrue }))).toEqual(choices);
+      // Exercise the actual scheduler; test timestamps must use the same epoch.
+      await new Promise((resolve) => setTimeout(resolve, 150));
+      expect(room.state!.phase).toBe('write');
       game.runner.handle(room, 0, { type: 'lockHeadline', actionId: 'lock', round: 1, phase: 'write',
-        text: 'PRIVATE headline!', story: { kind: 'claim', location: LOCATIONS[0], claim: EVENT_CLAIMS[0], attachEvidence: false } }, 3);
+        text: 'PRIVATE headline!', story: { kind: 'claim', location: LOCATIONS[0], claim: EVENT_CLAIMS[0], attachEvidence: false } }, now + 3);
       await vi.waitFor(() => expect(messages).toHaveLength(7));
       expect(calls).toBe(allowance);
       expect(readFileSync(file, 'utf8')).toBe('1\n'.repeat(allowance));
