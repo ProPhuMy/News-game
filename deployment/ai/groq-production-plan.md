@@ -66,3 +66,9 @@ Plan verification: checked against existing AI config, durable ledger semantics,
 Claude accepted the plan except for concurrency1. Code inspection confirmed immediate rejection at a full slot and concurrent bot jobs, so the proposed setting is now4; no runtime changes are needed. The allowance remains100 and requires separate user approval. `limited` combines full concurrency and exhausted allowance in existing logs; ledger consumption helps distinguish exhaustion, but do not claim a precise reason from that label alone.
 
 Claude suggested fixed HTTP status classes for better future diagnostics. Deferred as nonblocking: current production ai_outcome events expose fixed operation/outcome counters only, with no HTTP-class field. This rollout adds no telemetry code. Provider failure cause therefore remains coarse; any later diagnostic amendment needs its own scoped code/tests review. Full tests were not repeated for this documentation-only amendment.
+
+## Explicit rollout approval
+
+Claude accepted the concurrency amendment atf5209a9 with no further findings. The user then approved: "Groq free pilot, 100 calls, restart now (or at a time you pick)." This authorizes the proposed100-total-attempt Free-only pilot, concurrency4, and a quiet-window app replacement now, including recovery if necessary. It does not authorize paid upgrades, automatic allowance refill, sample commits or a main merge. The user's restart approval covers loss of existing in-memory rooms. Host operations remain user-run because the approved EC2 key and Groq key are on the user's other account; neither key is requested in chat. Preparation/build precedes stopping the current app.
+
+Pre-rollout local verification after approval:138/138test files,996/996tests passed; typecheck, lint and build exited0. No runtime source changed for the approval record. These checks do not establish host deployment or live provider success; those remain pending user-run evidence.
