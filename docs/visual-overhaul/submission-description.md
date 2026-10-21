@@ -62,10 +62,10 @@ The buildings are built in code, not imported from a kit. Each is a few palette-
 | Building identities | Overhaul design §5; C3 handoff; C4 sign fix |
 | Icons with colors, reduced motion, no-WebGL fallback | Gameplay spec §4.1, §7; overhaul design §7; C5 fallback and reduced-motion captures |
 | Credits | `ASSETS.md`, including the sound replacement rows |
-| Live URL | D4 handoff (deployed source `6065715`, HTTPS) |
+| Live URL | C5 closeout and D5 handoff: deployed source `d86a2d5`, image `sha256:4a038abd…`, HTTPS 200 rechecked in D5 |
 
 **Deliberately left out:**
 - **Language models:** the live build runs with `AI_PROVIDER=none`. Rival headlines and speech bubbles come from hand-written templates, and the "AI" papers are rule-based. The text calls them "computer-run" to avoid implying language-model generation. If the mission requires AI use, say so and the text can describe the optional AI adapter (gameplay spec §9.3, §12).
-- **Frame rate:** no claim. The recorded laptop result is a 36.8 FPS average with a user-accepted brief 29 FPS dip (D2 handoff).
+- **Frame rate:** no claim. The current release's reference-laptop result is a 34.73 FPS average, with a worst one-second window of 26, accepted by the user as an exception (C5). The earlier D2 figures (36.8 / 29) describe an older build.
 - **Phone support:** not claimed as a feature. Phone layouts work in captures, but the spec lists phone layout as a stretch goal.
 - **Unbuilt features:** none of the Should or Could items in the overhaul design is described (emotes, picket signs, day/night, latest-edition strip, halftone, and so on).
