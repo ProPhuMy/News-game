@@ -42,8 +42,8 @@ const LOOKS: Readonly<Record<TimeOfDay, { tint: keyof typeof TIME_TINTS; amount:
   morning: { tint: 'morning', amount: 0.3, sun: 'morning', sunAmount: 1, lightScale: 0.95, lampLevel: 0 },
   midday: { tint: 'daylight', amount: 0, sun: 'daylight', sunAmount: 1, lightScale: 1, lampLevel: 0 },
   afternoon: { tint: 'dusk', amount: 0.12, sun: 'dusk', sunAmount: 0.15, lightScale: 0.95, lampLevel: 0 },
-  late: { tint: 'dusk', amount: 0.3, sun: 'dusk', sunAmount: 0.35, lightScale: 0.85, lampLevel: 0.25 },
-  dusk: { tint: 'dusk', amount: 0.55, sun: 'dusk', sunAmount: 0.7, lightScale: 0.72, lampLevel: 0.7 },
+  late: { tint: 'dusk', amount: 0.22, sun: 'dusk', sunAmount: 0.3, lightScale: 0.85, lampLevel: 0.2 },
+  dusk: { tint: 'dusk', amount: 0.4, sun: 'dusk', sunAmount: 0.55, lightScale: 0.75, lampLevel: 0.7 },
   night: { tint: 'night', amount: 0.78, sun: 'moon', sunAmount: 1, lightScale: 0.6, lampLevel: 1 },
 };
 

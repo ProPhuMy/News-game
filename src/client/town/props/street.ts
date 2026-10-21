@@ -5,7 +5,25 @@ import type { ArchitectureContext, PlacedPiece } from '../../visuals/town-types.
 import { at, createPieceParts, placedPiece } from '../architecture/piece.ts';
 
 /** Opacity of a lamp's ground pool at full lamp level (interface §5c). */
-export const LAMP_POOL_MAX_OPACITY = 0.45;
+export const LAMP_POOL_MAX_OPACITY = 0.75;
+
+/** Radial falloff for a lamp's ground pool; alphaMap reads the green channel, so all channels carry it. */
+function poolFalloff(): THREE.DataTexture {
+  const size = 64;
+  const data = new Uint8Array(size * size * 4);
+  const half = size / 2;
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const r = Math.min(Math.hypot(x + 0.5 - half, y + 0.5 - half) / half, 1);
+      const v = Math.round(255 * (1 - r * r) ** 2);
+      data.set([v, v, v, 255], (y * size + x) * 4);
+    }
+  }
+  const texture = new THREE.DataTexture(data, size, size, THREE.RGBAFormat);
+  texture.magFilter = THREE.LinearFilter;
+  texture.needsUpdate = true;
+  return texture;
+}
 
 export interface GasLampPiece extends PlacedPiece {
   /** 0..1 (clamped): only the pool's opacity changes, never transforms, visibility or outlines (D2 batching). */
@@ -25,10 +43,10 @@ export function createGasLamp(ctx: ArchitectureContext): GasLampPiece {
   ctx.materials.outline(root);
   // Added after outline(): the pool is a flat light patch, not a solid, so it gets no outline and casts no shadow.
   const poolMaterial = parts.own(new THREE.MeshBasicMaterial({
-    color: lampGlow, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false,
+    color: lampGlow, alphaMap: parts.own(poolFalloff()), transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false,
     polygonOffset: true, polygonOffsetFactor: -2,
   }));
-  const pool = at(new THREE.Mesh(parts.own(new THREE.CircleGeometry(2.6, 24)), poolMaterial), 0, 0.004, 0);
+  const pool = at(new THREE.Mesh(parts.own(new THREE.CircleGeometry(3.6, 24)), poolMaterial), 0, 0.004, 0);
   pool.name = 'lamp-pool';
   pool.rotation.x = -Math.PI / 2;
   root.add(pool);

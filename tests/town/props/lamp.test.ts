@@ -28,6 +28,19 @@ describe('gas lamp glow (interface §5c)', () => {
     expect(p.receiveShadow).toBe(false);
   });
 
+  it('pool fades softly toward its edge (alpha map), so it reads as light, not a disc', () => {
+    const p = pool(createGasLamp(fakeContext('b')).object);
+    const map = p.material.alphaMap as THREE.DataTexture;
+    expect(map).toBeTruthy();
+    const { width, height, data } = map.image as { width: number; height: number; data: Uint8Array };
+    const at = (x: number, y: number) => data[(y * width + x) * 4]!;
+    const cx = Math.floor(width / 2);
+    const cy = Math.floor(height / 2);
+    expect(at(cx, cy)).toBeGreaterThan(200);
+    expect(at(cx + Math.floor(width / 4), cy)).toBeLessThan(at(cx, cy));
+    expect(at(width - 1, cy)).toBe(0);
+  });
+
   it('setLevel changes only the pool opacity, clamped to 0..1', () => {
     const lamp = createGasLamp(fakeContext('b'));
     const before = snapshot(lamp.object);
