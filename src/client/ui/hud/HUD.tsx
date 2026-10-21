@@ -11,6 +11,8 @@ export interface HUDProps {
   serverTimeOffset: number;
   papers: PaperView[];
   error?: string | null;
+  /** Optional strip directly under the top bar (the reveal's latest-edition ticker). */
+  ticker?: React.ReactNode;
   children?: React.ReactNode;
 }
 
@@ -21,16 +23,18 @@ export const HUD: React.FC<HUDProps> = ({
   serverTimeOffset,
   papers,
   error,
+  ticker,
   children,
 }) => {
   return (
-    <div className="hud-overlay" data-testid="hud-overlay">
+    <div className={ticker ? 'hud-overlay hud-overlay--ticker' : 'hud-overlay'} data-testid="hud-overlay">
       <TopBar
         round={round}
         phase={phase}
         deadlineMs={deadlineMs}
         serverTimeOffset={serverTimeOffset}
       />
+      {ticker}
       <div className="hud-body">
         <SidePanel papers={papers} />
         <main className="hud-center-content">

@@ -8,7 +8,7 @@ describe('parseCaptureArgs', () => {
       reducedMotion: false, seed: 1, width: 1280, height: 720, out: 'shots/town.png', prod: false, timeoutMs: 60000,
       model: 'characters/kenney-mini/character-male-a.glb', clip: null, timeMs: 0, count: 1,
       screen: 'home', palette: 'b', stressText: false, tab: 0, scroll: null, blockFonts: false,
-      variant: 'code', view: 'street', citizenHeight: null, crowdLayout: 'comparison', noWebgl: false, contextCycle: false,
+      variant: 'code', view: 'street', time: null, citizenHeight: null, crowdLayout: 'comparison', noWebgl: false, contextCycle: false,
       playerName: null, paperName: null, correctPlayerName: null, correctPaperName: null, expectError: null,
     });
   });
@@ -114,12 +114,18 @@ describe('architecture target', () => {
     expect(harnessPath(close)).toContain('variant=code&view=awning&palette=b');
     const timed = parseCaptureArgs(['--target', 'architecture', '--reaction-ms', '1000', '--reduced-motion', '--out', 'x.png']);
     expect(harnessPath(timed)).toContain('reactionMs=1000&reducedMotion=true');
+    expect(harnessPath(timed)).not.toContain('time=');
+    const night = parseCaptureArgs(['--target', 'architecture', '--view', 'town', '--time', 'night', '--out', 'x.png']);
+    expect(night.time).toBe('night');
+    expect(harnessPath(night)).toContain('&time=night');
   });
 
   it('rejects bad values and use outside the architecture target', () => {
     expect(() => parseCaptureArgs(['--target', 'architecture', '--variant', 'kit', '--out', 'x.png'])).toThrow(/--variant must be one of/);
     expect(() => parseCaptureArgs(['--target', 'architecture', '--view', 'top', '--out', 'x.png'])).toThrow(/--view must be one of/);
-    expect(() => parseCaptureArgs(['--variant', 'code', '--out', 'x.png'])).toThrow(/--variant and --view need --target architecture/);
+    expect(() => parseCaptureArgs(['--target', 'architecture', '--time', 'noon', '--out', 'x.png'])).toThrow(/--time must be one of morning, midday/);
+    expect(() => parseCaptureArgs(['--time', 'night', '--out', 'x.png'])).toThrow(/--variant, --view and --time need --target architecture/);
+    expect(() => parseCaptureArgs(['--variant', 'code', '--out', 'x.png'])).toThrow(/--variant, --view and --time need --target architecture/);
     expect(() => parseCaptureArgs(['--target', 'architecture', '--prod', '--out', 'x.png'])).toThrow(/--prod only supports --target app/);
   });
 });
