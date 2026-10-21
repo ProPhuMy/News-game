@@ -31,7 +31,7 @@ Case2 repeats the confirmed error; case7 repeats the rejected response's input. 
 
 ## Small offline tooling amendment — review before code/live execution
 
-The current CLI always runs24 cases and writes the original filenames. **Do not rerun it as-is.** Proposed Codex changes: `deployment/ai/groq-{cases,evaluate,report}.ts`, `tests/server/groq-evaluate.test.ts` and AI deployment docs only. No server/adapter/engine/shared/content/root-config changes are needed.
+The current CLI always runs24 cases and writes the original filenames. **Do not rerun it as-is.** Proposed Codex changes: `deployment/ai/groq-{cases,evaluate,report}.ts`, `tests/server/groq-evaluate.test.ts`, new Codex-owned `tests/server/groq-followup.test.ts`, and AI deployment docs only. No server/adapter/engine/shared/content/root-config changes are needed.
 
 - Add one explicit `--follow-up` suite selection alongside the existing required `--live`; default pilot remains24. Follow-up selects exactly the12 cases above, imposes a total12-attempt maximum through the same durable gate and writes separate `groq-followup-result.json` / `groq-followup-samples.json`. Hard cap is based on suite, not an arbitrary user-supplied case list. No automatic new ledger creation or replenishment.
 - Record a fixed optional per-case validation category derived during the evaluator's existing transient inspection: `valid`, `invalid_envelope`, `invalid_json`, `invalid_rating`, `unknown`. No Zod messages, model errors, arbitrary fields or raw response text. This diagnoses response usability only, not the appropriateness or truth of a headline. Preserve strict schema validation and all existing report redaction. Existing version1 pilot report must continue to parse unchanged; follow-up suite/cap discrimination and optional diagnostic field are Codex-owned artifact interfaces for Claude review.
@@ -45,6 +45,22 @@ Report genuine success versus fallback and numeric latency as before; >=90% tran
 
 ## Current status
 
-Proposal only. Claude's prompt is integrated; offline merge verification recorded in `groq-plan.md`. Follow-up implementation waits for review of this case/cap/report amendment. A live run still needs code/schema review and the user's separate approval. No contract request or new dependency.
+Claude accepted this plan at7ade1de; offline implementation is complete. Claude's prompt is integrated; offline merge verification recorded in `groq-plan.md`. Claude reviews the resulting implementation and schemas before any live call. A live run still needs code/schema review and the user's separate approval. No contract request or new dependency.
 
-Offline integration checks:137files/987tests pass; typecheck/lint/build exit0. A pre-existing Codex server-wiring test clock mismatch was reproduced and fixed in `tests/server/ai-runtime.test.ts` only. Imported Claude files byte-match2f15853; the original failed report is unchanged. No12-case runner or report-interface amendment is implemented yet.
+Offline integration checks:137files/987tests pass; typecheck/lint/build exit0. A pre-existing Codex server-wiring test clock mismatch was reproduced and fixed in `tests/server/ai-runtime.test.ts` only. Imported Claude files byte-match2f15853; the original failed report is unchanged. The12-case runner and report amendment are now implemented; live execution remains gated.
+
+At12 requests, >=90% means at most one transport failure (11/12=91.67%;10/12=83.33%). An unavailable moderation case remains unassessed and cannot be counted as a safety pass merely because the transport fraction clears the threshold. Coarse fixed validation category is sufficient for this round; no raw schema errors or additional constraint-diagnostic interface.
+
+
+## Offline implementation handoff
+
+- Fixed12-case suite in `groq-cases.ts`, with the requested one-line synthetic-profanity comment. No prompt/engine/server changes in this follow-up tooling commit.
+- `parseGroqEvaluationArgs` requires `--live`, recognizes only optional `--follow-up`, and rejects duplicate/unknown flags. `groqOutputFiles` selects distinct follow-up filenames. Default pilot still uses24 original cases and original names; do not use the old pilot command for this follow-up.
+- Follow-up cap12 rejects allowance13 before fetch. The shared durable gate, counted pre-check, no retries, auth/quota stop, timing limits and snapshot protection remain. Writing stats remain zero and are excluded from the rating-only transport gate.
+- Strict version1 schemas accept the saved pilot report unchanged. Follow-up summary/sample records use optional root `suite: 'follow-up'`; caps, IDs and operations must match. Follow-up rows require the fixed validation enum; pilot rows may omit it. Unknown fields remain rejected.
+- Tests observed RED9/9 before implementation, then GREEN9 follow-up +23 legacy evaluator tests. New tests cover12 consumed permits, exhausted ledger, allowance13, one/two failure thresholds, safe validation categories, counted failed pre-check, CLI selection, separate filenames, legacy report and late-timeout metadata. No paid transport is used in tests.
+- Independent fresh reviewer accepted code/tests/docs with no required findings; stale preimplementation wording removed. This does not substitute for Claude's required code/schema review.
+- The first pilot report remains unchanged, SHA25649076a04122093a567d13f19340dd42e1e7bb782b88c1b6c38f45f4fd3027b85. No follow-up result/sample files generated, keys accessed, ledger reset, additional authenticated call or production change. User must inspect generated samples before any future commit.
+- Next gate: Claude reviews this implementation and both schemas; then user separately approves at most12 additional Free-only calls. No main merge or Anthropic spending authorized by this delivery. No new dependencies or contract requests.
+
+Final offline verification: `npm test` **138files/996tests passed**; typecheck, lint and build exit0. Existing >500kB client bundle warning only. `git diff --check` clean; no visual changes or screenshots required. Logs `/tmp/news-town-groq-followup-*.log`, ignored progress ledger `.superpowers/sdd/groq-followup-plan/`. Prior prompt integration remains byte-identical to Claude's delivered files. Actual live model improvement is still unverified.
