@@ -75,7 +75,7 @@ export async function captureAppEvidence(page: Page, watch: PageWatch, opts: { o
   try {
     const { viewport, layout } = await checkAppLayout(page);
     await mkdir(dirname(opts.out), { recursive: true });
-    await page.screenshot({ path: opts.out, timeout: opts.timeoutMs });
+    await page.screenshot({ path: opts.out, timeout: opts.timeoutMs, animations: 'disabled' });
     const evidence: AppEvidence = {
       label: opts.label,
       origin: new URL(page.url()).origin,

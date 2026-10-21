@@ -50,6 +50,15 @@ export const PALETTES: Readonly<Record<PaletteId, PresentationPalette>> = {
   },
 };
 
+/** Light tints the time-of-day looks blend into each palette (presentation interface §5c). */
+export const TIME_TINTS = {
+  daylight: 0xffffff, // midday sun
+  morning: 0xfff0d2,  // soft warm sunrise
+  dusk: 0xf0a060,     // orange evening
+  night: 0x1c2c58,    // deep blue night sky, never black
+  moon: 0xa8bce8,     // cool night key light
+} as const;
+
 /** The palette the user approved at the D1 art decision (presentation-interface note §5b). */
 export const APPROVED_PALETTE: PaletteId = 'b';
 

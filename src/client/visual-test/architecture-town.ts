@@ -8,7 +8,9 @@ import { createTownCamera } from '../town/camera.ts';
 import { townFrameBounds } from '../town/index.ts';
 import { createTownLayout } from '../town/layout.ts';
 import { createMaterialKit } from '../town/materials.ts';
-import { getPalette } from '../visuals/palette.ts';
+import { getPalette, type PresentationPalette } from '../visuals/palette.ts';
+import { timeOfDayLook, type TimeOfDay } from '../visuals/time-of-day.ts';
+import { PICKET_SIGN_TEXTS, createPicketSignKit, type PicketSignKit } from '../town/props/picket.ts';
 import type { ArchitectureContext } from '../visuals/town-types.ts';
 import type { ArchitectureScenario } from './architecture-scenario.ts';
 import { measureCanvas, readyVerdict } from './pixels.ts';
@@ -17,7 +19,7 @@ import type { VisualState } from './state.ts';
 const ROAD_WIDTH = 3.4;
 const SLAB = 96;
 
-type Close = Exclude<ArchitectureScenario['view'], 'street' | 'awning' | 'town'>;
+type Close = Exclude<ArchitectureScenario['view'], 'street' | 'awning' | 'town' | 'picket'>;
 
 /** World position a close-up frames: a building's root, the fountain plaza midpoint, or office seat 0. */
 export function closeTarget(group: THREE.Group, view: Close, layout: ReturnType<typeof createTownLayout>): THREE.Vector3 {
@@ -37,6 +39,33 @@ export function closeTarget(group: THREE.Group, view: Close, layout: ReturnType<
   return at;
 }
 
+/** Harness-only preview: one sign per slogan, held at hand height (1.0) in a row along x at `center`. */
+export function addPicketRow(scene: THREE.Object3D, kit: PicketSignKit, center: THREE.Vector3): THREE.Object3D[] {
+  return PICKET_SIGN_TEXTS.map((text, i) => {
+    const sign = kit.create(text);
+    sign.position.set(center.x + (i - (PICKET_SIGN_TEXTS.length - 1) / 2) * 1.6, 1, center.z);
+    scene.add(sign);
+    return sign;
+  });
+}
+
+/** Harness-only preview of a time-of-day look; production lighting is Codex's (interface §5c). */
+export function applyTimeOfDay(
+  target: { scene: THREE.Scene; hemi: THREE.HemisphereLight; sun: THREE.DirectionalLight; setLampLevel?: (level: number) => void },
+  palette: PresentationPalette,
+  time: TimeOfDay | null,
+): void {
+  if (time === null) return;
+  const look = timeOfDayLook(palette, time);
+  target.scene.background = new THREE.Color(look.sky);
+  target.hemi.color.setHex(look.hemiSky);
+  target.hemi.groundColor.setHex(look.hemiGround);
+  target.hemi.intensity = 1.1 * look.lightScale;
+  target.sun.color.setHex(look.sun);
+  target.sun.intensity = 2.4 * look.lightScale;
+  target.setLampLevel?.(look.lampLevel);
+}
+
 export async function runArchitectureTown(
   scenario: ArchitectureScenario,
   container: HTMLElement,
@@ -51,7 +80,9 @@ export async function runArchitectureTown(
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(palette.town.sky);
   const geometries: THREE.BufferGeometry[] = [];
+  const pickets = createPicketSignKit(ctx);
   const disposeAll = (): void => {
+    pickets.dispose();
     buildings.dispose();
     for (const geometry of geometries) geometry.dispose();
     materials.dispose();
@@ -81,7 +112,8 @@ export async function runArchitectureTown(
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
-  scene.add(new THREE.HemisphereLight(palette.town.sky, palette.town.ground, 1.1));
+  const hemi = new THREE.HemisphereLight(palette.town.sky, palette.town.ground, 1.1);
+  scene.add(hemi);
   const sun = new THREE.DirectionalLight(0xffffff, 2.4);
   sun.position.set(10, 20, 14);
   sun.target.position.set(0, 0, 2);
@@ -92,6 +124,7 @@ export async function runArchitectureTown(
   sun.shadow.normalBias = 0.025;
   sun.shadow.bias = -0.0001;
   scene.add(sun, sun.target);
+  applyTimeOfDay({ scene, hemi, sun, setLampLevel: buildings.setLampLevel }, palette, scenario.time);
 
   let camera: THREE.PerspectiveCamera;
   const aspect = (container.clientWidth || 1280) / (container.clientHeight || 720);
@@ -103,6 +136,13 @@ export async function runArchitectureTown(
       townCamera.frame(townFrameBounds(buildings.group, layout));
       townCamera.resize(container.clientWidth || 1280, container.clientHeight || 720);
       camera = townCamera.camera;
+    } else if (view === 'picket') {
+      const node = layout.getNodeWorldPos(layout.getLocationNode('bakery'));
+      const at = new THREE.Vector3(node.x, 0, node.z);
+      addPicketRow(scene, pickets, at);
+      camera = new THREE.PerspectiveCamera(35, aspect, 0.1, 400);
+      camera.position.copy(at).add(new THREE.Vector3(0, 5, 8));
+      camera.lookAt(at.x, 1.4, at.z);
     } else {
       const at = closeTarget(buildings.group, view, layout);
       camera = new THREE.PerspectiveCamera(35, aspect, 0.1, 400);

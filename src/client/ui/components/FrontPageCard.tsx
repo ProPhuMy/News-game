@@ -11,6 +11,8 @@ export interface FrontPageView {
   hasEvidence: boolean;
   isExposed: boolean;
   exposureReason?: string;
+  /** True for the placeholder card of a seat that published nothing this round. */
+  unpublished?: boolean;
 }
 
 export interface FrontPageCardProps {

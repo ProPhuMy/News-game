@@ -52,18 +52,19 @@ Modify: `src/client/visuals/palette.ts` (time tints), `src/client/town/props/str
 
 ## Task 3 — Emote mapping
 
-- [ ] Failing test: `EMOTE_FOR_BEHAVIOR` covers every `BEHAVIORS` entry exactly as §5c lists, and `MAX_VISIBLE_EMOTES === 8`.
+- [ ] Failing test: `EMOTE_FOR_BEHAVIOR` covers every `BEHAVIORS` entry exactly as §5c lists, and `MAX_VISIBLE_EMOTES === 8`. Selection and clearing are Codex's (§5c amended).
 - [ ] Implement `emotes.ts`. Commit `visuals: emote mapping for Codex`.
 
 ## Task 4 — Picket sign prop
 
-- [ ] Failing tests:
+- [ ] Failing tests for `createPicketSignKit(ctx)` (interface §5c, as amended by Codex):
   - Grip at the origin, board above it facing +Z, total height between 1.2 and 1.4.
   - Every `PICKET_SIGN_TEXTS` entry is at most 6 glyphs and renders with the existing pixel font.
-  - Two signs with the same text share geometry and texture.
-  - `dispose()` frees each resource once.
+  - Two `create()` calls with the same text share geometry and texture with one original.
+  - Two kits never share resources, and disposing one leaves the other intact.
+  - `dispose()` detaches every clone from its parent, then frees each resource exactly once; a second call does nothing.
   - Palette surfaces only.
-- [ ] Implement `props/picket.ts`, reusing the `signs.ts` glyph texture and `createPieceParts`.
+- [ ] Implement `props/picket.ts`, reusing the `signs.ts` glyph texture and `createPieceParts`. No module-level cache.
 - [ ] Harness `--view picket`: a row of signs beside a bakery. Capture and open it. Commit `props: picket sign for protesters`.
 
 ## Task 5 — Latest-edition ticker

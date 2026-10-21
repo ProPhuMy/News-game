@@ -67,7 +67,7 @@ async function capture(options: CaptureOptions): Promise<void> {
     }
 
     await mkdir(dirname(options.out), { recursive: true });
-    await page.screenshot({ path: options.out, timeout: options.timeoutMs });
+    await page.screenshot({ path: options.out, timeout: options.timeoutMs, animations: 'disabled' }); // CSS marquees and transitions are not on the harness clock
     const { stylesheets, consoleErrors } = await watch.snapshot();
     await writeFile(`${options.out}.json`, `${JSON.stringify({
       target: options.target, url, options, browser: browser.version(), state, layout, stylesheets, consoleErrors,

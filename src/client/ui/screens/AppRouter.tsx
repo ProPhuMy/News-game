@@ -12,6 +12,7 @@ import { FinalEditionScreen } from './FinalEditionScreen.tsx';
 import { ServerRestartScreen } from './ServerRestartScreen.tsx';
 import { ConnectionOverlay } from './ConnectionOverlay.tsx';
 import { HUD } from '../hud/HUD.tsx';
+import { EditionTicker } from '../components/EditionTicker.tsx';
 import { SoundProvider } from '../audio/SoundContext.tsx';
 import {
   paperPublicToView,
@@ -225,6 +226,7 @@ export const AppRouter: React.FC<AppRouterProps> = ({ store = defaultStore }) =>
         deadlineMs={publicSnapshot.deadlineMs}
         serverTimeOffset={serverOffsetMs}
         papers={papers}
+        ticker={publicSnapshot.phase === 'reveal' ? <EditionTicker pages={frontPages} /> : undefined}
         // Investigate and write panels show errors until the player acts; the HUD banner covers everything else.
         error={(publicSnapshot.phase === 'investigate' || publicSnapshot.phase === 'write') && !privateSnapshot.acted
           ? null : formattedError}

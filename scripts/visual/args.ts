@@ -1,6 +1,7 @@
 import { APPROVED_PALETTE } from '../../src/client/visuals/palette.ts';
 import type { CrowdLayout } from '../../src/client/visual-test/crowd.ts';
 import { ARCHITECTURE_VARIANTS, ARCHITECTURE_VIEWS, type ArchitectureScenario } from '../../src/client/visual-test/architecture-scenario.ts';
+import { TIMES_OF_DAY } from '../../src/client/visuals/time-of-day.ts';
 
 export type CaptureTarget = 'town' | 'app' | 'character' | 'architecture' | 'crowd';
 export const APP_SCREENS = ['home', 'join', 'lobby', 'match', 'loading', 'disconnected', 'error'] as const;
@@ -46,6 +47,8 @@ export interface CaptureOptions {
   variant: ArchitectureScenario['variant'];
   /** --target architecture only: camera view. */
   view: ArchitectureScenario['view'];
+  /** --target architecture only: time-of-day look preview. */
+  time: ArchitectureScenario['time'];
   /** --target crowd only: requested citizen height (0.5 to 6). */
   citizenHeight: number | null;
   /** --target crowd only: Codex's comparison rows (default, reproduces the approved screenshot) or its production allocator. */
@@ -77,7 +80,7 @@ const DEFAULTS: Omit<CaptureOptions, 'out'> = {
   reducedMotion: false, seed: 1, width: 1280, height: 720, prod: false, timeoutMs: 60000,
   model: 'characters/kenney-mini/character-male-a.glb', clip: null, timeMs: 0, count: 1,
   screen: 'home', palette: APPROVED_PALETTE, stressText: false, tab: 0, scroll: null, blockFonts: false,
-  variant: 'code', view: 'street', citizenHeight: null, crowdLayout: 'comparison', noWebgl: false, contextCycle: false,
+  variant: 'code', view: 'street', time: null, citizenHeight: null, crowdLayout: 'comparison', noWebgl: false, contextCycle: false,
   playerName: null, paperName: null, correctPlayerName: null,
   correctPaperName: null, expectError: null,
 };
@@ -156,6 +159,11 @@ export function parseCaptureArgs(argv: readonly string[]): CaptureOptions {
       if (!view) throw new Error(`--view must be one of ${ARCHITECTURE_VIEWS.join(', ')}, got "${value ?? ''}"`);
       options.view = view;
       architectureOnly = true;
+    } else if (flag === '--time') {
+      const time = TIMES_OF_DAY.find((t) => t === value);
+      if (!time) throw new Error(`--time must be one of ${TIMES_OF_DAY.join(', ')}, got "${value ?? ''}"`);
+      options.time = time;
+      architectureOnly = true;
     } else if (flag === '--scroll') {
       if (!value) throw new Error('--scroll needs a CSS selector');
       options.scroll = value;
@@ -168,7 +176,7 @@ export function parseCaptureArgs(argv: readonly string[]): CaptureOptions {
   }
   if (!options.out) throw new Error('--out <file.png> is required');
   if (!options.out.endsWith('.png')) throw new Error('--out must end with .png');
-  if (architectureOnly && options.target !== 'architecture') throw new Error('--variant and --view need --target architecture');
+  if (architectureOnly && options.target !== 'architecture') throw new Error('--variant, --view and --time need --target architecture');
   if (options.target === 'crowd' && options.citizenHeight === null) throw new Error('--citizen-height is required with --target crowd');
   if (options.target !== 'crowd' && options.citizenHeight !== null) throw new Error('--citizen-height needs --target crowd');
   if (crowdLayoutGiven && options.target !== 'crowd') throw new Error('--crowd-layout needs --target crowd');
@@ -208,6 +216,7 @@ export function harnessPath(options: CaptureOptions): string {
       scene: 'architecture', variant: options.variant, view: options.view, palette: options.palette, seed: String(options.seed),
       reactionMs: String(options.reactionMs), reducedMotion: String(options.reducedMotion),
     });
+    if (options.time !== null) query.set('time', options.time);
     return `/visual-test/index.html?${query.toString()}`;
   }
   if (options.target === 'crowd') {

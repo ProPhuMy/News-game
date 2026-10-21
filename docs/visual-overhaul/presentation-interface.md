@@ -195,7 +195,7 @@ User approvals relayed 2026-10-19 after viewing Codex's D1 rendering-sample capt
 - Thirty-citizen crowd rings inside the §4 clearance radii.
 - Camera framing. At the default distance the top and bottom offices are cropped, and a 390 × 844 view shows only the centre (C3 captures `town-b.png`, `town-b-narrow.png`).
 
-## 5c. Should features (user decision 2026-10-20; proposed, awaiting Codex acknowledgment)
+## 5c. Should features (user decision 2026-10-20; amended per Codex review and **acknowledged by Codex at `aff108b`**, 2026-10-20)
 
 The user chose to build all five Should items and cut every Could item (C5 handoff §4). Claude owns everything below except the parts marked Codex. All of it is presentation only: it never changes outcomes, routes, destinations or phase timing, and it never adds a gameplay clock.
 
@@ -222,7 +222,7 @@ export function timeOfDayLook(palette: PresentationPalette, time: TimeOfDay): Ti
 
 ### Lamp glow (Claude: `props/street.ts`, `buildings.ts`)
 
-- New method `TownBuildings.setLampLevel(level: number): void`, with level clamped to 0..1. Each gas lamp gains a ground light pool: a flat, unoutlined, additive disc with a material the lamp owns. `setLampLevel` changes only material values (pool opacity and lantern emissive strength). It never changes transforms, visibility or outlines, so the D2 static-outline batch stays valid.
+- New method `TownBuildings.setLampLevel?(level: number): void` (optional, so existing hand-built test doubles stay valid; the real town always provides it), with level clamped to 0..1. Each gas lamp gains a ground light pool: a flat, unoutlined, additive disc with a material the lamp owns. `setLampLevel` changes only material values: the pool's opacity. The lantern keeps its always-on emissive, because changing it would mutate a shared MaterialKit surface (ruling after Claude's C5 review). It never changes transforms, visibility or outlines, so the D2 static-outline batch stays valid.
 - No real point lights (performance).
 
 ### Emotes (Claude: `src/client/visuals/emotes.ts`; Codex: rendering)
@@ -235,27 +235,35 @@ export const EMOTE_FOR_BEHAVIOR: Readonly<Record<Behavior, Emote | null>>;
 export const MAX_VISIBLE_EMOTES = 8; // a crowd cap separate from the 6 speech bubbles
 ```
 
-- **Codex** draws the glyph above the citizen's head once it arrives at its destination (or immediately under reduced motion, without animation), with at most `MAX_VISIBLE_EMOTES` at a time. Extra emotes are dropped one per destination group first. The glyph itself is the non-color cue; text renders as text, never HTML.
+- **Codex** draws the glyph above the citizen's head once it arrives at its destination (or immediately under reduced motion, without animation), with at most `MAX_VISIBLE_EMOTES` at a time. The glyph itself is the non-color cue; text renders as text, never HTML.
+- **Selection is deterministic** (Codex review): take the actors with a non-null emote in ReactionPlan order. First pick one eligible actor per destination node, in order of each destination's first appearance. Then fill the remaining slots round-robin across destinations, in actor order, until 8. Clear all emotes on any phase change.
 
 ### Picket signs (Claude: `props/picket.ts`; Codex: attachment)
 
 ```ts
 export const PICKET_SIGN_TEXTS: readonly string[]; // short pixel-font slogans, family friendly, ≤ 6 glyphs
-export function createPicketSign(ctx: ArchitectureContext, text: string): PlacedPiece;
+export interface PicketSignKit {
+  /** A sign for one actor: a clone of this kit's original for `text` (created on first use), sharing its resources. */
+  create(text: string): THREE.Object3D;
+  /** Detaches every clone this kit made from its parent, then frees each original's resources once. Idempotent. */
+  dispose(): void;
+}
+/** One kit per town/context; caches never cross kits, so one kit's disposal cannot free another's resources. */
+export function createPicketSignKit(ctx: ArchitectureContext): PicketSignKit;
 ```
 
-- **Origin** is the grip point, with the board above it facing +Z. The total height is about 1.3, sized for 1.8-unit citizens.
-- Geometry and textures are cached per text, so 18 or more signs share resources. Codex may use `object.clone()` and must call `dispose()` once, on the original piece, at teardown.
+- **Origin** of each sign is the grip point, with the board above it facing +Z. The total height is about 1.3, sized for 1.8-unit citizens.
+- Each kit keeps one original per text and makes clones from it, so 18 or more signs share resources. No module-level cache exists. Codex creates the kit with the town's context and disposes it with the town, before the material kit.
 - **Codex** attaches a sign to each `protest` and `angry_mob` actor when it arrives (for example at the hand or root offset), removes it on the next phase, and shows signs under reduced motion without sway. Signs are not outlined after ready unless Codex adds them to its own batching rules.
 
 ### Read, pause and react (Codex)
 
-- **Bounded timing:** for each actor, `prelude = min(1200 ms, max(0, remaining − routeDuration − 500 ms))`. A reading pose uses only spare time. When there is no slack, the prelude is 0, so authoritative movement never starts late and never ends after the deadline.
+- **Bounded timing** (Codex review): routes carry distances, not durations. Playback already moves each actor during a fixed window of **15–70 %** of the remaining reaction time, using normalized progress. That window does not change. The reading pose uses only the lead-in before it: `prelude = min(1200 ms, 0.15 × remaining)`, ending at or before the 15 % mark. The react pose and emote follow arrival, in the 70–100 % tail. Movement never starts late and never ends after the deadline.
 - Reduced motion has no prelude; the stable final pose and emote appear at once.
 
 ### Latest-edition ticker (Claude: UI)
 
-- During `reveal` only, a newspaper ticker runs along the top of the town, directly under the top bar (on phones, under the standings strip). It shows every published headline of the round in seat order, each with its paper color, icon and name, and an `EXPOSED` mark where public data supplies one. It never implies that one headline caused every reaction (overhaul design §7).
+- During `reveal` only, a newspaper ticker runs along the top of the town, directly under the top bar, at every screen size (it spans the full width, so on phones it sits above the standings strip). Its viewport scrolls by hand with a hidden scrollbar, so every headline stays reachable. It shows every published headline of the round in seat order (placeholder cards for seats that skipped are left out; when nobody published it shows "No front pages this edition"), each with its paper color, icon and name, and an `EXPOSED` mark where public data supplies one. It never implies that one headline caused every reaction (overhaul design §7).
 - The motion is a CSS marquee. Under reduced motion it becomes a static row that scrolls horizontally. It reads from the existing reveal front-page data; there is no new store field.
 
 ## 5d. No-WebGL notice space (C5; Codex proposal `b2924bc`, acknowledged by Claude 2026-10-20)
