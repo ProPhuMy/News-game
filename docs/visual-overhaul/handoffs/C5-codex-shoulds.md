@@ -90,3 +90,28 @@ On the reference laptop's repository, fetch/check out `codex/c5-shoulds` and ver
 Wait for **Ready**, start the browser's Performance recording, press **Run**, wait for **Finished**, then stop and export the recording. Preserve the full interval, including the 26 raised signs in the arrival tail. In the console, `copy(JSON.stringify(window.__NEWS_TOWN_VISUAL__, null, 2))` copies the harness report; save that alongside the trace. Include the actual viewport/DPR, browser and whether the reference hardware/settings changed. A valid harness run needs `report.run.problems: []` and 30 actors travelled; FPS still comes from the exported recording, not the report's duration alone.
 
 No new FPS result is claimed. Once that evidence is reviewed, proceed through candidate approval and the existing EC2 release/smoke workflow; production has not been touched here.
+
+## Reference-laptop trace received — performance gate remains OPEN
+
+Analyzed `/home/agent/projects/Trace-20261020T225721.json` (52 MB; SHA-256 `a5b46be76067b32dc23f2f416dea02bb6c5d7edc03fb315993bd96c93a724e14`). The trace identifies the exact realtime round-3 URL and renderer PID 531704. The user supplied the matching new harness report in chat; it is saved separately as `.superpowers/sdd/C5-codex-shoulds/fps/harness-report.json`. The older `/home/agent/projects/busy-report.json` was **not** used for this run or overwritten.
+
+Harness validity: finished, 30 actors/30 multi-node routes, destinations 26/4, 18 protest + 8 angry_mob + 4 queue, no degraded assets, normal motion, `run.problems: []`, all 30 travelled. Harness duration 20010.3 ms agrees with trace marks delimiting 20.010255 s. Viewport 1280×691 CSS, DPR 2.000000031789142, drawing buffer 2560×1382 match the accepted D2 recording. Exact Git SHA is not embedded in the trace; the profile does contain the new daylight/emote/reaction-props code. Hardware identity is not independently encoded by this report.
+
+Using the **same** distinct `AnimationFrame::Presentation` timestamps for the marked page renderer and the same full-window convention as D2:
+
+| Measurement | Accepted D2 | New Should recording |
+|---|---:|---:|
+| Full-interval presentations | 737 | 695 |
+| Average FPS | 36.7866 | **34.7322** |
+| Lowest exact rolling one-second count | 29 (user-accepted exception) | **26** |
+| Frame gap p95 | 41.680 ms | 48.606 ms |
+| Maximum frame gap | 62.522 ms | 55.557 ms |
+| Maximum main-thread RunTask | 34.282 ms | 58.731 ms |
+
+Average is down 5.58%. Fixed one-second counts: 29, 37, 37, 37, 37, 37, 37, 37, 37, 36, 30, 29, 33, 31, 34, 36, 37, 32, 36, 36. Worst rolling window begins 10.289081 s after Run, during travel. Arrival tail 14–20 s averages 35.1667 FPS. This trace therefore does **not** establish that unbatched sign outlines caused the worst dip: the minimum precedes sign attachment. No causal diagnosis is claimed from these counts alone.
+
+The script also reproduced the old trace's 737 presentations and rolling minimum 29, checking that the comparison uses the same measurement convention. The new trace's filmstrip ends at 11.755837 s after Run: extracted start/last-travel images were opened, but the filmstrip supplies **no arrival/finished image**. The frame-event stream and matching harness report do cover the full run. Do not label the last filmstrip image as arrival/end evidence.
+
+Structured analysis: `.superpowers/sdd/C5-codex-shoulds/fps/summary.json`; raw trace remains unchanged outside git. No source changes, new app tests, hardware FPS claim from software rendering, deployment or contract request. Prior candidate checks (907 tests/typecheck/lint/build) still apply to unchanged source; they were not rerun for this read-only analysis.
+
+**Outcome:** the run is valid, but FPS does not pass the stated 30 floor or the previously accepted brief 29 exception. C5 remains open. Next is profiling the mid-run dip and deciding on a targeted correction; do not silently broaden the old exception to 26 or remove agreed effects. Production remains unchanged.
