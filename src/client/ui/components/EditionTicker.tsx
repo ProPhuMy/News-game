@@ -2,7 +2,7 @@ import React from 'react';
 import type { FrontPageView } from './FrontPageCard.tsx';
 import { PaperBadge } from './PaperBadge.tsx';
 
-// Latest-edition ticker (presentation interface §5c): every front page of the round, in seat order, as text.
+// Latest-edition ticker (presentation interface §5c): every published headline of the round, in seat order, as text.
 // It lists headlines side by side and never implies one of them caused every citizen reaction.
 export interface EditionTickerProps {
   pages: FrontPageView[];
@@ -21,7 +21,7 @@ const Items: React.FC<{ pages: FrontPageView[] }> = ({ pages }) => (
 );
 
 export const EditionTicker: React.FC<EditionTickerProps> = ({ pages }) => {
-  const ordered = [...pages].sort((a, b) => a.seatId - b.seatId);
+  const ordered = pages.filter((page) => !page.unpublished).sort((a, b) => a.seatId - b.seatId);
   return (
     <section className="edition-ticker" role="region" aria-label="Latest edition">
       <span className="ticker-label" aria-hidden="true">Latest edition</span>

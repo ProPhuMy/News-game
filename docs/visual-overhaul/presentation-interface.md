@@ -222,7 +222,7 @@ export function timeOfDayLook(palette: PresentationPalette, time: TimeOfDay): Ti
 
 ### Lamp glow (Claude: `props/street.ts`, `buildings.ts`)
 
-- New method `TownBuildings.setLampLevel?(level: number): void` (optional, so existing hand-built test doubles stay valid; the real town always provides it), with level clamped to 0..1. Each gas lamp gains a ground light pool: a flat, unoutlined, additive disc with a material the lamp owns. `setLampLevel` changes only material values (pool opacity and lantern emissive strength). It never changes transforms, visibility or outlines, so the D2 static-outline batch stays valid.
+- New method `TownBuildings.setLampLevel?(level: number): void` (optional, so existing hand-built test doubles stay valid; the real town always provides it), with level clamped to 0..1. Each gas lamp gains a ground light pool: a flat, unoutlined, additive disc with a material the lamp owns. `setLampLevel` changes only material values: the pool's opacity. The lantern keeps its always-on emissive, because changing it would mutate a shared MaterialKit surface (ruling after Claude's C5 review). It never changes transforms, visibility or outlines, so the D2 static-outline batch stays valid.
 - No real point lights (performance).
 
 ### Emotes (Claude: `src/client/visuals/emotes.ts`; Codex: rendering)
@@ -263,7 +263,7 @@ export function createPicketSignKit(ctx: ArchitectureContext): PicketSignKit;
 
 ### Latest-edition ticker (Claude: UI)
 
-- During `reveal` only, a newspaper ticker runs along the top of the town, directly under the top bar, at every screen size (it spans the full width, so on phones it sits above the standings strip). Its viewport scrolls by hand with a hidden scrollbar, so every headline stays reachable. It shows every published headline of the round in seat order, each with its paper color, icon and name, and an `EXPOSED` mark where public data supplies one. It never implies that one headline caused every reaction (overhaul design §7).
+- During `reveal` only, a newspaper ticker runs along the top of the town, directly under the top bar, at every screen size (it spans the full width, so on phones it sits above the standings strip). Its viewport scrolls by hand with a hidden scrollbar, so every headline stays reachable. It shows every published headline of the round in seat order (placeholder cards for seats that skipped are left out; when nobody published it shows "No front pages this edition"), each with its paper color, icon and name, and an `EXPOSED` mark where public data supplies one. It never implies that one headline caused every reaction (overhaul design §7).
 - The motion is a CSS marquee. Under reduced motion it becomes a static row that scrolls horizontally. It reads from the existing reveal front-page data; there is no new store field.
 
 ## 5d. No-WebGL notice space (C5; Codex proposal `b2924bc`, acknowledged by Claude 2026-10-20)

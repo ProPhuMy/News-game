@@ -27,7 +27,7 @@ export const HUD: React.FC<HUDProps> = ({
   children,
 }) => {
   return (
-    <div className="hud-overlay" data-testid="hud-overlay">
+    <div className={ticker ? 'hud-overlay hud-overlay--ticker' : 'hud-overlay'} data-testid="hud-overlay">
       <TopBar
         round={round}
         phase={phase}

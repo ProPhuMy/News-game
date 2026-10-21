@@ -99,6 +99,7 @@ export function deriveFrontPages(pub: PublicSnapshot): FrontPageView[] {
         headlineText: '[No headline published this round]',
         hasEvidence: false,
         isExposed: false,
+        unpublished: true,
       };
     }
     return headlineToFrontPageView(headline, pub.papers, currentExposures);

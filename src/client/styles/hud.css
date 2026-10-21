@@ -146,7 +146,7 @@
 }
 
 /* Latest-edition ticker (interface §5c): a newspaper strip directly under the top bar during the reveal. */
-.hud-overlay:has(> .edition-ticker) { grid-template-rows: auto auto minmax(0, 1fr); }
+.hud-overlay--ticker { grid-template-rows: auto auto minmax(0, 1fr); }
 .edition-ticker {
   display: flex;
   align-items: center;

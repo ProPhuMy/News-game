@@ -41,6 +41,19 @@ describe('EditionTicker (interface §5c)', () => {
     expect(screen.getAllByRole('list')).toHaveLength(1);
   });
 
+  it('lists only published headlines, never the placeholder for a seat that skipped', () => {
+    const skipped = page(1, '[No headline published this round]', { unpublished: true });
+    render(<EditionTicker pages={[page(0, 'Real'), skipped]} />);
+    const items = within(screen.getAllByRole('list')[0]!).getAllByRole('listitem');
+    expect(items).toHaveLength(1);
+    expect(items[0]!.textContent).toContain('Real');
+  });
+
+  it('shows the empty-edition line when every seat skipped', () => {
+    render(<EditionTicker pages={[page(0, 'x', { unpublished: true }), page(1, 'y', { unpublished: true })]} />);
+    expect(screen.getByRole('region', { name: 'Latest edition' }).textContent).toContain('No front pages this edition');
+  });
+
   it('shows an empty-edition line instead of a blank bar', () => {
     const { container } = render(<EditionTicker pages={[]} />);
     expect(screen.getByRole('region', { name: 'Latest edition' }).textContent).toContain('No front pages this edition');
@@ -57,10 +70,13 @@ describe('HUD ticker slot', () => {
     );
     const overlay = container.querySelector('.hud-overlay')!;
     expect([...overlay.children].map((el) => el.className.split(' ')[0])).toEqual(['hud-top-bar', 'edition-ticker', 'hud-body']);
+    // A class, not :has(), sets the extra grid row, so browsers without :has() keep the layout.
+    expect(overlay.classList.contains('hud-overlay--ticker')).toBe(true);
   });
 
   it('renders no ticker by default', () => {
     render(<HUD round={2} phase="write" deadlineMs={Date.now() + 20000} serverTimeOffset={0} papers={[]} />);
     expect(screen.queryByRole('region', { name: 'Latest edition' })).toBeNull();
+    expect(document.querySelector('.hud-overlay')!.classList.contains('hud-overlay--ticker')).toBe(false);
   });
 });
