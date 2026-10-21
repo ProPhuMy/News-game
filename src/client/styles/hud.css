@@ -144,3 +144,53 @@
 @media (max-width: 640px), (max-height: 500px) {
   .hud-center-content > .reveal-screen { max-height: min(100%, 45vh); }
 }
+
+/* Latest-edition ticker (interface §5c): a newspaper strip directly under the top bar during the reveal. */
+.hud-overlay:has(> .edition-ticker) { grid-template-rows: auto auto minmax(0, 1fr); }
+.edition-ticker {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+  border-bottom: 3px double var(--nt-ink);
+  background: var(--nt-panel);
+  font-size: 0.9rem;
+  pointer-events: auto;
+}
+.ticker-label {
+  flex: none;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-3);
+  background: var(--nt-ink);
+  color: var(--nt-paper);
+  font-family: var(--font-headline);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+/* Scrollable (scrollbar hidden) so every headline stays reachable by hand, not only by waiting for the marquee. */
+.ticker-viewport { flex: 1; display: flex; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.ticker-viewport::-webkit-scrollbar { display: none; }
+.ticker-track {
+  display: flex;
+  flex: none;
+  gap: var(--space-6);
+  margin: 0;
+  padding: var(--space-1) var(--space-6) var(--space-1) var(--space-4);
+  list-style: none;
+  animation: ticker-scroll 32s linear infinite;
+}
+.ticker-item { display: flex; align-items: center; gap: var(--space-2); white-space: nowrap; }
+.ticker-headline { font-family: var(--font-headline); font-weight: 700; }
+.ticker-exposed { padding: 0 var(--space-1); border: 1px solid var(--nt-danger); color: var(--nt-danger); font-weight: 700; font-size: 0.75rem; }
+.ticker-empty { margin: 0; padding: var(--space-1) var(--space-4); font-style: italic; color: var(--nt-muted); }
+@keyframes ticker-scroll { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+/* Reduced motion: a still row the reader can scroll; the marquee copy is not needed. */
+.reduced-motion .ticker-track { animation: none; }
+.reduced-motion .ticker-track[aria-hidden="true"] { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .ticker-track { animation: none; }
+  .ticker-track[aria-hidden="true"] { display: none; }
+}

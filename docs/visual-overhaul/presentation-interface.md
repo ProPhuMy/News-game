@@ -263,7 +263,7 @@ export function createPicketSignKit(ctx: ArchitectureContext): PicketSignKit;
 
 ### Latest-edition ticker (Claude: UI)
 
-- During `reveal` only, a newspaper ticker runs along the top of the town, directly under the top bar (on phones, under the standings strip). It shows every published headline of the round in seat order, each with its paper color, icon and name, and an `EXPOSED` mark where public data supplies one. It never implies that one headline caused every reaction (overhaul design §7).
+- During `reveal` only, a newspaper ticker runs along the top of the town, directly under the top bar, at every screen size (it spans the full width, so on phones it sits above the standings strip). Its viewport scrolls by hand with a hidden scrollbar, so every headline stays reachable. It shows every published headline of the round in seat order, each with its paper color, icon and name, and an `EXPOSED` mark where public data supplies one. It never implies that one headline caused every reaction (overhaul design §7).
 - The motion is a CSS marquee. Under reduced motion it becomes a static row that scrolls horizontally. It reads from the existing reveal front-page data; there is no new store field.
 
 ## 5d. No-WebGL notice space (C5; Codex proposal `b2924bc`, acknowledged by Claude 2026-10-20)
