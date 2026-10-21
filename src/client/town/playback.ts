@@ -1,5 +1,8 @@
 import * as THREE from 'three';
 import type { ReactionEntry, ReactionPlan } from '../../shared/snapshots.ts';
+import { EMOTE_FOR_BEHAVIOR } from '../visuals/emotes.ts';
+import { selectEmoteActors, type createEmoteManager } from './emotes.ts';
+import type { createReactionProps } from './reaction-props.ts';
 import { applyCitizenBehaviorPose } from './behaviors.ts';
 import type { TownBuildings } from './buildings.ts';
 import type { CitizenManager } from './citizens.ts';
@@ -25,6 +28,8 @@ export interface PlaybackDependencies {
   };
   poof: PoofSystem;
   reducedMotion?: boolean;
+  emotes?: Pick<ReturnType<typeof createEmoteManager>, 'show' | 'clear'>;
+  props?: Pick<ReturnType<typeof createReactionProps>, 'showSign' | 'clear'>;
 }
 
 export interface PlaybackCoordinator {
@@ -99,11 +104,13 @@ export function createPlaybackCoordinator(
   let elapsed = 0;
   let playing = false;
   let resolveCurrent: (() => void) | null = null;
+  let emoteActors = new Set<number>();
   const shownBubbles = new Set<number>();
   const switchedPapers = new Set<number>();
   const citizenContexts = new Map<number, CitizenPlanContext>();
 
-  function resetPlanState(): void {
+  function resetPlanState(clearFeedback = false): void {
+    if (clearFeedback) { deps.emotes?.clear(); deps.props?.clear(); }
     if (activePlan) {
       activePlan.exposures.forEach((exp) => {
         deps.buildings.setOfficeHighlight(exp.seatId, false);
@@ -123,9 +130,9 @@ export function createPlaybackCoordinator(
     }
   }
 
-  return {
+  const coordinator: PlaybackCoordinator = {
     startPlan(plan: ReactionPlan, durationSeconds = 20.0): Promise<void> {
-      resetPlanState();
+      resetPlanState(true);
 
       activePlan = plan;
       totalDuration = Math.max(0.1, durationSeconds);
@@ -133,6 +140,7 @@ export function createPlaybackCoordinator(
       playing = true;
 
       const destinations = plan.citizens.map(entry => resolveDestNode(deps.layout, entry.route, entry.citizenId, deps.citizens));
+      emoteActors = new Set(selectEmoteActors(plan, destinations));
       const offsets = allocateCrowdSlots(deps.layout, destinations);
       plan.citizens.forEach((entry, index) => {
         const destNodeId = destinations[index]!;
@@ -168,26 +176,7 @@ export function createPlaybackCoordinator(
 
       // Short duration / reconnect resilience: immediately snap to destination with toPaper
       if (totalDuration <= 0.3 || deps.reducedMotion) {
-        plan.citizens.forEach((entry) => {
-          const ctx = citizenContexts.get(entry.citizenId);
-          if (ctx) {
-            deps.citizens.setCitizenPosition(entry.citizenId, ctx.destPos);
-            deps.citizens.setCitizenRotation(entry.citizenId, 0);
-          }
-          deps.citizens.setCitizenPaper(entry.citizenId, entry.toPaper, {
-            reducedMotion: deps.reducedMotion,
-          });
-          applyCitizenBehaviorPose(
-            deps.citizens.getCitizen(entry.citizenId),
-            entry.behavior,
-            0,
-            deps.reducedMotion,
-          );
-          deps.citizens.setCitizenPose(entry.citizenId, 'idle', 0);
-          if (entry.bubble) deps.bubbles.showBubble(entry.citizenId, entry.bubble,
-            out => deps.citizens.getCitizenPosition(entry.citizenId, out));
-        });
-        resetPlanState();
+        coordinator.update(0);
         return Promise.resolve();
       }
 
@@ -222,6 +211,10 @@ export function createPlaybackCoordinator(
             deps.citizens.setCitizenPaper(entry.citizenId, entry.toPaper, {
               reducedMotion: deps.reducedMotion,
             });
+            if (entry.behavior === 'protest' || entry.behavior === 'angry_mob') deps.props?.showSign(entry.citizenId);
+            const emote = EMOTE_FOR_BEHAVIOR[entry.behavior];
+            if (emote && emoteActors.has(entry.citizenId)) deps.emotes?.show(entry.citizenId, emote,
+              () => deps.citizens.getCitizenPosition(entry.citizenId));
           }
 
           applyCitizenBehaviorPose(
@@ -249,7 +242,7 @@ export function createPlaybackCoordinator(
             elapsed,
             deps.reducedMotion,
           );
-          deps.citizens.setCitizenPose(entry.citizenId, 'idle', elapsed);
+          deps.citizens.setCitizenPose(entry.citizenId, elapsed < Math.min(1.2, totalDuration * 0.15) ? 'read' : 'idle', elapsed);
         } else {
           // Walking along route with trajectory blending toward destination slot
           const transitT = (progress - transitStart) / (transitEnd - transitStart);
@@ -279,7 +272,7 @@ export function createPlaybackCoordinator(
 
       deps.bubbles.update();
 
-      if (deps.reducedMotion || progress >= 1.0) {
+      if (deps.reducedMotion || totalDuration <= 0.3 || progress >= 1.0) {
         resetPlanState();
       }
     },
@@ -289,11 +282,12 @@ export function createPlaybackCoordinator(
     },
 
     stop(): void {
-      resetPlanState();
+      resetPlanState(true);
     },
 
     dispose(): void {
-      resetPlanState();
+      resetPlanState(true);
     },
   };
+  return coordinator;
 }

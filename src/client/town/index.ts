@@ -16,6 +16,8 @@ import { createTownLayout } from './layout.ts';
 import { createRouteInterpolator } from './movement.ts';
 import { createPoofEffect } from './particles.ts';
 import { createPlaybackCoordinator } from './playback.ts';
+import { createEmoteManager } from './emotes.ts';
+import { createReactionProps } from './reaction-props.ts';
 import { createDaylight } from './daylight.ts';
 import type { TimeOfDay } from '../visuals/time-of-day.ts';
 import { createTownScene } from './scene.ts';
@@ -78,10 +80,13 @@ export function createTownView(
   let poof: ReturnType<typeof createPoofEffect> | null = null;
   let citizens: ReturnType<typeof createCitizenManager> | null = null;
   let bubbles: ReturnType<typeof createBubbleManager> | null = null;
+  let emotes: ReturnType<typeof createEmoteManager> | null = null;
+  let reactionProps: ReturnType<typeof createReactionProps> | null = null;
   let coordinator: ReturnType<typeof createPlaybackCoordinator> | null = null;
   let fallbackView: FallbackView | null = null;
   let animFrameId: number | null = null;
   let lastTime = performance.now();
+  let playbackTime = lastTime;
   let resizeObserver: ResizeObserver | null = null;
   let cleanupContextLoss: (() => void) | null = null;
   let cleanupControls: (() => void) | null = null;
@@ -112,6 +117,8 @@ export function createTownView(
     cleanupStaticOutlines?.();
     coordinator?.dispose();
     bubbles?.dispose();
+    emotes?.dispose();
+    reactionProps?.dispose();
     citizens?.dispose();
     poof?.dispose();
     buildings?.dispose();
@@ -162,6 +169,8 @@ export function createTownView(
     const interpolator = createRouteInterpolator(layout);
     const activeBubbles = createBubbleManager(container, camera.camera);
     bubbles = activeBubbles;
+    const activeEmotes = createEmoteManager(container, camera.camera, palette); emotes = activeEmotes;
+    const activeProps = createReactionProps(ctx, activeCitizens); reactionProps = activeProps;
 
     activeScene.scene.add(townEnvironment);
     activeScene.scene.add(townPaperboys.group);
@@ -175,6 +184,7 @@ export function createTownView(
       interpolator,
       bubbles: activeBubbles,
       poof: activePoof,
+      emotes: activeEmotes, props: activeProps,
       get reducedMotion() {
         return currentReducedMotion;
       },
@@ -202,6 +212,7 @@ export function createTownView(
         }
         // The bubble overlay is plain DOM, so it stays visible over the fallback view unless cleared.
         activeBubbles.clear();
+        activeEmotes.setVisible(false);
         if (canvas) canvas.style.display = 'none';
         if (!fallbackView) {
           fallbackView = createFallbackView(container);
@@ -213,6 +224,10 @@ export function createTownView(
           fallbackView = null;
         }
         if (canvas) canvas.style.display = 'block';
+        const restoredAt = performance.now();
+        activeCoordinator.update(Math.max(0, (restoredAt - playbackTime) / 1000));
+        playbackTime = restoredAt;
+        activeEmotes.setVisible(true);
         daylight.setTime(currentTime, true);
         handleResize();
         lastTime = performance.now();
@@ -226,7 +241,8 @@ export function createTownView(
 
     function animate(now: number): void {
       if (animFrameId === null) return;
-      const deltaSeconds = Math.max(0, Math.min(0.1, (now - lastTime) / 1000));
+      const elapsedSeconds = Math.max(0, (now - lastTime) / 1000);
+      const deltaSeconds = Math.min(0.1, elapsedSeconds);
       lastTime = now;
 
       try {
@@ -234,8 +250,10 @@ export function createTownView(
         camera.update(deltaSeconds);
         activePoof.update(deltaSeconds);
         activeCitizens.update(deltaSeconds);
-        activeCoordinator.update(deltaSeconds);
+        activeCoordinator.update(Math.max(0, (now - playbackTime) / 1000));
+        playbackTime = now;
         activeBubbles.update(deltaSeconds);
+        activeEmotes.update();
         const fog = activeScene.scene.fog;
         if (fog instanceof THREE.Fog) {
           fog.near = camera.getDistance() + 30;
@@ -258,6 +276,7 @@ export function createTownView(
       camera.resize(w, h);
       activeScene.resize(w, h);
       activeBubbles.update();
+      activeEmotes.update();
     };
 
     handleResize();
@@ -286,6 +305,7 @@ export function createTownView(
 
       playReactionPlan(plan: ReactionPlan, durationSeconds?: number): Promise<void> {
         if (isDisposed) return Promise.resolve();
+        playbackTime = performance.now();
         return activeCoordinator.startPlan(plan, durationSeconds);
       },
 
@@ -298,6 +318,7 @@ export function createTownView(
 
       setPhase(phase: Phase): void {
         if (isDisposed) return;
+        activeCoordinator.stop();
         if (phase === 'intro') {
           camera.startIntroSweep(20);
         } else {

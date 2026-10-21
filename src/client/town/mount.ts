@@ -87,6 +87,8 @@ export function mountTown(
 
     view.setTimeOfDay(state.publicSnapshot ? timeOfDay(state.publicSnapshot.round, state.publicSnapshot.phase) : 'midday');
 
+    if (!state.publicSnapshot && lastPhase !== null) view.setPhase('ended');
+
     if (!state.publicSnapshot || sessionChanged) {
       lastPhase = null;
       lastPlayedRound = -1;

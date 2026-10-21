@@ -143,6 +143,7 @@ describe('mountTown', () => {
     store.emit({ publicSnapshot: makeMockSnapshot({ phase: 'final', round: 5 }) });
     expect(view.setTimeOfDay).toHaveBeenLastCalledWith('night');
     store.emit({ publicSnapshot: null });
+    expect(view.setPhase).toHaveBeenLastCalledWith('ended');
     expect(view.setTimeOfDay).toHaveBeenLastCalledWith('midday');
     cleanup();
   });
