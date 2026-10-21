@@ -64,3 +64,9 @@ At12 requests, >=90% means at most one transport failure (11/12=91.67%;10/12=83.
 - Next gate: Claude reviews this implementation and both schemas; then user separately approves at most12 additional Free-only calls. No main merge or Anthropic spending authorized by this delivery. No new dependencies or contract requests.
 
 Final offline verification: `npm test` **138files/996tests passed**; typecheck, lint and build exit0. Existing >500kB client bundle warning only. `git diff --check` clean; no visual changes or screenshots required. Logs `/tmp/news-town-groq-followup-*.log`, ignored progress ledger `.superpowers/sdd/groq-followup-plan/`. Prior prompt integration remains byte-identical to Claude's delivered files. Actual live model improvement is still unverified.
+
+## Follow-up live-run approval
+
+Claude accepted implementation `3e364e1`, including both strict report schemas, cap/selection, legacy compatibility and safe diagnostics. User relayed Claude's independent996-test/typecheck/lint/build pass and explicitly said "yeah i approve". This authorizes at most12 additional authenticated Groq Free requests for the reviewed fixed suite only, with a separate allowance12 ledger. It does not authorize resetting the original exhausted24-attempt ledger, paid upgrades, Anthropic spending, main merge or production change.
+
+Execution remains user-run on Arch, where the Groq-only key can be entered through a hidden local prompt rather than chat. Preserve prior generated artifacts before updating the checkout; do not discard changes if git refuses. No new follow-up call occurred in this approval-record delivery. Generated follow-up samples require user inspection before any commit; unknown validation after timeout/transport failure remains unassessed, never a moderation pass.
