@@ -47,3 +47,45 @@ describe('provider transport', () => {
     expect(headers).toEqual({ 'content-type': 'application/json', Authorization: 'Bearer SYNTHETIC' });
   });
 });
+
+describe('OpenAI-compatible base URL', () => {
+  it.each([undefined, '', '   '])('preserves default endpoint for %j', async (baseUrl) => {
+    let target: unknown;
+    const provider = createProvider({ ...options, provider: 'openai', baseUrl, fetch: async (url) => {
+      target = url; return Response.json({ choices: [{ message: { content: '{}' } }] });
+    } });
+    await provider('system', 'data', true, signal);
+    expect(target).toBe('https://api.openai.com/v1/chat/completions');
+  });
+
+  it.each([
+    ['https://api.groq.com/openai/v1', 'openai/gpt-oss-20b', true],
+    [' https://api.groq.com/openai/v1/ ', 'openai/gpt-oss-20b', true],
+    ['https://other.example/openai/v1', 'openai/gpt-oss-20b', false],
+    ['https://api.groq.com/other', 'openai/gpt-oss-20b', false],
+    ['https://api.groq.com/openai/v1', 'other-model', false],
+    [undefined, 'openai/gpt-oss-20b', false],
+  ] as const)('scopes low effort to %s / %s', async (baseUrl, model, low) => {
+    let target: unknown; let request: RequestInit | undefined;
+    const provider = createProvider({ ...options, provider: 'openai', baseUrl, model, fetch: async (url, init) => {
+      target = url; request = init; return Response.json({ choices: [{ message: { content: '{}' } }] });
+    } });
+    await provider('system', 'data', true, signal);
+    const body: unknown = JSON.parse(String(request?.body));
+    expect(body).toEqual({ model, max_completion_tokens: 512,
+      messages: [{ role: 'system', content: 'system' }, { role: 'user', content: 'data' }],
+      response_format: { type: 'json_object' }, ...(low ? { reasoning_effort: 'low' } : {}) });
+    if (baseUrl?.includes('/openai/v1')) expect(target).toBe(`${baseUrl.trim().replace(/\/+$/, '')}/chat/completions`);
+    if (baseUrl) expect(request?.redirect).toBe('error');
+    await provider('system', 'data', false, signal);
+    expect(JSON.parse(String(request?.body))).not.toHaveProperty('response_format');
+  });
+
+  it.each(['relative', 'http://host/v1', 'https://user:SECRET@host/v1', 'https://host/v1?key=SECRET', 'https://host/v1#SECRET', 'https://host/v1?', 'https://host/v1#'])('rejects unsafe URL %s before fetch', (baseUrl) => {
+    expect(() => createProvider({ ...options, provider: 'openai', baseUrl })).toThrow('Invalid AI_BASE_URL');
+  });
+
+  it('rejects a custom base for Anthropic rather than sending its key elsewhere', () => {
+    expect(() => createProvider({ ...options, baseUrl: 'https://api.groq.com/openai/v1' })).toThrow('Invalid AI_BASE_URL');
+  });
+});

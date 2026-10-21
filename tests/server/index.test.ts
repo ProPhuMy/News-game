@@ -17,6 +17,7 @@ describe('server startup', () => {
   });
 
   it.each([
+    [{ AI_BASE_URL: 'https://user:SECRET@host/v1' }, 'Invalid AI_BASE_URL'],
     [{ AI_REQUEST_ALLOWANCE: 'SECRET-invalid-allowance' }, 'Invalid AI request configuration'],
     [{ AI_REQUEST_ALLOWANCE: '1', AI_ALLOWANCE_FILE: '/SECRET/missing-ledger' }, 'Invalid AI request configuration'],
     [{ AI_PROVIDER: 'SECRET-invalid-provider' }, 'Invalid AI_PROVIDER'],

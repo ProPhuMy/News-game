@@ -70,7 +70,7 @@ async function main() {
     trustRenderProxy: process.env.TRUST_RENDER_PROXY === 'true',
     ...(process.env.TRUSTED_PROXY_ADDRESS ? { trustedProxyAddress: process.env.TRUSTED_PROXY_ADDRESS } : {}),
     aiLimits: parseAiLimits(process.env),
-    ai: { provider, ...(process.env.AI_MODEL ? { model: process.env.AI_MODEL } : {}), ...(key ? { apiKey: key } : {}) } });
+    ai: { provider, ...(process.env.AI_BASE_URL ? { baseUrl: process.env.AI_BASE_URL } : {}), ...(process.env.AI_MODEL ? { model: process.env.AI_MODEL } : {}), ...(key ? { apiKey: key } : {}) } });
   try { await game.listen(port); }
   catch (error) {
     await game.close();
@@ -85,7 +85,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   void main().catch((error: unknown) => {
     const safeMessages = [
       'Validated src/content/index.ts is required', 'PORT must be between 1 and 65535',
-      'Invalid AI request configuration',
+      'Invalid AI request configuration', 'Invalid AI_BASE_URL',
       'Invalid AI_PROVIDER', 'Invalid TRUST_RENDER_PROXY', 'Invalid TRUSTED_PROXY_ADDRESS',
       'Proxy trust modes must not be combined', 'AI_MODEL and provider API key are required',
       'Content must provide safe headline and bubble fallbacks',
