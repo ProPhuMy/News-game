@@ -48,3 +48,48 @@ Proposed initial evaluation: **at most 100 outbound attempts**, counting writing
 Claude accepted candidate `113c6be` with no blocking findings and independently reran 942 tests, typecheck, lint and build. See `plan.md` for exact checks, deferred nonblocking suggestions and review attribution. Tests replace only the HTTP transport; real adapter, server, runner, engine and temporary filesystem ledger are exercised. Live compatibility, quality, latency, account billing and production behavior remain unverified until the paid evaluation/rollout gates pass. No contract requests or dependency changes.
 
 Sources: [Anthropic thinking configuration](https://platform.claude.com/docs/en/build-with-claude/thinking-troubleshooting), [Haiku pricing](https://www.anthropic.com/claude/haiku). Existing host replacement/rollback topology: [EC2 README](../ec2/README.md).
+
+## Groq Free — offline candidate, not enabled
+
+Groq is now the preferred evaluation path; Anthropic remains an unapproved paid fallback. Claude accepted `groq-plan.md` and its three amendments at `c9406a7`. The implementation and the two exported report schemas still require Claude's review before any authenticated request, followed by separate user approval of24 Free-only attempts. No live result or samples file has been produced.
+
+### Endpoint configuration
+
+`AI_BASE_URL` is optional. Blank/unset preserves `https://api.openai.com/v1/chat/completions`. A custom base is HTTPS-only, with no credentials, query or fragment, and redirects are refused. It is trusted operator configuration, never player input. Enabling Anthropic with a custom base is rejected. The safe startup message is `Invalid AI_BASE_URL`, without the supplied URL.
+
+Future Groq configuration, **reference only**:
+
+```dotenv
+AI_PROVIDER=openai
+AI_BASE_URL=https://api.groq.com/openai/v1
+AI_MODEL=openai/gpt-oss-20b
+# OPENAI_API_KEY must contain this endpoint's GROQ key, never an OpenAI key.
+AI_REQUEST_ALLOWANCE=0
+```
+
+The placeholder remains default-off; no key is committed or needed for offline tests. When the normalized base and model match the exact Groq values above, the request includes `reasoning_effort: 'low'`. Other hosts/models, default OpenAI and Anthropic are unchanged. The512-token cap and3-second operation deadline remain. Groq JSON mode is used for ratings only; schema validation still determines whether output is usable.
+
+### Evaluator and report schemas for review
+
+The synthetic evaluator is `deployment/ai/groq-evaluate.ts`; it imports the actual production adapter/prompts and persistent request gate. Cases are in `groq-cases.ts`; strict schemas are exported as `GroqSummarySchema` and `GroqSamplesSchema` from `groq-report.ts`. No public route, socket event, client bundle or real-player logging changes.
+
+- `groq-result.json`: version/model/source revision, incomplete/failed/pending-review status, completed case count and cap24; per-operation attempt/outcome counts, genuine-provider success fraction, under-deadline count and successful-output p50/p95/max latency. Each case records only fixed case ID/operation/outcome, elapsed time, allowlisted finish reason, coarse HTTP status category, filtered/quality booleans and numeric token usage (or null). No raw text, provider errors or URL.
+- `groq-samples.json`: synthetic case ID and whitelisted input fields, final headline or rating/bubbles, provider/fallback/cache source label, and `review: 'pending'`. No secrets, URLs, HTTP envelope, reasoning, refusal text or arbitrary model metadata. Secret/URL redaction can lengthen displayed strings; the sample schema intentionally allows that representation, while actual adapter output retains gameplay validation. Files are JSON text, never executable HTML. Samples are an exception for these known synthetic cases, not a logging feature for player content.
+-24 distinct cases:15 ratings (topic, denial/off-topic, inappropriate, injection and exposes) plus9 existing bot headline writes (3 personalities ×3 claim/location contexts). Case1 is the ordinary rating/access/JSON pre-check, included in the24; failure stops incomplete immediately. Cached results cannot masquerade as provider success; the evaluator uses a new adapter per case and the same request gate for all cases.
+- Every attempt is counted, including errors and timeouts. Auth/quota errors stop the run; no retries/provider switching. Sequential pacing is at least20 seconds, adjustable only slower via `GROQ_EVALUATION_INTERVAL_MS` if actual quotas require it. Allowance cannot exceed24. A transport that outlives the deadline cannot promote a fallback or mutate captured report rows afterward.
+- `finish_reason` allows only `stop`, `length`, `content_filter`, `tool_calls` or `unknown`. Truncation, refusal, filtered output, failed rating expectations or known injection sentinels fail observed quality even if output passed schema. This is not comprehensive moderation: human review must inspect safety, relevance, bot context, style and humor.
+- Transport threshold stays >=90% separately for ratings/writing. Unknown/unavailable cases are recorded as unsuccessful quality checks, never passed; non-success cases do not silently turn the transport threshold into100%. Human review must resolve any unassessed critical safety/semantic case before rollout. Observed bad provider quality blocks the pilot. Even perfect metrics only produce `pending-review`, never automatic PASSED. Small serial tests do not certify public multi-room capacity.
+
+### Live-run prerequisites — not executed
+
+The user supplied the Free model table: GPT-OSS20B30RPM/1,000RPD/8,000TPM/200,000TPD. This is user-reported, not an authenticated verification of organization status or remaining quota. Confirm the actual organization is Free, model enabled, other quota consumers and Data Controls. Free-plan evaluation targets$0; no Developer upgrade, payment method, Anthropic top-up or AWS credit consumption is authorized.
+
+After Claude code/schema review and explicit user approval, run from this reviewed worktree with a securely set **Groq-only** key in the selected key env slot. Use a new pre-created persistent evaluation ledger, `AI_ALLOWANCE_FILE` set to its absolute path, and `AI_REQUEST_ALLOWANCE=24`. Never truncate/replenish the ledger, expose the key through CLI arguments/chat/logs or use the production ledger. The command for that later approved run is:
+
+```sh
+node deployment/ai/groq-evaluate.ts --live
+```
+
+Without `--live`, the CLI exits without consuming a request even if credentials are present. It writes the two fixed report files only after the run returns, and logs only numeric outcome/latency aggregates. Early interruption is not completion; preserve the ledger and any prior reports, and check source revision and counts rather than treating an older file as a new result. Do not use other inputs or production player text with this evaluator. No report or key is generated by a dry command.
+
+Production enablement remains a separate decision after live results, including user tone/humor review. A later container replacement loses active rooms, requires the retained recovery image/ledger, matching production smoke and genuine success events for both operations. Submission description is unchanged until Claude has that evidence and the user's wording approval.

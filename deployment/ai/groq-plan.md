@@ -1,6 +1,6 @@
 # Groq Free evaluation implementation plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans after Claude's plan review and user approval. No implementation in this planning delivery.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans after Claude's plan review and user approval. Offline implementation is now complete; authenticated evaluation remains gated.
 
 **Goal:** Evaluate the existing headline writing/rating adapter on Groq Free with a minimal optional HTTPS base URL, preserving engine authority and all fallbacks.
 **Architecture:** Extend existing OpenAI-compatible transport configuration only. Reuse adapter validation, outcome events and persistent server allowance. Use synthetic, bounded evaluation cases outside the live game; production stays disabled until separately approved.
@@ -10,7 +10,7 @@
 ## Base, ownership and gates
 
 - Branch `codex/groq-evaluation`, isolated `.worktrees/codex-groq-evaluation`, from `e8616d3` on `codex/ai-evaluation`. Main is `d66660c`; prepared AI runtime is not merged/deployed. Preserve the accepted preparation commits; do not start from main without them. Claude independently passed 942 tests plus typecheck/lint/build at the identical runtime. No test suite is rerun for this plan-only commit.
-- Codex-owned changes planned: `src/ai/providers.ts`, `src/server/index.ts`, `tests/ai/providers.test.ts`, `tests/server/index.test.ts`, `.env.example`, `deployment/ai/README.md`; new `deployment/ai/groq-plan.md`, `groq-evaluate.ts`, `groq-cases.ts`, `groq-result.json` and `groq-samples.json` (only after evaluation), and `tests/server/groq-evaluate.test.ts`. No new shared interface, engine, bot, content, client, root config or Claude-owned file changes.
+- Codex-owned changes planned: `src/ai/providers.ts`, `src/server/index.ts`, `tests/ai/providers.test.ts`, `tests/server/index.test.ts`, `.env.example`, `deployment/ai/README.md`; new `deployment/ai/groq-plan.md`, `groq-evaluate.ts`, `groq-cases.ts`, `groq-report.ts` (strict report schemas and redaction), `groq-result.json` and `groq-samples.json` (only after evaluation), and `tests/server/groq-evaluate.test.ts`. No new shared interface, engine, bot, content, client, root config or Claude-owned file changes.
 - **Before code:** Claude reviews this plan. Account/model selection can remain pending while offline code is built; live evaluation waits for the model and real account quotas to be confirmed and explicit user approval of the capped Free-only run. Production enablement requires a separate user approval after results.
 - No Anthropic spending approved. Haiku 5.5 up to a $5 top-up remains only a possible separately authorized fallback. No automatic provider/model failover, key reuse between providers, paid upgrade or AWS change.
 
@@ -62,10 +62,10 @@ Data-use review: Groq retains non-content usage metadata. Normal inference conte
 
 ## Current handoff / stop condition
 
-Plan-only delivery: Claude accepted `08ca3cd` with no blocking findings. User supplied the matching model limits table; organization Free status, remaining/shared quota and Data Controls still need confirmation. The three amendments below are ready for Claude's narrow pre-review before code. No implementation or authenticated evaluation. No contract requests, dependencies, purchases, live calls, main merge or production changes. Finish preparation only after accepted plan; finish evaluation only after the explicitly approved run and honest result report.
+Offline implementation complete at `4a66a27`, based on accepted plan/amendments `c9406a7`. All checks and internal independent review pass; Claude's code and both-report-schema review remains required before any authenticated call. User supplied matching model limits, but actual Free organization status, remaining/shared quota, Data Controls and explicit24-call approval remain open. No live report or samples were generated. No main merge, paid API call, account upgrade or production change.
 
 
-## Claude review amendments — pre-code acknowledgment requested
+## Claude review amendments — acknowledged at c9406a7
 
 Claude accepted the original plan, with three suggestions now incorporated:
 
@@ -73,4 +73,25 @@ Claude accepted the original plan, with three suggestions now incorporated:
 2. Separate synthetic samples artifact so the user can judge headline/bubble tone directly. Numeric summary privacy remains unchanged; samples exclude keys, URLs, raw provider metadata/errors and reasoning. Provider/fallback attribution remains explicit. This exception is for the synthetic evaluator, never real-player logging.
 3. First ordinary rating is the access/JSON pre-check, inside the same24-attempt ledger. On failure, stop and report incomplete. A full successful run remains15 ratings +9 writes, not25 requests.
 
-Claude reviews this amendment before code, then the implementation and report schema before any authenticated call. User approves the Free-only live run separately. No Anthropic spending, production changes or new dependencies authorized.
+Claude acknowledged this amendment before code. Claude now reviews the implementation and report schemas before any authenticated call. User approves the Free-only live run separately. No Anthropic spending, production changes or new dependencies authorized.
+
+
+## Execution rulings and progress
+
+Claude acknowledged all three amendments at `c9406a7`; offline implementation authorized. No authenticated call is authorized by that acknowledgment.
+
+Ruling: report schemas/redaction live in new Codex-owned `deployment/ai/groq-report.ts`, keeping the evaluator focused and under300 lines. Both report schemas are exported for Claude's review. Synthetic samples alone may contain whitelisted text; the numeric summary and server logs remain text-free. No cross-owner interface changes.
+
+Ruling: automatic evaluation status stops at `pending-review`, never `passed`, because tone, humor, safe phrasing and bot claim/location consistency require human inspection. Provider validation is not semantic approval. Missing/unverifiable finish metadata fails quality grading; failure does not trigger another provider/model.
+
+
+## Offline delivery evidence
+
+- Runtime commit **`4a66a27`**, branch `codex/groq-evaluation`. Source files outside Codex ownership remain unchanged from accepted preparation; no new dependency or contract request. The branch includes the earlier accepted, unmerged AI-preparation commits.
+- Fresh baseline942 tests passed. URL/startup tests observed RED12failed/21passed then GREEN72 focused tests. Empty query/fragment delimiter regressions observed RED2failed/22passed then GREEN24provider tests.
+- Evaluator initially RED missing-module, then green after implementation. One initial fixture used the sample-only filtered word rather than production content; corrected to an actual blocked term. Callback-flow type errors were fixed without casts. Evaluator now **19/19** tests, mocking only HTTP/clock waits and using real production adapter/prompts/ledger.
+- Independent final reviewer found two required issues: sample redaction expansion could invalidate a60-character bubble and discard reports, and all-case quality gating accidentally imposed100% transport success. Both reproduced RED and fixed GREEN. Additional refusal/injection regression observed RED before the final fixes. Sanitized sample strings allow redaction expansion after actual gameplay validation. The >=90% transport gate is separate from observed-quality failures; unknown critical cases still require human resolution, and automatic status never exceeds `pending-review`.
+- Reviewer rechecked code, schemas and Groq README: **accepted, no remaining required findings**. This is an internal independent review, not Claude's required counterpart review.
+- Final `npm test`: **136 files /979 passed**. `npm run typecheck`, `npm run lint`, `npm run build`: exit0; existing >500kB client bundle warning remains. `git diff --check` clean. No screenshots: no client/UI/renderer change. Logs `/tmp/news-town-groq-*.log`; progress ledger ignored under `.superpowers/sdd/groq-plan/`.
+- Schemas for Claude: `GroqSummarySchema` and `GroqSamplesSchema` in [groq-report.ts](groq-report.ts). Cases and evaluator in [groq-cases.ts](groq-cases.ts) and [groq-evaluate.ts](groq-evaluate.ts). See [README](README.md#groq-free--offline-candidate-not-enabled) for configuration, field inventory and the separate live/production gates.
+- No authenticated/live request was made. `groq-result.json` and `groq-samples.json` do not exist yet; mock test results are not presented as provider suitability evidence. Actual model quality, three-second success rate and account quota availability remain unverified. Anthropic spending remains unauthorized. Main integration, live evaluation and production rollout are separate decisions.
