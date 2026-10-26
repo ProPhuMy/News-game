@@ -7,6 +7,7 @@ import { createMatch, tick, publicView, privateView } from '../../src/engine/ind
 import { createRoomManager } from '../../src/server/rooms.ts';
 import { SAMPLE_CONTENT } from '../../src/sim/sample-content.ts';
 import { COLORS } from '../../src/shared/ids.ts';
+import { TUNING } from '../../src/shared/tuning.ts';
 import honest from '../../src/sim/fixtures/solo-honest.json';
 import exposures from '../../src/sim/fixtures/exposures.json';
 import caretaker from '../../src/sim/fixtures/caretaker-pulled.json';
@@ -19,8 +20,8 @@ const recording = () => {
   let match = createMatch({ content: SAMPLE_CONTENT, startMs: 0 }, 1,
     [{ kind: 'human', ...profile }, { kind: 'bot' }, { kind: 'bot' }, { kind: 'bot' }]);
   const frames = [{ atMs: 0, public: publicView(match), private: privateView(match, 0) }];
-  match = tick(match, 20_000).state;
-  frames.push({ atMs: 20_000, public: publicView(match), private: privateView(match, 0) });
+  match = tick(match, TUNING.phaseMs.intro).state;
+  frames.push({ atMs: TUNING.phaseMs.intro, public: publicView(match), private: privateView(match, 0) });
   return { name: 'test-match', description: 'M0 engine frames', room: rooms.snapshot(session.code, 0), frames };
 };
 afterEach(() => vi.useRealTimers());
@@ -48,9 +49,10 @@ describe('fixture playback', () => {
     const player = createFixturePlayer(recording(), store);
     player.play();
     expect(store.getState().publicSnapshot?.phase).toBe('intro');
-    expect(store.getState().publicSnapshot?.deadlineMs).toBe(120_000);
-    await vi.advanceTimersByTimeAsync(20_000);
+    expect(store.getState().publicSnapshot?.deadlineMs).toBe(100_000 + TUNING.phaseMs.intro);
+    await vi.advanceTimersByTimeAsync(TUNING.phaseMs.intro);
     expect(store.getState().publicSnapshot?.phase).toBe('investigate');
+    expect(store.remainingMs()).toBe(TUNING.firstRoundInvestigateMs);
     expect(store.getState().privateSnapshot?.version).toBe(store.getState().publicSnapshot?.version);
     player.dispose();
     store.dispose();
@@ -64,7 +66,7 @@ describe('fixture playback', () => {
     store.receive('ack', { actionId: id, ok: true, serverNowMs: 105_000 });
     const player = createFixturePlayer(recording(), store);
     player.play();
-    expect(store.remainingMs()).toBe(20_000);
+    expect(store.remainingMs()).toBe(TUNING.phaseMs.intro);
     player.dispose();
     store.dispose();
   });
@@ -74,12 +76,12 @@ describe('fixture playback', () => {
     const store = createClientStore({ send: () => {} });
     const player = createFixturePlayer(recording(), store);
     player.play();
-    await vi.advanceTimersByTimeAsync(10_000);
+    await vi.advanceTimersByTimeAsync(TUNING.phaseMs.intro / 2);
     player.pause();
-    await vi.advanceTimersByTimeAsync(30_000);
+    await vi.advanceTimersByTimeAsync(TUNING.phaseMs.intro);
     expect(store.getState().publicSnapshot?.phase).toBe('intro');
     player.play();
-    await vi.advanceTimersByTimeAsync(9999);
+    await vi.advanceTimersByTimeAsync(TUNING.phaseMs.intro / 2 - 1);
     expect(store.getState().publicSnapshot?.phase).toBe('intro');
     player.dispose();
     await vi.advanceTimersByTimeAsync(1);
