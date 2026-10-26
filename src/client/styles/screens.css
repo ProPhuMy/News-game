@@ -131,19 +131,31 @@
   font-weight: 700;
 }
 
-/* Intro */
-.intro-card-deck { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: var(--space-2); }
-.rule-card {
+/* Intro: illustrated three-step mini-comic. Phones show one step at a time (see the media rules below). */
+.onboarding-deck {
   display: grid;
-  gap: var(--space-1);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.onboarding-step {
+  display: grid;
+  gap: var(--space-2);
   align-content: start;
-  padding: var(--space-3);
+  padding: var(--space-2);
   border: 1px solid var(--nt-border);
   border-radius: var(--radius-sm);
 }
+.onboarding-art { display: block; width: 100%; height: auto; }
+.onboarding-caption { display: grid; gap: var(--space-1); }
+.onboarding-caption h3 { display: flex; align-items: center; gap: var(--space-2); font-size: 1.1rem; }
+.onboarding-caption p { margin: 0; line-height: 1.4; }
 .card-index {
   display: inline-grid;
   place-items: center;
+  flex: none;
   width: 1.75rem;
   height: 1.75rem;
   border-radius: 50%;
@@ -151,7 +163,19 @@
   color: var(--nt-panel);
   font-weight: 800;
 }
+.onboarding-nav { display: none; gap: var(--space-2); align-items: center; }
+.onboarding-count { font-weight: 700; white-space: nowrap; }
 .intro-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.intro-waiting { margin: 0; font-weight: 700; }
+/* Phones, portrait or landscape: one step at a time. Short screens put the art beside its caption. */
+@media (max-width: 640px), (max-height: 500px) {
+  .onboarding-deck { grid-template-columns: minmax(0, 1fr); }
+  .onboarding-step:not([data-current]) { display: none; }
+  .onboarding-nav { display: flex; }
+}
+@media (max-height: 500px) {
+  .onboarding-step { grid-template-columns: minmax(0, 0.9fr) minmax(0, 1fr); align-items: center; }
+}
 
 /* Investigate */
 /* minmax(0, 1fr): a long rival headline in the select must not widen the panel. */

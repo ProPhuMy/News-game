@@ -32,6 +32,7 @@ export const RevealScreen: React.FC<RevealScreenProps> = ({
 
   return (
     <div className="screen-container reveal-screen" data-testid="reveal-screen">
+      <p className="your-move">Watch the town react. Nothing to do.</p>
       <ExposureBanner exposures={exposures} />
 
       {frontPages.length === 0 ? (

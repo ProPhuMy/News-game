@@ -13,7 +13,8 @@ import type { FinalScoreRow } from './components/ScoreboardTable.tsx';
 import type { ExposureEvent } from './components/ExposureBanner.tsx';
 import type { ProofCard } from './screens/WriteScreen.tsx';
 import type { EvidenceCard } from './components/EvidenceSelector.tsx';
-import type { Behavior, Color } from '../../shared/ids.ts';
+import type { InspectionResult } from './components/InspectionReport.tsx';
+import type { Behavior, Color, TownClaim } from '../../shared/ids.ts';
 import { LOCATION_NAMES } from '../../shared/ids.ts';
 
 export const ERROR_MESSAGES: Record<string, string> = {
@@ -136,6 +137,36 @@ export function deriveEvidenceCards(
       claimType: e.claim,
       description: e.text,
     }));
+}
+
+export const CLAIM_LABELS: Record<TownClaim, string> = {
+  danger: 'Danger',
+  health_scare: 'Health Scare',
+  scandal: 'Scandal',
+  great_deal: 'Great Deal',
+  weird_sighting: 'Weird Sighting',
+  all_clear: 'All Clear',
+};
+
+/** This seat's own result for the current round, from data the server already sent. Older rounds never show. */
+export function deriveInspectionReport(
+  priv: Pick<PrivateSnapshot, 'investigations' | 'evidence'>,
+  pub: Pick<PublicSnapshot, 'round' | 'headlines' | 'papers'>
+): InspectionResult {
+  const done = priv.investigations.find((i) => i.round === pub.round);
+  if (!done) return { kind: 'none' };
+  const { target } = done;
+  if (target.kind === 'location') {
+    const card = priv.evidence.find((e) => e.round === pub.round && e.location === target.location);
+    return card ? { kind: 'evidence', location: card.location, claim: card.claim, text: card.text } : { kind: 'none' };
+  }
+  const headline = pub.headlines.find((h) => h.id === target.headlineId);
+  const paper = headline ? pub.papers.find((p) => p.seatId === headline.seatId) : undefined;
+  return {
+    kind: done.outcome === 'proof' ? 'proof' : 'nothing',
+    paperName: paper?.paperName ?? 'a rival paper',
+    headlineText: headline?.text ?? '',
+  };
 }
 
 export function deriveExposures(

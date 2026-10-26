@@ -3,6 +3,7 @@ import type { Phase } from '../../../shared/ids.ts';
 import { TUNING } from '../../../shared/tuning.ts';
 import { CountdownTimer } from '../components/CountdownTimer.tsx';
 import { useSound } from '../audio/SoundContext.tsx';
+import { RulesButton } from '../components/RulesDialog.tsx';
 
 const PHASE_LABELS: Record<Phase, string> = {
   intro: 'Welcome to Town',
@@ -70,6 +71,7 @@ export const TopBar: React.FC<TopBarProps> = ({
       <div className="phase-title">{PHASE_LABELS[phase] || phase}</div>
       <div className="top-bar-controls">
         <CountdownTimer deadlineMs={deadlineMs} serverTimeOffset={serverTimeOffset} />
+        <RulesButton />
         <button
           type="button"
           className="motion-toggle-btn"

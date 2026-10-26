@@ -26,6 +26,7 @@ import {
   deriveFinalExposures,
   deriveFinalHeadlines,
   formatErrorMessage,
+  deriveInspectionReport,
 } from '../mapper.ts';
 
 export interface AppRouterProps {
@@ -197,6 +198,8 @@ export const AppRouter: React.FC<AppRouterProps> = ({ store = defaultStore }) =>
     const frontPages = deriveFrontPages(publicSnapshot);
     const proofCards = deriveProofCards(privateSnapshot.proofs, publicSnapshot);
     const evidenceCards = deriveEvidenceCards(privateSnapshot.evidence, publicSnapshot.round);
+    const report = deriveInspectionReport(privateSnapshot, publicSnapshot);
+    const tipText = privateSnapshot.tip?.text;
     const exposures = deriveExposures(publicSnapshot.exposures, publicSnapshot.papers, publicSnapshot.round);
     const recap = deriveRecapText(publicSnapshot.reactionPlan, publicSnapshot.papers);
     const scoreRows = finalToScoreRows(publicSnapshot.final, publicSnapshot.papers);
@@ -236,14 +239,16 @@ export const AppRouter: React.FC<AppRouterProps> = ({ store = defaultStore }) =>
             deadlineMs={publicSnapshot.deadlineMs}
             serverTimeOffset={serverOffsetMs}
             onSkipIntro={() => store.actions.skipIntro()}
+            ready={privateSnapshot.acted}
           />
         )}
 
         {publicSnapshot.phase === 'investigate' && (
           <InvestigateScreen
-            tipText={privateSnapshot.tip?.text ?? 'No active tip for this round.'}
+            tipText={tipText ?? 'No active tip for this round.'}
             round={publicSnapshot.round}
             hasLocked={privateSnapshot.acted}
+            report={privateSnapshot.acted ? report : null}
             rivalHeadlines={rivalHeadlines}
             pending={isPending}
             serverError={formattedError}
@@ -259,6 +264,7 @@ export const AppRouter: React.FC<AppRouterProps> = ({ store = defaultStore }) =>
 
         {publicSnapshot.phase === 'write' && (
           <WriteScreen
+            round={publicSnapshot.round}
             hasLocked={privateSnapshot.acted}
             lockedHeadline={privateSnapshot.lockedHeadline}
             evidenceCards={evidenceCards}
@@ -267,6 +273,8 @@ export const AppRouter: React.FC<AppRouterProps> = ({ store = defaultStore }) =>
             pending={isPending}
             onLockHeadline={(payload) => store.actions.lockHeadline(payload)}
             onSkipWrite={() => store.actions.skipWrite()}
+            tipText={tipText}
+            report={report}
           />
         )}
 

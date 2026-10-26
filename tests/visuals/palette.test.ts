@@ -32,6 +32,10 @@ describe('presentation palette', () => {
     }
   });
 
+  it.each(IDS)('palette %s defines the onboarding illustration skin tone as css hex', (id) => {
+    expect(getPalette(id).illustration.skin).toMatch(/^#[0-9a-f]{6}$/);
+  });
+
   it('variant a keeps the current paper colors so UI and town agree until D1', () => {
     const a = getPalette('a');
     expect([a.paper.red.hex, a.paper.blue.hex, a.paper.green.hex, a.paper.gold.hex, a.unsubscribed.hex])
