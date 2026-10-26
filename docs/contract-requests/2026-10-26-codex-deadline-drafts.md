@@ -1,0 +1,24 @@
+# Request: private revisioned drafts, interpretation and deadline publication
+
+Status: REQUESTED, not approved/implemented. User requested this feature, chose preserving writing drafts through disconnect, and clarified interpreting present nonempty headlines while sending no AI request for empty text. User-controlled shared delivery and Claude engine authorization are still required by AGENTS Hard rule1/ownership table. Design: docs/onboarding/deadline-drafts-proposal.md.
+
+## Proposed shared surface
+
+1. DraftPayloadSchema/type: raw text string max1000 (existing transport bound), selection discriminated union of claim(location nullable, TownClaim nullable, attachEvidence boolean) or expose(headlineId nullable). Save incomplete/invalid latest data; publication remains existing cleaned1–100characters and current validation.
+2. ClientMessage saveDraft: existing actionId/round/phase, baseRevision nonnegative safe integer, payload. ClientMessage lockDraft: same metadata, expectedRevision positive safe integer. Server-incremented revisions per room/round/seat; retain legacy lockHeadline, same validator. No client-supplied owner/status/AI result.
+3. Fixed DRAFT_CONFLICT and DRAFT_INCOMPLETE errors. Owner-only PrivateSnapshot draft record {round,revision,payload,validation:valid|needs_correction,error:ErrorCode|null,interpretation}, plus submitted-revision status if locked. Interpretation is fixed pending/interpreted/fallback metadata and optional schema-validated Rating for the exact latest revision; invalid/empty drafts have no interpretation. No public draft field.
+4. Owner-only draftStateVersion safe integer, initially0, incrementing for each server draft/status change. Existing engine version alone is insufficient: client currently discards same-version private packets. Accept equal engine versions only for a larger private draftStateVersion while preserving coherent public/private pairing and owner checks. Private projection receives only that seat's approved draft context; no raw-state broadcast or made-up engine version.
+5. AiAdapter.rateHeadline retains input/Promise<Rating>, adding optional trusted second argument {onOutcome?: (outcome:AiOutcome)=>void}. Shared fixed AiOutcome union success/cache/disabled/failure/limited; preserve existing adapter export/callers. This callback is never serialized into provider inputs or cache keys. Actual adapter provides per-job provenance once; server never guesses fallback by comparing values or global counters.
+6. Engine-owned pure preflight validator/prepared RateHeadlineInput (including engine fallback), reused at manual/timeout publication. Add a deadline-finalization interface receiving frozen latest revision candidates and same-revision completed Rating|null; recheck all normal engine validations and finalize atomically BEFORE reveal. Final concrete signatures belong in the assigned shared/engine implementation plan, acknowledged before Codex consumes them. No fake timestamps, client outcome choices or deadline extension.
+
+## Spec changes to approve
+
+§4.3: latest valid server-saved draft publishes automatically at Write cutoff, once per seat, same validation as manual Lock. Latest empty/invalid publishes nothing; never revert to older valid text. Skip cancels. Interpret complete nonempty saved drafts before cutoff; empty/cleared drafts make no provider request and invalidate old jobs. Pending/unavailable latest interpretation uses its own existing engine fallback, never an older result. Keep3s/512token and existing durable30000total/concurrency4; no allowance refill/payment.
+
+§4.5 Write only: preserve unacted human-origin saved drafts through disconnect instead of immediate Caretaker writing. Early Write completion waits for all human-origin seats to act/skip (including disconnected), otherwise normal45s deadline. This avoids losing offline drafts through early reveal. Intro/Investigate, bots, cleanup and previously locked actions unchanged. Server restart still ends in-memory matches/drafts.
+
+## Assignment and gates
+
+Propose user assigns shared schemas/projection/errors/AI observer and engine validation/deadline/disconnect changes to Claude, UI to Claude, server/net/AI adapter integration to Codex. No shared edit before authorization; no casts/parallel contract types. Counterpart reviews design, then each coder writes an implementation plan against concrete approved delivery.
+
+Autosave coalesces at1save/sec with one request in flight plus manual flush; prove normal5round usage stays within existing120packets/minute and256receipt caps. Do not silently remove/raise anti-abuse limits. Existing drafts only persist for the live match. Latest unseen/offline edits cannot be guaranteed at cutoff; UI must distinguish unsaved changes. No provider request, deployment, dependency or root-config edit has occurred in this proposal.
