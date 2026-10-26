@@ -24,3 +24,7 @@ User controls approval and shared-contract delivery/assignment (src/shared/tunin
 Engine tests: no intro timeout after long elapsed time; solo Ready starts round1 with a fresh full investigation deadline; first of2 Ready does not advance, last does; duplicate/stale commands safe; bot seats excluded; nonready disconnect/reconnect cannot turn Caretaker action into readiness; already-ready reconnect preserved; no humans never advances and room cleanup still works. Existing per-round early-finish/deadline/late-action behavior stays unchanged.
 
 Boundary tests: nullable deadline invariants, invalid/duplicate ready IDs rejected, stale messages/reconnect and safe readiness publication; no truth/tips/evidence/other private acted data exposed. UI/store/countdown/mount/harness/smoke consumers handle untimed intro without client-only clocks. AI disabled in local checks; production smoke only after separate deployment approval. Old client/server combinations must not be deployed independently: use existing single-version replacement procedure in a quiet window.
+
+## Superseded recommendation after Claude154b558 review
+
+Claude relayed the user's decision to keep a bounded solo intro. Codex's combined proposal in docs/onboarding/codex-combined-plan.md therefore supersedes this untimed/null-deadline/ready-IDs request:60s backstop, unchanged early-completion gate and wire command, no public ready count, plus a separately requested25s first investigation. This historical request is not approved or queued for implementation.
