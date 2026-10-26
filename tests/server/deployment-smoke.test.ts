@@ -1,9 +1,16 @@
 import { createServer } from 'node:http';
 import { once } from 'node:events';
 import { describe, expect, it } from 'vitest';
-import { parseSmokeOptions, fetchSmokeResource, requireCleanWatch, decodeSmokePackets } from '../../deployment/D4-smoke-options.ts';
+import { TUNING } from '../../src/shared/tuning.ts';
+import { parseSmokeOptions, fetchSmokeResource, requireCleanWatch, decodeSmokePackets, SMOKE_PHASE_TIMEOUT_MS } from '../../deployment/D4-smoke-options.ts';
 
 describe('deployment smoke options', () => {
+  it('allows the longest full phase to expire with ten seconds of browser slack', () => {
+    for (const phaseMs of [...Object.values(TUNING.phaseMs), TUNING.firstRoundInvestigateMs]) {
+      expect(SMOKE_PHASE_TIMEOUT_MS).toBeGreaterThanOrEqual(phaseMs + 10_000);
+    }
+  });
+
   it('rejects browser diagnostics before returning sidecar data, without disclosing their text', async () => {
     const watch = requireCleanWatch({ snapshot: async () => ({ stylesheets: [], consoleErrors: ['SYNTHETIC-PRIVATE-TOKEN'] }) });
     await expect(watch.snapshot()).rejects.toThrow(/^Browser errors occurred$/);
