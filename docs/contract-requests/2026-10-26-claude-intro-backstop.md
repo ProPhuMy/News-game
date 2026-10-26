@@ -11,4 +11,4 @@
 - Engine and server tests that assert the intro deadline.
 - Recorded fixtures: none are re-recorded by hand. If needed, Claude re-records them through `npm run fixtures`.
 
-**Approval:** user approval required before `src/shared/` changes (AGENTS.md Hard rule 1).
+**Approval: APPROVED by the user on 2026-10-26** ("approve 60s"). Codex implements the `src/shared/tuning.ts` change with its engine/server tests, the spec table update and the redeploy.
