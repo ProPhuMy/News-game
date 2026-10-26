@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '../components/Button';
 import { CountdownTimer } from '../components/CountdownTimer';
+import { keepFocus } from '../components/keepFocus.ts';
 import { StepArt, type OnboardingStep } from '../components/OnboardingArt';
 import type { RuleCard } from '../../../content/rule-cards.ts';
 import { RULE_CARDS } from '../../../content/rule-cards.ts';
@@ -17,11 +18,6 @@ export interface IntroScreenProps {
 
 // Illustrated three-step intro. Desktop shows all steps; phones (CSS, <=640px) show the current one with Back/Next.
 // "I'm ready" sends the existing skipIntro command: the intro ends once every connected human is ready.
-// The pressed "I'm ready" button unmounts; move focus to the waiting line instead of dropping it to <body>.
-const keepFocus = (el: HTMLParagraphElement | null) => {
-  if (el && (document.activeElement === null || document.activeElement === document.body)) el.focus();
-};
-
 export const IntroScreen: React.FC<IntroScreenProps> = ({
   deadlineMs,
   serverTimeOffset,

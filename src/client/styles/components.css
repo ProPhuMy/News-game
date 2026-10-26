@@ -8,7 +8,7 @@
 
 /* Long user text wraps inside its panel instead of pushing controls away. */
 .paper-name, .editor-name, .player-sub, .seat-player-name, .headline-text, .archive-text, .archive-paper,
-.bubble-text, .recap-text, .exposure-entry, .exposed-reason, .tip-text, .locked-headline-preview,
+.bubble-text, .recap-text, .inspection-text, .inspection-fact, .exposure-entry, .exposed-reason, .tip-text, .locked-headline-preview,
 .winner-announcement, .final-exposure-item, .truth-record-card h3, .rival-select, .card-desc {
   overflow-wrap: anywhere;
   min-width: 0;
@@ -128,6 +128,24 @@ textarea { min-height: 5rem; resize: vertical; }
   font-size: 0.8rem;
 }
 .tip-text { font-family: var(--font-headline); font-size: 1.1rem; }
+.tip-note { margin: 0; color: var(--nt-muted); font-size: 0.85rem; font-style: italic; }
+
+/* Inspection result: the certain answer, solid border against the tip's dashed one. */
+.inspection-report {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border: 3px solid var(--nt-ink);
+  border-radius: var(--radius-sm);
+  background: var(--nt-panel);
+  box-shadow: var(--shadow-card);
+}
+.inspection-report h3:focus, .intro-waiting:focus { outline: none; } /* focus targets, not controls */
+.inspection-report h3 { margin: 0; font-family: var(--font-headline); font-size: 1.1rem; }
+.inspection-report p, .inspection-none { margin: 0; }
+.inspection-fact { font-size: 1.05rem; }
+.inspection-text { font-family: var(--font-headline); }
+.inspection-howto, .inspection-none { color: var(--nt-muted); font-size: 0.9rem; }
 
 /* Countdown */
 .countdown-timer { font-family: var(--font-mono); font-weight: 800; font-size: 1.25rem; }

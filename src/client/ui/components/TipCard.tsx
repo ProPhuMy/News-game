@@ -9,6 +9,7 @@ export const TipCard: React.FC<TipCardProps> = ({ tipText }) => {
     <div className="tip-card" role="region" aria-label="Confidential Tip">
       <div className="tip-stamp">CONFIDENTIAL TIP</div>
       <p className="tip-text">{tipText}</p>
+      <p className="tip-note">A hint, not proof.</p>
     </div>
   );
 };

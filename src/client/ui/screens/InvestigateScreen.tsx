@@ -3,6 +3,7 @@ import type { Location } from '../../../shared/ids';
 import { LOCATIONS, LOCATION_NAMES } from '../../../shared/ids';
 import { TipCard } from '../components/TipCard';
 import { Button } from '../components/Button';
+import { InspectionReport, type InspectionResult } from '../components/InspectionReport';
 
 export interface RivalHeadlineOption {
   id: string;
@@ -21,6 +22,8 @@ export interface InvestigateScreenProps {
   onSkip: () => void;
   pending?: boolean;
   serverError?: string | null;
+  /** This seat's own result for the current round; shown once acted. */
+  report?: InspectionResult | null;
 }
 
 export const InvestigateScreen: React.FC<InvestigateScreenProps> = ({
@@ -33,14 +36,18 @@ export const InvestigateScreen: React.FC<InvestigateScreenProps> = ({
   onSkip,
   pending = false,
   serverError,
+  report = null,
 }) => {
   const [selectedRivalId, setSelectedRivalId] = useState<string>('');
 
   if (hasLocked) {
     return (
       <div className="investigate-panel locked-state" data-testid="investigate-locked">
+        {report && report.kind !== 'none' && <InspectionReport report={report} />}
         <TipCard tipText={tipText} />
-        <div className="locked-banner">✓ Investigation order locked in. Waiting for report...</div>
+        <div className="locked-banner" role="status">
+          {report?.kind === 'none' ? 'You skipped checking this round.' : '✓ Checked.'} Waiting for the other editors…
+        </div>
       </div>
     );
   }

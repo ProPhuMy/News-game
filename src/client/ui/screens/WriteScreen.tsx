@@ -8,6 +8,9 @@ import { Chip } from '../components/Chip.tsx';
 import { CharacterCounter } from '../components/CharacterCounter.tsx';
 import type { EvidenceCard } from '../components/EvidenceSelector.tsx';
 import { EvidenceSelector } from '../components/EvidenceSelector.tsx';
+import { InspectionReport, type InspectionResult } from '../components/InspectionReport.tsx';
+import { TipCard } from '../components/TipCard.tsx';
+import { CLAIM_LABELS } from '../mapper.ts';
 
 export interface ProofCard {
   id: string;
@@ -33,16 +36,12 @@ export interface WriteScreenProps {
   pending?: boolean;
   onLockHeadline: (payload: LockHeadlinePayload) => void;
   onSkipWrite: () => void;
+  /** This seat's tip and own result for the current round, shown before any selection. */
+  tipText?: string;
+  report?: InspectionResult | null;
 }
 
-const CLAIM_OPTIONS: { id: TownClaim; label: string }[] = [
-  { id: 'danger', label: 'Danger' },
-  { id: 'health_scare', label: 'Health Scare' },
-  { id: 'scandal', label: 'Scandal' },
-  { id: 'great_deal', label: 'Great Deal' },
-  { id: 'weird_sighting', label: 'Weird Sighting' },
-  { id: 'all_clear', label: 'All Clear' },
-];
+const CLAIM_OPTIONS = Object.entries(CLAIM_LABELS).map(([id, label]) => ({ id: id as TownClaim, label }));
 
 export const WriteScreen: React.FC<WriteScreenProps> = ({
   round,
@@ -54,6 +53,8 @@ export const WriteScreen: React.FC<WriteScreenProps> = ({
   pending = false,
   onLockHeadline,
   onSkipWrite,
+  tipText,
+  report = null,
 }) => {
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const [selectedClaim, setSelectedClaim] = useState<Claim | null>(null);
@@ -132,6 +133,10 @@ export const WriteScreen: React.FC<WriteScreenProps> = ({
         {round === 1 && (
           <p className="round-one-hint">A true headline with evidence builds trust. A lie can win readers, but may get exposed later.</p>
         )}
+
+        {report && report.kind !== 'none' && <InspectionReport report={report} inEditor />}
+        {report?.kind === 'none' && <p className="inspection-none">You didn't check a place this round.</p>}
+        {tipText && <TipCard tipText={tipText} />}
 
         {proofCards.length > 0 && (
           <div className="proof-exposure-banner">
