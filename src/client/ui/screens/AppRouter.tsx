@@ -236,6 +236,7 @@ export const AppRouter: React.FC<AppRouterProps> = ({ store = defaultStore }) =>
             deadlineMs={publicSnapshot.deadlineMs}
             serverTimeOffset={serverOffsetMs}
             onSkipIntro={() => store.actions.skipIntro()}
+            ready={privateSnapshot.acted}
           />
         )}
 
