@@ -148,7 +148,7 @@ try {
   await host.getByRole('button', { name: 'Start Match', exact: true }).click();
   const matchReady = page => page.getByTestId('hud-overlay').waitFor();
   await Promise.all(pages.map(matchReady));
-  await Promise.all(pages.map(page => page.getByRole('button', { name: 'Skip Intro', exact: true }).click()));
+  await Promise.all(pages.map(page => page.getByRole('button', { name: /^(?:I'm ready|Skip Intro)$/ }).click()));
   await guest.getByRole('button', { name: LOCATION_NAMES[LOCATIONS[0]], exact: true }).click();
   await guest.getByTestId('investigate-locked').waitFor();
   await drainPolling();
@@ -170,7 +170,7 @@ try {
   checks.restoredSeat = true;
   console.log('Production assets, separate seats, literal markup and reconnect checked. Playing five rounds.');
   const drive = async page => {
-    const actions = ['Skip Intro', 'Skip Investigation', 'Skip Writing'];
+    const actions = ["I'm ready", 'Skip Intro', 'Skip Investigation', 'Skip Writing'];
     while (true) {
       await page.waitForFunction(labels => Boolean(document.querySelector('.results-card')) ||
         [...document.querySelectorAll('button')].some(button => !button.disabled && button.offsetParent !== null &&

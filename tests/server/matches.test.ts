@@ -5,6 +5,7 @@ import { createRoomManager } from '../../src/server/rooms.ts';
 import { createMatchRunner } from '../../src/server/matches.ts';
 import { SAMPLE_CONTENT } from '../../src/sim/sample-content.ts';
 import { COLORS, LOCATIONS, EVENT_CLAIMS } from '../../src/shared/ids.ts';
+import { TUNING } from '../../src/shared/tuning.ts';
 import { SERVER_EVENTS } from '../../src/shared/protocol.ts';
 import { privateView, publicView } from '../../src/engine/index.ts';
 import { PrivateSnapshotSchema, PublicSnapshotSchema } from '../../src/shared/snapshots.ts';
@@ -74,7 +75,7 @@ describe('match runner', () => {
       runner.handle(bad, 0, { type: 'startMatch', actionId: 'bad-start' }, 0);
       runner.handle(good, 0, { type: 'startMatch', actionId: 'good-start' }, 0);
       broken = true;
-      expect(() => runner.tick(20_000)).not.toThrow();
+      expect(() => runner.tick(TUNING.phaseMs.intro)).not.toThrow();
       expect(rooms.rooms.has(bad.code)).toBe(false);
       expect(disconnect.mock.calls).toEqual([['bad']]);
       expect(good.state!.phase).toBe('investigate');
@@ -93,7 +94,7 @@ describe('match runner', () => {
       runner.handle(room, 0, { type: 'startMatch', actionId: 'bad-start' }, 0);
       runner.handle(healthy, 0, { type: 'startMatch', actionId: 'good-start' }, 0);
       Object.defineProperty(room.state, 'phase', { value: 'corrupted-runtime-phase', writable: true });
-      expect(() => runner.tick(20_000)).not.toThrow();
+      expect(() => runner.tick(TUNING.phaseMs.intro)).not.toThrow();
       expect(rooms.rooms.has(room.code)).toBe(false);
       expect(healthy.state!.phase).toBe('investigate');
       expect(log).toHaveBeenCalled();

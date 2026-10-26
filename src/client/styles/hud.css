@@ -214,6 +214,7 @@
 }
 .rules-dialog::backdrop { background: color-mix(in srgb, var(--nt-ink) 45%, transparent); }
 .rules-dialog-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.rules-note { margin: var(--space-1) 0 0; color: var(--nt-muted); font-size: 0.9rem; }
 .rules-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-2); margin: var(--space-3) 0; padding: 0; list-style: none; }
 .rules-step { display: grid; gap: var(--space-1); align-content: start; }
 .rules-step h3 { display: flex; align-items: center; gap: var(--space-2); font-size: 1.05rem; }

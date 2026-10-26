@@ -3,9 +3,10 @@ import { CLAIMS, CLAIM_BEHAVIOR, COLORS, COLOR_ICONS } from '../../src/shared/id
 import { TUNING } from '../../src/shared/tuning.ts';
 
 describe('tuning', () => {
-  it('fits a full match in 460 s', () => {
+  it('fits a full match in 510 s (60 s intro backstop, 25 s first Investigate; user-approved 2026-10-26)', () => {
     const p = TUNING.phaseMs;
-    expect(p.intro + TUNING.rounds * (p.investigate + p.write + p.reveal) + p.final).toBe(460_000);
+    const firstExtra = TUNING.firstRoundInvestigateMs - p.investigate;
+    expect(p.intro + TUNING.rounds * (p.investigate + p.write + p.reveal) + firstExtra + p.final).toBe(510_000);
   });
 
   it('room codes never use 0, O, 1 or I', () => {

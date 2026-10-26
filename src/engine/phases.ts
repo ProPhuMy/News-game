@@ -17,7 +17,7 @@ export function phaseDone(s: MatchState): boolean {
 
 function enterPhase(s: MatchState, phase: 'investigate' | 'write' | 'reveal' | 'final', nowMs: number, events: EngineEvent[]): void {
   s.phase = phase;
-  s.deadlineMs = nowMs + TUNING.phaseMs[phase];
+  s.deadlineMs = nowMs + (phase === 'investigate' && s.round === 1 ? TUNING.firstRoundInvestigateMs : TUNING.phaseMs[phase]);
   s.version++;
   for (const seat of s.seats) {
     seat.acted = false;

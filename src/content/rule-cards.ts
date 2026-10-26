@@ -15,7 +15,7 @@ export const RULE_CARDS: RuleCard[] = [
   },
   {
     title: 'Reveal',
-    body: 'The town reacts. Readers flock to good stories, but lies can get exposed and wreck your trust. Score = readers × trust.',
+    body: 'The town reacts. Readers flock to good stories, but lies can get exposed and wreck your trust. More readers + more trust = higher score.',
   },
 ];
 

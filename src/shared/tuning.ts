@@ -4,7 +4,10 @@ export const TUNING = {
   citizens: 30,
   rounds: 5,
   eventsPerRound: 3,
-  phaseMs: { intro: 20_000, investigate: 15_000, write: 45_000, reveal: 20_000, final: 40_000 },
+  // Intro 60 s is a backstop; it ends early once every connected human is ready (user-approved 2026-10-26).
+  phaseMs: { intro: 60_000, investigate: 15_000, write: 45_000, reveal: 20_000, final: 40_000 },
+  /** Round 1 only: time to read the first tip (user-approved 2026-10-26). Later rounds use phaseMs.investigate. */
+  firstRoundInvestigateMs: 25_000,
   botLockDelayMs: { min: 3_000, max: 15_000 },
   trust: {
     start: 50, min: 0, max: 100,
