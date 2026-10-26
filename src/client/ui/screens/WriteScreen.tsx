@@ -23,6 +23,8 @@ export interface LockHeadlinePayload {
 }
 
 export interface WriteScreenProps {
+  /** Current round; round 1 adds a first-time hint. */
+  round?: number;
   hasLocked: boolean;
   lockedHeadline?: { id: string; story: Story; text: string } | null;
   evidenceCards: EvidenceCard[];
@@ -43,6 +45,7 @@ const CLAIM_OPTIONS: { id: TownClaim; label: string }[] = [
 ];
 
 export const WriteScreen: React.FC<WriteScreenProps> = ({
+  round,
   hasLocked,
   lockedHeadline,
   evidenceCards,
@@ -125,6 +128,10 @@ export const WriteScreen: React.FC<WriteScreenProps> = ({
     <div className="write-screen" data-testid="write-screen">
       <div className="editor-card">
         <h2>Front Page Editor</h2>
+        <p className="your-move">Your move: pick a place and a claim, write a headline, lock it in.</p>
+        {round === 1 && (
+          <p className="round-one-hint">A true headline with evidence builds trust. A lie can win readers, but may get exposed later.</p>
+        )}
 
         {proofCards.length > 0 && (
           <div className="proof-exposure-banner">

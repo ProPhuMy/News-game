@@ -47,6 +47,14 @@ export const InvestigateScreen: React.FC<InvestigateScreenProps> = ({
 
   return (
     <div className="investigate-panel" data-testid="investigate-panel">
+      <p className="your-move">
+        {round >= 2 && rivalHeadlines.length > 0
+          ? "Your move: check one place — or a rival's old headline."
+          : 'Your move: pick one place to check.'}
+      </p>
+      {round === 1 && (
+        <p className="round-one-hint">Your tip hints at one town event. Checking a place tells you the real story there.</p>
+      )}
       <TipCard tipText={tipText} />
 
       {serverError && (
@@ -57,7 +65,7 @@ export const InvestigateScreen: React.FC<InvestigateScreenProps> = ({
 
       <div className="investigate-choices">
         <section className="choice-section">
-          <h3>Option A: Check a Town Location (Certain Truth &amp; Evidence)</h3>
+          <h3>Check a place (sure answer + evidence)</h3>
           <div className="locations-buttons">
             {LOCATIONS.map((loc) => (
               <Button
@@ -77,7 +85,7 @@ export const InvestigateScreen: React.FC<InvestigateScreenProps> = ({
         )}
         {round >= 2 && rivalHeadlines.length > 0 && (
           <section className="choice-section">
-            <h3>Option B: Investigate a Rival Headline (Search for Proof of Lie)</h3>
+            <h3>{"Dig into a rival's old headline (may find proof of a lie)"}</h3>
             <div className="rival-picker">
               <select
                 value={selectedRivalId}

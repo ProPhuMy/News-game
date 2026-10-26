@@ -260,6 +260,7 @@ export const AppRouter: React.FC<AppRouterProps> = ({ store = defaultStore }) =>
 
         {publicSnapshot.phase === 'write' && (
           <WriteScreen
+            round={publicSnapshot.round}
             hasLocked={privateSnapshot.acted}
             lockedHeadline={privateSnapshot.lockedHeadline}
             evidenceCards={evidenceCards}
