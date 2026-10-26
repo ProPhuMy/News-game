@@ -150,6 +150,14 @@ textarea { min-height: 5rem; resize: vertical; }
 /* Countdown */
 .countdown-timer { font-family: var(--font-mono); font-weight: 800; font-size: 1.25rem; }
 .countdown-timer.urgent { color: var(--nt-danger); }
+.time-warning {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border: 2px solid var(--nt-danger);
+  border-radius: var(--radius-sm);
+  color: var(--nt-danger);
+  font-weight: 800;
+}
 
 /* Evidence */
 .evidence-attach-panel { display: grid; gap: var(--space-2); }

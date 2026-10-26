@@ -6,6 +6,7 @@ import type { Story } from '../../../shared/protocol.ts';
 import { Button } from '../components/Button.tsx';
 import { Chip } from '../components/Chip.tsx';
 import { CharacterCounter } from '../components/CharacterCounter.tsx';
+import { useSecondsLeft } from '../components/CountdownTimer.tsx';
 import type { EvidenceCard } from '../components/EvidenceSelector.tsx';
 import { EvidenceSelector } from '../components/EvidenceSelector.tsx';
 import { InspectionReport, type InspectionResult } from '../components/InspectionReport.tsx';
@@ -39,7 +40,19 @@ export interface WriteScreenProps {
   /** This seat's tip and own result for the current round, shown before any selection. */
   tipText?: string;
   report?: InspectionResult | null;
+  /** Server deadline for the late-time warning; omitted in isolated renders. */
+  deadlineMs?: number;
+  serverTimeOffset?: number;
 }
+
+/** Warn this many seconds before the Write deadline (user-approved 2026-10-26). */
+export const WRITE_WARNING_SECONDS = 10;
+
+const TimeWarning: React.FC<{ deadlineMs: number; serverTimeOffset: number }> = ({ deadlineMs, serverTimeOffset }) => {
+  const left = useSecondsLeft(deadlineMs, serverTimeOffset);
+  if (left > WRITE_WARNING_SECONDS || left <= 0) return null;
+  return <p className="time-warning" role="alert">{WRITE_WARNING_SECONDS} s left — lock it in!</p>;
+};
 
 const CLAIM_OPTIONS = Object.entries(CLAIM_LABELS).map(([id, label]) => ({ id: id as TownClaim, label }));
 
@@ -55,6 +68,8 @@ export const WriteScreen: React.FC<WriteScreenProps> = ({
   onSkipWrite,
   tipText,
   report = null,
+  deadlineMs,
+  serverTimeOffset = 0,
 }) => {
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const [selectedClaim, setSelectedClaim] = useState<Claim | null>(null);
@@ -241,6 +256,7 @@ export const WriteScreen: React.FC<WriteScreenProps> = ({
           />
         )}
 
+        {deadlineMs !== undefined && <TimeWarning deadlineMs={deadlineMs} serverTimeOffset={serverTimeOffset} />}
         <div className="editor-actions">
           <Button
             variant="primary"
