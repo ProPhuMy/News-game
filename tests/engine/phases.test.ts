@@ -31,9 +31,9 @@ describe('createMatch', () => {
     expect(() => createMatch({ content: SAMPLE_CONTENT, startMs: 0 }, 1, [HUMAN, HUMAN, { kind: 'bot' }, { kind: 'bot' }])).toThrow();
   });
 
-  it('starts in the intro with a 20 s deadline', () => {
+  it('starts in the intro with a 60 s backstop deadline', () => {
     const s = createMatch({ content: SAMPLE_CONTENT, startMs: 1_000 }, 1, [HUMAN, { kind: 'bot' }, { kind: 'bot' }, { kind: 'bot' }]);
-    expect([s.round, s.phase, s.deadlineMs]).toEqual([0, 'intro', 21_000]);
+    expect([s.round, s.phase, s.deadlineMs]).toEqual([0, 'intro', 61_000]);
   });
 });
 
@@ -47,10 +47,21 @@ describe('phase machine', () => {
     let s = soloMatch();
     s = run(s, 0, skipIntro(s), 500);
     s = tick(s, 500).state;
-    expect([s.round, s.phase, s.deadlineMs]).toEqual([1, 'investigate', 500 + TUNING.phaseMs.investigate]);
+    expect([s.round, s.phase, s.deadlineMs]).toEqual([1, 'investigate', 500 + TUNING.firstRoundInvestigateMs]);
   });
 
-  it('plays 5 rounds and the Final Edition in 460 s when nobody acts', () => {
+  it('gives the round-1 Investigate the longer first-round time and later rounds the usual time', () => {
+    let s = soloMatch();
+    expect(s.deadlineMs).toBe(60_000);
+    s = tick(s, s.deadlineMs).state;
+    expect([s.round, s.phase, s.deadlineMs]).toEqual([1, 'investigate', 60_000 + 25_000]);
+    s = advanceTo(s, 'reveal', 1);
+    const entered = s.deadlineMs;
+    s = tick(s, entered).state;
+    expect([s.round, s.phase, s.deadlineMs]).toEqual([2, 'investigate', entered + 15_000]);
+  });
+
+  it('plays 5 rounds and the Final Edition in 510 s when nobody acts', () => {
     let s = soloMatch();
     const reveals: number[] = [];
     while (s.phase !== 'ended') {
@@ -58,7 +69,7 @@ describe('phase machine', () => {
       if (s.phase === 'reveal') reveals.push(s.round);
     }
     expect(reveals).toEqual([1, 2, 3, 4, 5]);
-    expect(s.deadlineMs).toBe(460_000);
+    expect(s.deadlineMs).toBe(510_000);
   });
 
   it('advances only one phase when ticked very late', () => {

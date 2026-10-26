@@ -21,6 +21,7 @@ export const RulesButton: React.FC = () => {
           <h2 id={title}>How to play</h2>
           <button type="button" className="btn btn-secondary" onClick={() => dialog.current?.close()}>Close</button>
         </div>
+        <p className="rules-note">The game keeps running while this is open.</p>
         <ol className="rules-steps">
           {RULE_CARDS.map((card, idx) => (
             <li key={card.title} className="rules-step">

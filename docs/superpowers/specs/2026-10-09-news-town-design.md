@@ -65,20 +65,20 @@ The game is a success when:
 
 | Phase | Duration | Ends early when |
 |---|---|---|
-| Intro: camera sweep + 3 rule cards | 20 s | Every connected human presses "Skip" |
-| Round × 5: Investigate | 15 s | Every connected human has investigated or skipped |
+| Intro: camera sweep + 3 illustrated steps | 60 s (backstop) | Every connected human presses "I'm ready" |
+| Round × 5: Investigate | 25 s in round 1, then 15 s | Every connected human has investigated or skipped |
 | Round × 5: Write | 45 s | Every connected human has locked or skipped |
 | Round × 5: Front page + reaction | 20 s | Never (fixed-length animation) |
 | Final Edition | 40 s | Never |
 
-The maximum total is 20 + 5 × 80 + 40 = 460 s, about 7 min 40 s.
+The maximum total is 60 + 10 + 5 × 80 + 40 = 510 s, about 8 min 30 s. (Intro 60 s and the round-1 Investigate 25 s were approved by the user on 2026-10-26 for onboarding; both still end early.)
 
 AI papers decide instantly at the start of each phase. Their "locked" indicator appears after a random 3–15 s delay so the table feels alive. That delay is for display only and never holds up a phase.
 
 ### 4.3 A round
 
 1. **Tip (shown at the start of Investigate).** Each paper privately receives one vague tip about a current town event (§5.3).
-2. **Investigate (15 s).** Choose one option:
+2. **Investigate (15 s; 25 s in round 1).** Choose one option:
    - **Check a location:** reveals the truth at that location for *this round* and grants an evidence card (§5.5). The result is certain.
    - **Investigate a rival headline:** pick any unexposed headline that a rival published in an earlier round. There's a chance of finding proof that it's a lie (§6.2). This option is unavailable in round 1.
    - **Skip.**

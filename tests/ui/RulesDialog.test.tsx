@@ -22,6 +22,7 @@ describe('How to play', () => {
     fireEvent.click(screen.getByRole('button', { name: 'How to play' }));
     expect(dialog.hasAttribute('open')).toBe(true);
     expect(dialog.getAttribute('aria-labelledby')).toBeTruthy();
+    expect(within(dialog).getByText('The game keeps running while this is open.')).toBeDefined();
     expect(dialog.querySelectorAll('svg[aria-hidden="true"]')).toHaveLength(3);
     for (const card of [...RULE_CARDS, ...RULE_DETAILS]) {
       expect(within(dialog).getByText(card.title)).toBeDefined();

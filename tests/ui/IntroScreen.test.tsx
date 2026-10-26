@@ -14,7 +14,7 @@ describe('rule cards (user-approved captions, 2026-10-26)', () => {
     expect(RULE_CARDS).toEqual([
       { title: 'Investigate', body: "Check one place in town to learn the truth and earn evidence. Or dig into a rival's old headline." },
       { title: 'Write', body: 'Print one headline: the honest truth, or a juicy lie. Your choice.' },
-      { title: 'Reveal', body: 'The town reacts. Readers flock to good stories, but lies can get exposed and wreck your trust. Score = readers × trust.' },
+      { title: 'Reveal', body: 'The town reacts. Readers flock to good stories, but lies can get exposed and wreck your trust. More readers + more trust = higher score.' },
     ]);
     expect(() => ContentSchema.parse(content)).not.toThrow();
   });

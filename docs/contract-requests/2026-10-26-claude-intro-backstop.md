@@ -12,3 +12,11 @@
 - Recorded fixtures: none are re-recorded by hand. If needed, Claude re-records them through `npm run fixtures`.
 
 **Approval: APPROVED by the user on 2026-10-26** ("approve 60s"). Codex implements the `src/shared/tuning.ts` change with its engine/server tests, the spec table update and the redeploy.
+
+**Delivery (2026-10-26):** the user assigned the `src/shared/tuning.ts` edit to Claude and also approved Codex's companion request `2026-10-26-codex-first-investigate.md` (round-1 Investigate 25 s). Both landed on `claude/onboarding-timing`:
+
+- `phaseMs.intro` is now `60_000`.
+- New field `firstRoundInvestigateMs: 25_000`, selected in `src/engine/phases.ts` `enterPhase` only for round 1 Investigate.
+- The spec §4.2 table now gives a 510 s maximum.
+
+Codex-owned test updates are requested in `docs/onboarding/timing-codex-request.md`.
