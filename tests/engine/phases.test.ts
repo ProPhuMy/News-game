@@ -61,7 +61,7 @@ describe('phase machine', () => {
     expect([s.round, s.phase, s.deadlineMs]).toEqual([2, 'investigate', entered + 15_000]);
   });
 
-  it('plays 5 rounds and the Final Edition in 510 s when nobody acts', () => {
+  it('plays 5 rounds and the Final Edition in 585 s when nobody acts', () => {
     let s = soloMatch();
     const reveals: number[] = [];
     while (s.phase !== 'ended') {
@@ -69,7 +69,7 @@ describe('phase machine', () => {
       if (s.phase === 'reveal') reveals.push(s.round);
     }
     expect(reveals).toEqual([1, 2, 3, 4, 5]);
-    expect(s.deadlineMs).toBe(510_000);
+    expect(s.deadlineMs).toBe(585_000);
   });
 
   it('advances only one phase when ticked very late', () => {

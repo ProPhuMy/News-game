@@ -3,10 +3,10 @@ import { CLAIMS, CLAIM_BEHAVIOR, COLORS, COLOR_ICONS } from '../../src/shared/id
 import { TUNING } from '../../src/shared/tuning.ts';
 
 describe('tuning', () => {
-  it('fits a full match in 510 s (60 s intro backstop, 25 s first Investigate; user-approved 2026-10-26)', () => {
+  it('fits a full match in 585 s (60 s intro backstop, 25 s first Investigate, 60 s Write; user-approved 2026-10-26)', () => {
     const p = TUNING.phaseMs;
     const firstExtra = TUNING.firstRoundInvestigateMs - p.investigate;
-    expect(p.intro + TUNING.rounds * (p.investigate + p.write + p.reveal) + firstExtra + p.final).toBe(510_000);
+    expect(p.intro + TUNING.rounds * (p.investigate + p.write + p.reveal) + firstExtra + p.final).toBe(585_000);
   });
 
   it('room codes never use 0, O, 1 or I', () => {

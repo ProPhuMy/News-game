@@ -1,7 +1,12 @@
 import type { PageWatch } from '../scripts/visual/evidence.ts';
 import { z } from 'zod';
+import { TUNING } from '../src/shared/tuning.ts';
+
 import { AckSchema, RoomSnapshotSchema, SERVER_EVENTS } from '../src/shared/protocol.ts';
 import { PrivateSnapshotSchema, PublicSnapshotSchema } from '../src/shared/snapshots.ts';
+
+// Browser scheduling slack belongs to the probe, not gameplay tuning.
+export const SMOKE_PHASE_TIMEOUT_MS = Math.max(...Object.values(TUNING.phaseMs), TUNING.firstRoundInvestigateMs) + 10_000;
 
 const eventPacket = z.union([
   z.tuple([z.literal(SERVER_EVENTS.ack), AckSchema]),

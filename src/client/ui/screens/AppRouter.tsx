@@ -275,6 +275,8 @@ export const AppRouter: React.FC<AppRouterProps> = ({ store = defaultStore }) =>
             onSkipWrite={() => store.actions.skipWrite()}
             tipText={tipText}
             report={report}
+            deadlineMs={publicSnapshot.deadlineMs}
+            serverTimeOffset={serverOffsetMs}
           />
         )}
 

@@ -4,13 +4,12 @@ interface CountdownTimerProps {
   deadlineMs: number;
   serverTimeOffset?: number;
   onExpire?: () => void;
+  /** Seconds left at which the timer turns red (default 5). */
+  urgentAtSeconds?: number;
 }
 
-export const CountdownTimer: React.FC<CountdownTimerProps> = ({
-  deadlineMs,
-  serverTimeOffset = 0,
-  onExpire,
-}) => {
+/** Whole seconds left until a server deadline. Display only: the server owns every phase change. */
+export const useSecondsLeft = (deadlineMs: number, serverTimeOffset = 0, onExpire?: () => void): number => {
   const computeSecondsLeft = () => {
     const currentServerTime = Date.now() + serverTimeOffset;
     return Math.max(0, Math.ceil((deadlineMs - currentServerTime) / 1000));
@@ -31,7 +30,17 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({
     return () => clearInterval(interval);
   }, [deadlineMs, serverTimeOffset, onExpire]);
 
-  const isUrgent = secondsLeft <= 5 && secondsLeft > 0;
+  return secondsLeft;
+};
+
+export const CountdownTimer: React.FC<CountdownTimerProps> = ({
+  deadlineMs,
+  serverTimeOffset = 0,
+  onExpire,
+  urgentAtSeconds = 5,
+}) => {
+  const secondsLeft = useSecondsLeft(deadlineMs, serverTimeOffset, onExpire);
+  const isUrgent = secondsLeft <= urgentAtSeconds && secondsLeft > 0;
 
   return (
     <div

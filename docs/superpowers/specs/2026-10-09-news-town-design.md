@@ -67,11 +67,11 @@ The game is a success when:
 |---|---|---|
 | Intro: camera sweep + 3 illustrated steps | 60 s (backstop) | Every connected human presses "I'm ready" |
 | Round × 5: Investigate | 25 s in round 1, then 15 s | Every connected human has investigated or skipped |
-| Round × 5: Write | 45 s | Every connected human has locked or skipped |
+| Round × 5: Write | 60 s | Every connected human has locked or skipped |
 | Round × 5: Front page + reaction | 20 s | Never (fixed-length animation) |
 | Final Edition | 40 s | Never |
 
-The maximum total is 60 + 10 + 5 × 80 + 40 = 510 s, about 8 min 30 s. (Intro 60 s and the round-1 Investigate 25 s were approved by the user on 2026-10-26 for onboarding; both still end early.)
+The maximum total is 60 + 10 + 5 × 95 + 40 = 585 s, about 9 min 45 s. (Intro 60 s, the round-1 Investigate 25 s and Write 60 s were approved by the user on 2026-10-26 for onboarding; all still end early.)
 
 AI papers decide instantly at the start of each phase. Their "locked" indicator appears after a random 3–15 s delay so the table feels alive. That delay is for display only and never holds up a phase.
 
@@ -82,7 +82,7 @@ AI papers decide instantly at the start of each phase. Their "locked" indicator 
    - **Check a location:** reveals the truth at that location for *this round* and grants an evidence card (§5.5). The result is certain.
    - **Investigate a rival headline:** pick any unexposed headline that a rival published in an earlier round. There's a chance of finding proof that it's a lie (§6.2). This option is unavailable in round 1.
    - **Skip.**
-3. **Write (45 s).** Pick a target location, then a claim type (§5.2). Alternatively, if you hold proof, choose "Expose [paper]: '[headline]'". Then write a headline of 1–100 characters and optionally attach a matching evidence card. Press **LOCK IT IN**. You can't edit after locking. When the timer runs out, nothing is published unless a headline was already locked.
+3. **Write (60 s).** Pick a target location, then a claim type (§5.2). Alternatively, if you hold proof, choose "Expose [paper]: '[headline]'". Then write a headline of 1–100 characters and optionally attach a matching evidence card. Press **LOCK IT IN**. You can't edit after locking. When the timer runs out, nothing is published unless a headline was already locked.
 4. **Front page + reaction (20 s).** All headlines are revealed together as four front pages. Exposures happen first ("THE TRUTH COMES OUT"). Then the citizens react, and a one-line recap appears ("9 citizens rushed the bank; 3 now read The Daily Gasp").
 
 ### 4.4 Final Edition (40 s)

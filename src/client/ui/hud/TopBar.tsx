@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import type { Phase } from '../../../shared/ids.ts';
 import { TUNING } from '../../../shared/tuning.ts';
 import { CountdownTimer } from '../components/CountdownTimer.tsx';
+import { WRITE_WARNING_SECONDS } from '../screens/WriteScreen.tsx';
 import { useSound } from '../audio/SoundContext.tsx';
 import { RulesButton } from '../components/RulesDialog.tsx';
 
@@ -70,7 +71,8 @@ export const TopBar: React.FC<TopBarProps> = ({
       </div>
       <div className="phase-title">{PHASE_LABELS[phase] || phase}</div>
       <div className="top-bar-controls">
-        <CountdownTimer deadlineMs={deadlineMs} serverTimeOffset={serverTimeOffset} />
+        <CountdownTimer deadlineMs={deadlineMs} serverTimeOffset={serverTimeOffset}
+          urgentAtSeconds={phase === 'write' ? WRITE_WARNING_SECONDS : undefined} />
         <RulesButton />
         <button
           type="button"

@@ -10,7 +10,7 @@ import { resolve, relative, dirname } from 'node:path';
 import { chromium } from 'playwright-core';
 import { chromiumArgs } from '../scripts/visual/args.ts';
 
-import { parseSmokeOptions, fetchSmokeResource, requireCleanWatch, decodeSmokePackets } from './D4-smoke-options.ts';
+import { parseSmokeOptions, fetchSmokeResource, requireCleanWatch, decodeSmokePackets, SMOKE_PHASE_TIMEOUT_MS } from './D4-smoke-options.ts';
 import { watchPage, captureAppEvidence } from '../scripts/visual/evidence.ts';
 import { LOCATIONS, LOCATION_NAMES } from '../src/shared/ids.ts';
 
@@ -174,7 +174,7 @@ try {
     while (true) {
       await page.waitForFunction(labels => Boolean(document.querySelector('.results-card')) ||
         [...document.querySelectorAll('button')].some(button => !button.disabled && button.offsetParent !== null &&
-          labels.includes(button.textContent.trim())), actions, { timeout: 55_000 });
+          labels.includes(button.textContent.trim())), actions, { timeout: SMOKE_PHASE_TIMEOUT_MS });
       const clicked = await page.evaluate(labels => {
         if (document.querySelector('.results-card')) return 'finished';
         // Deadline transitions can remove a button between separate locator checks and clicks.
@@ -186,7 +186,7 @@ try {
       if (clicked === 'finished') return;
       if (clicked) await page.waitForFunction(label =>
         ![...document.querySelectorAll('button')].some(button => button.textContent.trim() === label),
-      clicked, { timeout: 55_000 });
+      clicked, { timeout: SMOKE_PHASE_TIMEOUT_MS });
     }
   };
   await Promise.all(pages.map(drive));
