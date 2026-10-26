@@ -37,4 +37,15 @@ describe('How to play', () => {
     expect(container.querySelector('dialog')!.hasAttribute('open')).toBe(false);
     expect(document.activeElement).toBe(opener);
   });
+
+  it('closes on Esc (native cancel then close) and returns focus; takes no store props, so it cannot send actions', () => {
+    const { container } = render(<RulesButton />);
+    const opener = screen.getByRole('button', { name: 'How to play' });
+    fireEvent.click(opener);
+    const dialog = container.querySelector('dialog')!;
+    fireEvent(dialog, new Event('cancel', { cancelable: true }));
+    dialog.close();
+    expect(dialog.hasAttribute('open')).toBe(false);
+    expect(document.activeElement).toBe(opener);
+  });
 });

@@ -17,6 +17,11 @@ export interface IntroScreenProps {
 
 // Illustrated three-step intro. Desktop shows all steps; phones (CSS, <=640px) show the current one with Back/Next.
 // "I'm ready" sends the existing skipIntro command: the intro ends once every connected human is ready.
+// The pressed "I'm ready" button unmounts; move focus to the waiting line instead of dropping it to <body>.
+const keepFocus = (el: HTMLParagraphElement | null) => {
+  if (el && (document.activeElement === null || document.activeElement === document.body)) el.focus();
+};
+
 export const IntroScreen: React.FC<IntroScreenProps> = ({
   deadlineMs,
   serverTimeOffset,
@@ -31,7 +36,7 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({
     <div className="screen-container intro-screen" data-testid="intro-screen">
       <ol className="onboarding-deck" data-step={step}>
         {ruleCards.map((card, idx) => (
-          <li key={card.title} className="onboarding-step" aria-current={idx + 1 === step ? 'step' : undefined}>
+          <li key={card.title} className="onboarding-step" data-current={idx + 1 === step || undefined}>
             <StepArt step={(idx + 1) as OnboardingStep} palette={palette} className="onboarding-art" />
             <div className="onboarding-caption">
               <h3><span className="card-index" aria-hidden="true">{idx + 1}</span>{card.title}</h3>
@@ -43,12 +48,14 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({
 
       <div className="intro-footer">
         <div className="onboarding-nav">
-          {step > 1 && <Button variant="secondary" onClick={() => setStep(step - 1)}>Back</Button>}
-          {step < last && <Button variant="secondary" onClick={() => setStep(step + 1)}>Next</Button>}
+          {/* aria-disabled, not disabled: a disabled button drops keyboard focus at the ends. */}
+          <Button variant="secondary" aria-disabled={step === 1} onClick={() => setStep(Math.max(1, step - 1))}>Back</Button>
+          <span className="onboarding-count" aria-live="polite">Step {step} of {last}</span>
+          <Button variant="secondary" aria-disabled={step === last} onClick={() => setStep(Math.min(last, step + 1))}>Next</Button>
         </div>
         <CountdownTimer deadlineMs={deadlineMs} serverTimeOffset={serverTimeOffset} />
         {ready
-          ? <p className="intro-waiting" role="status">Waiting for the other editors…</p>
+          ? <p className="intro-waiting" role="status" tabIndex={-1} ref={keepFocus}>Waiting for the other editors…</p>
           : <Button variant="retro" onClick={onSkipIntro} className="btn-large">I'm ready</Button>}
       </div>
     </div>

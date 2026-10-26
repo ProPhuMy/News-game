@@ -163,13 +163,14 @@
   color: var(--nt-panel);
   font-weight: 800;
 }
-.onboarding-nav { display: none; gap: var(--space-2); }
+.onboarding-nav { display: none; gap: var(--space-2); align-items: center; }
+.onboarding-count { font-weight: 700; white-space: nowrap; }
 .intro-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); }
 .intro-waiting { margin: 0; font-weight: 700; }
 /* Phones, portrait or landscape: one step at a time. Short screens put the art beside its caption. */
 @media (max-width: 640px), (max-height: 500px) {
   .onboarding-deck { grid-template-columns: minmax(0, 1fr); }
-  .onboarding-step:not([aria-current="step"]) { display: none; }
+  .onboarding-step:not([data-current]) { display: none; }
   .onboarding-nav { display: flex; }
 }
 @media (max-height: 500px) {

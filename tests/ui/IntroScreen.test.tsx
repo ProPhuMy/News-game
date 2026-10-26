@@ -42,27 +42,41 @@ describe('IntroScreen', () => {
     expect(onSkipIntro).toHaveBeenCalledTimes(1);
   });
 
-  it('phone stepper: Next and Back move one step; Next hides on the last step; I\'m ready is always there', () => {
+  it('phone stepper: Back/Next stay mounted (aria-disabled at the ends) so focus never drops; count announces the step', () => {
     const { container } = render(<IntroScreen {...props} onSkipIntro={vi.fn()} />);
     const deck = container.querySelector('.onboarding-deck')!;
+    const back = screen.getByRole('button', { name: 'Back' });
+    const next = screen.getByRole('button', { name: 'Next' });
     expect(deck.getAttribute('data-step')).toBe('1');
-    expect(screen.queryByRole('button', { name: 'Back' })).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-    expect(deck.getAttribute('data-step')).toBe('2');
-    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    expect(back.getAttribute('aria-disabled')).toBe('true');
+    fireEvent.click(back);
+    expect(deck.getAttribute('data-step')).toBe('1');
+    fireEvent.click(next);
+    fireEvent.click(next);
     expect(deck.getAttribute('data-step')).toBe('3');
-    expect(screen.queryByRole('button', { name: 'Next' })).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+    expect(screen.getByText('Step 3 of 3')).toBeDefined();
+    expect(next.getAttribute('aria-disabled')).toBe('true');
+    fireEvent.click(next);
+    expect(deck.getAttribute('data-step')).toBe('3');
+    fireEvent.click(back);
     expect(deck.getAttribute('data-step')).toBe('2');
     expect(screen.getByRole('button', { name: "I'm ready" })).toBeDefined();
-    const current = container.querySelectorAll('.onboarding-step[aria-current="step"]');
+    const current = container.querySelectorAll('.onboarding-step[data-current]');
     expect(current).toHaveLength(1);
     expect(current[0]!.textContent).toContain('Write');
+    expect(container.querySelector('[aria-current]')).toBeNull();
   });
 
   it('after pressing ready, shows the waiting state instead of the button', () => {
     render(<IntroScreen {...props} onSkipIntro={vi.fn()} ready />);
     expect(screen.queryByRole('button', { name: "I'm ready" })).toBeNull();
     expect(screen.getByRole('status').textContent).toContain('Waiting for the other editors');
+  });
+
+  it('moves focus to the waiting line when the pressed ready button unmounts', () => {
+    const { rerender } = render(<IntroScreen {...props} onSkipIntro={vi.fn()} />);
+    screen.getByRole('button', { name: "I'm ready" }).focus();
+    rerender(<IntroScreen {...props} onSkipIntro={vi.fn()} ready />);
+    expect(document.activeElement).toBe(screen.getByRole('status'));
   });
 });

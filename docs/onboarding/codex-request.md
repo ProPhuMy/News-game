@@ -29,6 +29,10 @@ The user approved `docs/contract-requests/2026-10-26-claude-intro-backstop.md` o
 
 After the user merges `claude/onboarding` and your change for items 1–2, redeploy with the same AI environment: Groq free tier, the 30,000-call allowance, and the existing ledger (do not reset or recreate it). Use a quiet window, because a restart drops open rooms, and keep the recovery image. Then run the production smoke.
 
+## 4. Question: ready count
+
+The proposal (Codex item 3) asks whether the public snapshot says who has pressed ready. The UI shows only "Waiting for the other editors…" from this seat's private `acted` flag. If you want a "1 of 2 ready" count, say which public field carries it; the UI will not guess.
+
 ## What changed on the Claude side (for review of cross-agent effects)
 
 - `IntroScreen`: illustrated three-step mini-comic. Phones (≤ 640 px wide or ≤ 500 px tall) show one step at a time with Back/Next.
