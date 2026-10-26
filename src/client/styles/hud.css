@@ -28,7 +28,7 @@
 }
 .phase-title { font-family: var(--font-headline); font-size: 1.35rem; font-weight: 800; min-width: 0; }
 .top-bar-controls { display: flex; align-items: center; gap: var(--space-2); margin-left: auto; }
-.motion-toggle-btn, .sound-toggle-btn {
+.motion-toggle-btn, .sound-toggle-btn, .rules-btn {
   width: 2.5rem;
   height: 2.5rem;
   border: 2px solid var(--nt-ink);
@@ -108,7 +108,7 @@
 @media (max-width: 640px) {
   .hud-top-bar { padding: var(--space-2) var(--space-3); gap: var(--space-2); }
   .phase-title { font-size: 1.05rem; }
-  .motion-toggle-btn, .sound-toggle-btn { width: 2.25rem; height: 2.25rem; }
+  .motion-toggle-btn, .sound-toggle-btn, .rules-btn { width: 2.25rem; height: 2.25rem; }
 
   .hud-body {
     grid-template-columns: minmax(0, 1fr);
@@ -193,4 +193,32 @@
 @media (prefers-reduced-motion: reduce) {
   .ticker-track { animation: none; }
   .ticker-track[aria-hidden="true"] { display: none; }
+}
+
+/* How to play: a top-bar button and a native modal dialog (Esc closes it). */
+.rules-btn { font: 800 1.1rem var(--font-headline); }
+.rules-dialog {
+  margin: auto; /* the global reset zeroes margins; native modal centering needs auto */
+  width: min(100% - 2 * var(--space-3), 52rem);
+  max-height: min(100% - 2 * var(--space-3), 44rem);
+  padding: var(--space-4);
+  border: 2px solid var(--nt-ink);
+  border-radius: var(--radius-md);
+  background: var(--nt-panel);
+  color: var(--nt-ink);
+  overflow-y: auto;
+  pointer-events: auto; /* #ui-root passes clicks through to the town by default */
+}
+.rules-dialog::backdrop { background: color-mix(in srgb, var(--nt-ink) 45%, transparent); }
+.rules-dialog-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.rules-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-2); margin: var(--space-3) 0; padding: 0; list-style: none; }
+.rules-step { display: grid; gap: var(--space-1); align-content: start; }
+.rules-step h3 { display: flex; align-items: center; gap: var(--space-2); font-size: 1.05rem; }
+.rules-step p, .rules-detail p { margin: 0; line-height: 1.4; }
+.rules-details-title { margin: var(--space-3) 0 var(--space-2); }
+.rules-detail { margin-bottom: var(--space-2); }
+.rules-detail h4 { margin: 0 0 var(--space-1); }
+@media (max-width: 640px) {
+  .rules-dialog { width: 100%; max-width: 100%; height: 100%; max-height: 100%; margin: 0; border-radius: 0; }
+  .rules-steps { grid-template-columns: minmax(0, 1fr); }
 }
