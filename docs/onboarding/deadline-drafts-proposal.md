@@ -1,5 +1,7 @@
 # Latest saved draft → deadline submission
 
+**SHELVED — user chose a longer Write phase plus a warning instead. Do not implement this design or its contract requests. Branch retained as history; no runtime changes were made. Superseding delivery: claude/write-time @27c1784,2026-10-26.**
+
 Owner: Codex proposal/server/net/AI; Claude UI and authorized engine changes. Base main0f37c0c. Status: design for user/counterpart approval, no product implementation.
 
 User requested deadline submission and server-preserved edits. User chose preserving drafts through a writing-phase disconnect, and clarified: "just let the AI interpret whatever headline is present, don't send anything when the headline is empty." Therefore this proposal interprets complete NONEMPTY saved drafts before the deadline, NOT only after locking. Shared-contract edits and engine implementation still need assignment/approval.

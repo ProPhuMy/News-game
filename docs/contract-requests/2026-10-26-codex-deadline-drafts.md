@@ -1,5 +1,7 @@
 # Request: private revisioned drafts, interpretation and deadline publication
 
+**SHELVED — user chose a longer Write phase plus a warning instead. Do not implement this design or its contract requests. Branch retained as history; no runtime changes were made. Superseding delivery: claude/write-time @27c1784,2026-10-26.**
+
 Status: REQUESTED, not approved/implemented. User requested this feature, chose preserving writing drafts through disconnect, and clarified interpreting present nonempty headlines while sending no AI request for empty text. User-controlled shared delivery and Claude engine authorization are still required by AGENTS Hard rule1/ownership table. Design: docs/onboarding/deadline-drafts-proposal.md.
 
 ## Proposed shared surface
